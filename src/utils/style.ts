@@ -1,1 +1,0 @@
-export const azul = '#1446A0'

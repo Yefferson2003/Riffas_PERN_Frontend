@@ -3,20 +3,19 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { LoadingButton } from "@mui/lab";
 import { FormControl, IconButton, InputAdornment, InputLabel, OutlinedInput, TextField } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { login } from "../../api/authApi";
 import ErrorMessage from "../../components/ErrorMessage";
-import { useAuth } from "../../hooks/useAuth";
 import { UserLoginForm } from "../../types";
+import { useNavigate } from 'react-router-dom';
 
 function LoginView() {
 
     const [showPassword, setShowPassword] = useState(false);
-    // const token = localStorage.getItem('AUTH_TOKEN')
-    const {user} = useAuth()
+    const token = localStorage.getItem('AUTH_TOKEN')
+    // const {user} = useAuth()
     const navigate = useNavigate()
 
     const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -30,7 +29,7 @@ function LoginView() {
     };
 
     const initialValues: UserLoginForm = {
-        email: '',
+        identificationNumber: '',
         password: '',
     }
     const { register, handleSubmit, reset, formState: { errors } } = useForm({ defaultValues: initialValues })
@@ -42,19 +41,13 @@ function LoginView() {
             toast.error(error.message)
         },
         onSuccess() {
-            reset()
             queryClient.invalidateQueries({queryKey: ['user']})
+            reset()
+            navigate('/')
         }
     })
 
-    useEffect(() => {
-        if (user) {
-            navigate('/')
-        }
-    }, [user, navigate])
-    
-
-    const handleLogin = (formData: UserLoginForm) => mutate(formData)
+    const handleLogin = (formData: UserLoginForm) => {mutate(formData)}
     
     return (
         <div>
@@ -65,17 +58,13 @@ function LoginView() {
                 autoComplete="off"
             >
                 <FormControl fullWidth>
-                <TextField id="email" label="Email" color="info"
-                    {...register('email', {
-                        required: "El Email es obligatorio",
-                        pattern: {
-                            value: /\S+@\S+\.\S+/,
-                            message: "E-mail no válido",
-                        },
+                <TextField id="identificationNumber" label="Número de Identificación" color="info"
+                    {...register('identificationNumber', {
+                        required: "La Identificación es obligatorio",
                     })}
                 />
-                {errors.email && (
-                    <ErrorMessage id="error-email">{errors.email.message}</ErrorMessage>
+                {errors.identificationNumber && (
+                    <ErrorMessage id="error-email">{errors.identificationNumber.message}</ErrorMessage>
                 )}
                 </FormControl>
                 
@@ -112,6 +101,7 @@ function LoginView() {
                 <LoadingButton type="submit" variant="contained" color="primary"
                     id="button-login" loadingIndicator='Cargando...'
                     loading={isPending}
+                    disabled={!!token}
                 >
                     Iniciar Sesión
                 </LoadingButton>

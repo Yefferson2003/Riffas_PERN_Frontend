@@ -17,9 +17,11 @@ import useScrollTrigger from '@mui/material/useScrollTrigger';
 import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { azul } from '../utils/style';
+import { azul } from '../utils';
 import LoaderView from '../views/LoaderView';
 import { useQueryClient } from '@tanstack/react-query';
+import { ToastContainer } from "react-toastify"
+import 'react-toastify/dist/ReactToastify.css';
 
 interface Props {
     /**
@@ -31,15 +33,20 @@ interface Props {
 }
 
 const drawerWidth = 240;
-const navItems = ['index', 'logout'];
-const navItemsTraslations : {[key: string] : string} = {
-    index : 'Inicio',
-    logout : 'Cerrar Sesión'
-}
-const navItemsUrls : {[key: string] : string} = {
-    index : '/',
-    logout : '/'
-}
+const navItemsBase = ['index', 'logout'];
+const navItemsAdmin = ['index', 'users', 'logout', ];
+
+const navItemsTraslations: { [key: string]: string } = {
+    index: 'Inicio',
+    users: 'Usuarios',
+    logout: 'Cerrar Sesión',
+};
+
+const navItemsUrls: { [key: string]: string } = {
+    index: '/',
+    logout: '/',
+    users: '/users',
+};
 
 function HideOnScroll(props: Props) {
     const { children, window } = props;
@@ -70,15 +77,18 @@ export default function IndexLayout(props: Props) {
     };
 
     const handleNavigation = (item : string) => {
-        navigate(navItemsUrls[item]);
         if (item === 'logout') {
             logout();
-            navigate('/')
         }
+        navigate(navItemsUrls[item]);
     };
 
     const handleDrawerToggle = () => {
         setMobileOpen((prevState) => !prevState);
+    };
+
+    const getNavItems = () => {
+        return user?.rol.name === 'admin' ? navItemsAdmin : navItemsBase;
     };
 
     const drawer = (
@@ -88,7 +98,7 @@ export default function IndexLayout(props: Props) {
         </Typography>
         <Divider />
         <List>
-            {navItems.map((item) => (
+            {getNavItems().map((item) => (
             <ListItem key={item} disablePadding>
                 <ListItemButton sx={{ textAlign: 'center' }} 
                     onClick={() => handleNavigation(item)}
@@ -111,7 +121,7 @@ export default function IndexLayout(props: Props) {
     }
 
     if (user) return (
-        <Box sx={{ display: 'flex', width: '100%'}}>
+        <Box sx={{ display: 'flex', width: '100%',}}>
         <CssBaseline />
         <HideOnScroll {...props}>
             <AppBar component="nav" sx={{bgcolor: azul}}>
@@ -141,10 +151,9 @@ export default function IndexLayout(props: Props) {
                     RIFFAS
                 </Typography>
                 <Box sx={{ display: { xs: 'none', sm: 'block' }, }}>
-                    {navItems.map((item) => (
+                    {getNavItems().map((item) => (
                     <Button key={item} sx={{ color: '#fff' }}
                         onClick={() => handleNavigation(item)}
-                        variant='contained'
                     >
                         {navItemsTraslations[item]}
                     </Button>
@@ -170,10 +179,22 @@ export default function IndexLayout(props: Props) {
             {drawer}
             </Drawer>
         </nav>
-        <Box component="main" sx={{ p: 3, width: '100%' }}>
-            <Toolbar />
-            <Outlet context={user}/>   
-        </Box>
+            <Box component="main" sx={{ p: 3, width: '100%' }}>
+                <Toolbar />
+                <Outlet context={user}/>   
+            </Box>
+            <ToastContainer
+                    position="top-right"
+                    autoClose={5000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover={false}
+                    theme="colored"
+                />
         </Box>
     );
 }

@@ -10,7 +10,8 @@ export default {
       'white': '#ffffff',
       'baclk': '#000000',
       'azul': '#1446A0',
-      'rojo': '#ff0000'
+      'rojo': '#ff0000',
+      'gris': '#e2e8f0',
     },
     extend: {
       fontFamily: {

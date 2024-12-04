@@ -4,6 +4,8 @@ import IndexView from "./views/indexView/IndexView"
 import AuthLayout from "./layouts/AuthLayout"
 import Error404View from "./views/Error404View"
 import LoginView from "./views/authView/LoginView"
+import UsersView from "./views/indexView/UsersView"
+import RaffleNumbersView from "./views/indexView/RaffleNumbersView"
 
 
 function Router() {
@@ -16,6 +18,8 @@ function Router() {
 
                 <Route element={<IndexLayout/>}>
                     <Route path="/" element={<IndexView/>} index/>
+                    <Route path="/users" element={<UsersView/>} index/>
+                    <Route path="/raffle/:raffleId" element={<RaffleNumbersView/>} index/>
                 </Route>
 
                 <Route element={<AuthLayout/>}>

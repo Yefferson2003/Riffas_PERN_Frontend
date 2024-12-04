@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { AuthSchema, UserLoginForm } from "../types";
+import { UserLoginForm, userSchema } from "../types";
 
 export async function login(formData: UserLoginForm) {
     try {
@@ -19,9 +19,8 @@ export async function login(formData: UserLoginForm) {
 export async function getUser() {
     try {
         const { data } = await api.get('/auth/user');
-        const response = AuthSchema.safeParse(data)
+        const response = userSchema.safeParse(data)
         if (response.success) {
-
             return response.data
         }
     } catch (error) {
