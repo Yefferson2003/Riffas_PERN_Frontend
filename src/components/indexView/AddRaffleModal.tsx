@@ -210,7 +210,10 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
                         helperText={errors.description?.message}
                         multiline
                         maxRows={4}
-                        {...register('description', {required: 'Descripción Obligatoria'})}
+                        {...register('description', {required: 'Descripción Obligatoria',minLength: {
+                            value: 10,
+                            message: "la descripción debe tener minimo 10 caracteres",
+                        },})}
                     />
                     
                     <TextField id="price" label="Precio" variant="outlined" 

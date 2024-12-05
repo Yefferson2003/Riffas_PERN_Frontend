@@ -206,16 +206,8 @@ function ViewRaffleNumberModal({raffleNumber,setPaymentsSellNumbersModal, setPdf
                         {...register('phone', {
                             required: "El Teléfono es obligatorio",
                             pattern: {
-                                value: /^[3][0-9]{9}$/,
-                                message: "Número de teléfono inválido, debe ser un número colombiano de 10 dígitos",
-                            },
-                            minLength: {
-                                value: 10,
-                                message: "El número debe tener 10 dígitos",
-                            },
-                            maxLength: {
-                                value: 10,
-                                message: "El número debe tener 10 dígitos",
+                                value: /^[0-9]+$/, // Solo números
+                                message: 'Solo se permiten números',
                             },
                         })}
                     />
