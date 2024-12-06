@@ -299,6 +299,8 @@ export const raffleNumberExelSchema = raffleNumbersSchema.pick({
     lastName: z.string().nullable(),
     phone: z.string().nullable(),
     address: z.string().nullable(),
+    paymentAmount: z.string(),
+    paymentDue: z.string()
 })
 export const responseRaffleNumbersExelSchema = ResponsePaginationSchema.pick({
     currentPage: true,

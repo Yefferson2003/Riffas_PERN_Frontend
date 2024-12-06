@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import { formatDateTimeLargeIsNull, formatWithLeadingZeros } from '.';
+import { formatCurrencyCOP, formatDateTimeLargeIsNull, formatWithLeadingZeros } from '.';
 import { getRaffleNumersExel } from '../api/raffleNumbersApi';
 import dayjs from 'dayjs';
 
@@ -18,6 +18,7 @@ export const fetchRaffleNumbers = async (raffleId: number) => {
         throw new Error("Error al obtener los números de la rifa");
     }
 };
+
 
 const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable: string | undefined) => {
     if (!raffleId) {
@@ -49,7 +50,9 @@ const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable:
             { header: "Nombre", key: "firstName", width: 15 },
             { header: "Apellido", key: "lastName", width: 15 },
             { header: "Teléfono", key: "phone", width: 15 },
-            { header: "Dirección", key: "address", width: 30 },
+            { header: "Dirección", key: "address", width: 25 },
+            { header: "Valor abonado", key: "paymentAmount", width: 20 },
+            { header: "Valor a deber", key: "paymentDue", width: 20 },
         ];
 
         // Agregar filas y estilos
@@ -64,6 +67,9 @@ const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable:
                 lastName: raffle.lastName || '---',
                 phone: raffle.phone || '---',
                 address: raffle.address || '---',
+                pa: raffle.address || '---',
+                paymentAmount: formatCurrencyCOP(+raffle.paymentAmount) || '---',
+                paymentDue: formatCurrencyCOP(+raffle.paymentDue) || '---',
             });
 
             let fillColor;
@@ -90,7 +96,7 @@ const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable:
             });
         });
 
-        const todayDate = dayjs().format('YYYY-MM-DD_HH-mm-ss');
+        const todayDate = dayjs().format('DDMMYYYY');
 
 
         const filename = `Números_Rifa_${nitResponsable}_${todayDate}.xlsx`;
