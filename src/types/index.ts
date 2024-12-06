@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import {z} from "zod";
+import { z } from "zod";
 // AUTH & USERS & PAGINATION
 
 const rolNameEnum = ['admin', 'vendedor', 'responsable'] as const
@@ -314,5 +314,9 @@ export type RaffleNumber = z.infer<typeof raffleNumberSchema> //
 export type RaffleNumbersPayments = z.infer<typeof RafflePayResponseSchema>
 export type PayNumbersForm = z.infer<typeof payNumbersSchema>
 export type PayNumberForm = z.infer<typeof payNumberSchema>
+
+export const totalSchema = z.object({
+    total: z.number()
+})
 
 

@@ -42,14 +42,20 @@ function IndexView() {
                 queryClient.invalidateQueries({ queryKey: ['raffles', search, page, rowsPerPage] });
             }
         };
+        const handleUpdateQueryDeleteRaffle = () => {
+            queryClient.invalidateQueries({ queryKey: ['raffles', search, page, rowsPerPage] });
+            
+        };
 
     
         socket.on('assigUser', handleUpdateQuery);
         socket.on('deleteAssigUser', handleUpdateQuery);
+        socket.on('deleteRaffle', handleUpdateQueryDeleteRaffle);
     
         return () => {
             socket.off('assigUser', handleUpdateQuery);
             socket.off('deleteAssigUser', handleUpdateQuery);
+            socket.off('deleteAssigUser', handleUpdateQueryDeleteRaffle);
         };
     }, [queryClient, user.id, page, rowsPerPage, search]);
     return (

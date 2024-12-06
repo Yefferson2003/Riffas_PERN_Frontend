@@ -3,13 +3,15 @@ import { IconButton, Tooltip } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { deleteAssingUser } from "../../api/raffleApi";
+import { User } from '../../types';
+import { useOutletContext } from 'react-router-dom';
 
 type ButtonDeleteAsingUserProps = {
     raffleId: number
     userId: number
 }
 function ButtonDeleteAsingUser({raffleId, userId} : ButtonDeleteAsingUserProps) {
-
+    const user : User = useOutletContext();
     const queryClient = useQueryClient()
     const {mutate, isPending} = useMutation({
         mutationFn: deleteAssingUser,
@@ -33,7 +35,7 @@ function ButtonDeleteAsingUser({raffleId, userId} : ButtonDeleteAsingUserProps) 
     return (
         <IconButton
             color="error"
-            disabled={isPending}
+            disabled={isPending || user.rol.name === 'responsable'}
             onClick={handleDeleteAssing}
         >
             <Tooltip title='Eliminar Asignación'>

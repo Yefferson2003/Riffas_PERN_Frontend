@@ -19,6 +19,8 @@ import { RaffleNumbersPayments, User } from "../../types";
 import { colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros } from "../../utils";
 import exportRaffleNumbers from '../../utils/exel';
 import LoaderView from "../LoaderView";
+import ButtonDeleteRaffle from '../../components/indexView/ButtonDeleteRaffle';
+import Recaudo from '../../components/indexView/Recaudo';
 
 const styleForm = {
     width: '100%',
@@ -160,7 +162,7 @@ function RaffleNumbersView() {
                 
                 
                 <div className=''>
-                { user.rol.name === 'admin' && 
+                { user.rol.name !== 'vendedor' && 
                     <IconButton
                         onClick={handleNavigateViewUsers}
                     >
@@ -182,13 +184,16 @@ function RaffleNumbersView() {
                     <IconButton
                         onClick={() => {
                             exportRaffleNumbers(raffleId, raffle?.nitResponsable)
-                            toast.success('Archivo descargado')
+                            toast.info('Descargando archivo...')
                         }}
                     >
                         <Tooltip title={'Boletas Vendidas'} placement="bottom-start">
                         <DescriptionIcon color='success'/>
                         </Tooltip>
                     </IconButton>
+                }
+                {user.rol.name === 'admin' && raffle &&
+                    <ButtonDeleteRaffle raffleId={raffle.id}/>
                 }
                     
                 </div>
@@ -226,6 +231,8 @@ function RaffleNumbersView() {
                         <p>{formatDateTimeLarge(raffle.playDate)}</p>
                     </div>
                 </div>}
+                
+                { raffleId && <Recaudo raffleId={+raffleId}/>}
 
                 <img 
                     className="object-cover w-full h-40"
@@ -314,7 +321,8 @@ function RaffleNumbersView() {
             setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
             setPdfData={setPdfData}
         />}
-        {raffle && raffleNumbers && pdfData && <PaymentSellNumbersModal 
+        {raffle && raffleNumbers && pdfData && <PaymentSellNumbersModal
+            raffle={raffle}
             setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
             setPdfData={setPdfData}
             paymentsSellNumbersModal={paymentsSellNumbersModal}

@@ -137,7 +137,7 @@ function ViewUsersOfRaffleModal({raffleId} : ViewUsersOfRaffleModalProps) {
 
     const {data, isLoading} = useUsersRaffle(raffleId, show)
 
-    if (user.rol.name === 'admin') return (
+    if (user.rol.name !== 'vendedor') return (
         <Modal
         open={show}
             onClose={() => {
@@ -151,7 +151,7 @@ function ViewUsersOfRaffleModal({raffleId} : ViewUsersOfRaffleModalProps) {
             <h2 className="mb-5 text-2xl font-bold text-center text-azul">Usuarios de la Rifa</h2>
             <p className="mb-5 text-xl font-bold text-center">Podras visualizar, asignar y eliminar usuarios para esta rifa</p>
 
-            <SelectAsingUser raffleId={raffleId}/>
+            <SelectAsingUser raffleId={raffleId} userRol={user.rol.name}/>
 
             <div className="w-full text-center">
                 {(isLoading && !data) && <CircularProgress/>}

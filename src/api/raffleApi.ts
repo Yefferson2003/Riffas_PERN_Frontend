@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { CreateRaffleForm, raffleByIdSchema, responseGetRafflesSchema, responseGetUsersByRaffle, UpdateRaffleForm } from "../types";
+import { CreateRaffleForm, raffleByIdSchema, responseGetRafflesSchema, responseGetUsersByRaffle, totalSchema, UpdateRaffleForm } from "../types";
 
 export async function getRaffles(params = {}) {
     try {
@@ -46,6 +46,23 @@ export async function getUsersByRaffle(raffleId : number) {
         }
     }
 }
+
+export async function getRecaudoByRaffle(raffleId : number) {
+    try {
+        const {data} = await api.get(`/raffles/${raffleId}/recaudo`)
+        const response = totalSchema.safeParse(data)
+        if (response.success) {
+            return response.data
+        }
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            // console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+
+
 
 export async function createRaffle({newFormData, banerImgUrl} : {newFormData:  CreateRaffleForm, banerImgUrl: string}) {
     try {
@@ -104,6 +121,17 @@ export async function assingUser({raffleId, userId } : {raffleId: number, userId
 export async function deleteAssingUser({raffleId, userId } : {raffleId: number, userId: number }) {
     try {
         const {data} = await api.delete<string>(`/raffles/${raffleId}/assing-user/${userId}`)
+        return data
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+export async function deleteRaffle(raffleId: number ) {
+    try {
+        const {data} = await api.delete<string>(`/raffles/${raffleId}`)
         return data
     } catch (error) {
         if (isAxiosError(error) && error.response) {

@@ -1,7 +1,7 @@
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { Box, IconButton, Modal, Tooltip, Typography } from "@mui/material";
 import autoTable from "jspdf-autotable";
-import { RaffleNumbersPayments } from "../../types";
+import { Raffle, RaffleNumbersPayments } from "../../types";
 
 import CloseIcon from '@mui/icons-material/Close';
 import dayjs from 'dayjs';
@@ -25,23 +25,39 @@ const style = {
 };
 
 type PaymentSellNumbersModalProps = {
+    raffle: Raffle
     setPaymentsSellNumbersModal: React.Dispatch<React.SetStateAction<boolean>>
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
     paymentsSellNumbersModal: boolean
     pdfData: RaffleNumbersPayments
 }
 
-function PaymentSellNumbersModal({paymentsSellNumbersModal,pdfData,setPaymentsSellNumbersModal,setPdfData} : PaymentSellNumbersModalProps) {
+function PaymentSellNumbersModal({raffle,paymentsSellNumbersModal,pdfData,setPaymentsSellNumbersModal,setPdfData} : PaymentSellNumbersModalProps) {
     const handleDownloadPDF = () => {
         const doc = new jsPDF();
+    
+        // Formatear el título con la información adicional
+        const raffleInfo = `Rifa: ${raffle.id} - NIT: ${raffle.nitResponsable}`;
+        const raffleDescription = raffle.description || "Sin descripción";
+        const rafflePlayDate = `Fecha de Juego: ${formatDateTimeLarge(raffle.playDate)}`;
     
         // Título principal
         doc.setFontSize(18);
         doc.setTextColor("#1446A0");
         doc.text("Resumen de Compra", 105, 15, { align: "center" });
     
+        // Subtítulos (información adicional de la rifa)
+        doc.setFontSize(12);
+        doc.setFont("bold");
+        doc.setTextColor("#000");
+        doc.text(raffleInfo, 105, 25, { align: "center" });
+        doc.setFont("normal");
+        doc.text(raffleDescription, 105, 30, { align: "center" });
+        doc.text(rafflePlayDate, 105, 35, { align: "center" });
+    
+        // Contenido principal
         pdfData.forEach((raffle, index) => {
-            const yStart = 30 + index * 90; // Espaciado entre secciones
+            const yStart = 50 + index * 90; // Ajustar el espaciado debido al título ampliado
     
             // Contenedor principal (borde para la sección)
             doc.setDrawColor(20, 70, 160);
@@ -134,8 +150,9 @@ function PaymentSellNumbersModal({paymentsSellNumbersModal,pdfData,setPaymentsSe
         });
     
         // Guardar el PDF
-        doc.save(`resumen_compra_${dayjs().format("YYYYMMDD_HHmm")}.pdf`);
+        doc.save(`resumen_compra_${dayjs().format("DDMMYYYY")}.pdf`);
     };
+    
     
 
     const handleCloseModal = () => {
@@ -171,6 +188,20 @@ function PaymentSellNumbersModal({paymentsSellNumbersModal,pdfData,setPaymentsSe
                     Resumen de Compra
                 </p>
                 <Box>
+                
+                <Box sx={{ mb: 2, border: "3px solid #1446A0", p: 2, borderRadius: 2}}>
+                    <div className='flex gap-3'>
+                    <p>Rifa #:</p>
+                    <p className='font-bold text-azul'>{raffle.id+ '-' +raffle.nitResponsable}</p>
+                    </div>
+                    <div className='flex gap-3'>
+                    <p>Info: <span className='font-bold text-azul'>{raffle.description}</span></p>
+                    </div>
+                    <div className='flex gap-3'>
+                    <p>Juega:</p>
+                    <p className='font-bold text-azul'>{formatDateTimeLarge(raffle.playDate)}</p>
+                    </div>
+                </Box>
                     
                 {pdfData.map((raffle) => (
                     <Box key={raffle.id} sx={{ mb: 2, border: "3px solid #1446A0", p: 2, borderRadius: 2}}>
