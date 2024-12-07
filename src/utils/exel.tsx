@@ -1,8 +1,8 @@
+import dayjs from 'dayjs';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import { formatCurrencyCOP, formatDateTimeLargeIsNull, formatWithLeadingZeros } from '.';
+import { formatDateTimeLargeIsNull, formatWithLeadingZeros } from '.';
 import { getRaffleNumersExel } from '../api/raffleNumbersApi';
-import dayjs from 'dayjs';
 
 
 export const fetchRaffleNumbers = async (raffleId: number) => {
@@ -51,8 +51,24 @@ const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable:
             { header: "Apellido", key: "lastName", width: 15 },
             { header: "Teléfono", key: "phone", width: 15 },
             { header: "Dirección", key: "address", width: 25 },
-            { header: "Valor abonado", key: "paymentAmount", width: 20 },
-            { header: "Valor a deber", key: "paymentDue", width: 20 },
+            { 
+                header: "Valor abonado", 
+                key: "paymentAmount", 
+                width: 20, 
+                style: { numFmt: '#,##0.00' } // Formato numérico para moneda o números con decimales
+            },
+            { 
+                header: "Valor a deber", 
+                key: "paymentDue", 
+                width: 20, 
+                style: { numFmt: '#,##0.00' } // Formato numérico para moneda o números con decimales
+            },
+            { 
+                header: "Abonos acumulados", 
+                key: "payments", 
+                width: 20, 
+                style: { numFmt: '#,##0.00' } // Formato numérico para moneda o números con decimales
+            },
         ];
 
         // Agregar filas y estilos
@@ -68,8 +84,9 @@ const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable:
                 phone: raffle.phone || '---',
                 address: raffle.address || '---',
                 pa: raffle.address || '---',
-                paymentAmount: formatCurrencyCOP(+raffle.paymentAmount) || '---',
-                paymentDue: formatCurrencyCOP(+raffle.paymentDue) || '---',
+                paymentAmount: +raffle.paymentAmount || 0,
+                paymentDue: +raffle.paymentDue || 0,
+                payments: raffle.payments.reduce((sum, payment) => sum + +payment.amount, 0)
             });
 
             let fillColor;
@@ -95,6 +112,36 @@ const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable:
                 };
             });
         });
+        // Agregar una fila para la suma al final
+        const lastRowNumber = worksheet.lastRow?.number || 0; // Obtiene el índice de la última fila
+        const totalRow = worksheet.addRow({
+            number: "TOTAL", // Indica que es la fila de total
+            paymentAmount: "", // Esto se llenará con la fórmula
+            paymentDue: "", // Esto se llenará con la fórmula
+            payments: ""
+        });
+
+        // Asignar la fórmula para la columna de "Valor abonado" y "Valor a deber"
+        totalRow.getCell("paymentAmount").value = {
+            formula: `SUM(I2:I${lastRowNumber})`, // Asumiendo que la columna E tiene los valores
+        };
+        totalRow.getCell("paymentDue").value = {
+            formula: `SUM(J2:J${lastRowNumber})`, // Asumiendo que la columna F tiene los valores
+        };
+        totalRow.getCell("payments").value = {
+            formula: `SUM(K2:K${lastRowNumber})`, // Asumiendo que la columna F tiene los valores
+        };
+
+        // Aplicar estilos a la fila de total
+        totalRow.eachCell((cell) => {
+            cell.font = { bold: true }; // Poner en negrita
+            cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFD9D9D9" }, // Color de fondo gris claro
+            };
+        });
+
 
         const todayDate = dayjs().format('DDMMYYYY');
 

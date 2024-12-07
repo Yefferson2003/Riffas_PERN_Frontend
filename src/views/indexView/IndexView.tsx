@@ -92,7 +92,7 @@ function IndexView() {
                         onClick={() => handleNavigateRaffleNumbers(raffle.id)}
                     >
                         <img 
-                            className="object-cover w-full h-40"
+                            className="object-cover w-full h-40 "
                             src={raffle.banerImgUrl || '/banner_default.jpg'} 
                             alt="banner riffa" 
                         />

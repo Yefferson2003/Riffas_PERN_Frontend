@@ -300,7 +300,10 @@ export const raffleNumberExelSchema = raffleNumbersSchema.pick({
     phone: z.string().nullable(),
     address: z.string().nullable(),
     paymentAmount: z.string(),
-    paymentDue: z.string()
+    paymentDue: z.string(),
+    payments: z.array(z.object({
+        amount: z.string()
+    }))
 })
 export const responseRaffleNumbersExelSchema = ResponsePaginationSchema.pick({
     currentPage: true,

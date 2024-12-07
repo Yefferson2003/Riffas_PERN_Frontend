@@ -232,7 +232,7 @@ function RaffleNumbersView() {
                     </div>
                 </div>}
                 
-                { raffleId && <Recaudo raffleId={+raffleId}/>}
+                { raffle && raffleId && user.rol.name !== 'vendedor' && <Recaudo raffleId={+raffleId}/>}
 
                 <img 
                     className="object-cover w-full h-40"
