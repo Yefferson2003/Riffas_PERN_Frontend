@@ -1,4 +1,4 @@
-import { Alert, Box, Button, FormControl, InputLabel, MenuItem, Modal, Select, TextField } from "@mui/material";
+import { Alert, Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -8,6 +8,7 @@ import { PayNumberForm, RaffleNumber, RaffleNumbersPayments } from "../../types"
 import { formatCurrencyCOP, formatWithLeadingZeros } from "../../utils";
 import ButttonDeleteRaffleNumber from "./ButtonDeleteRaffleNumber";
 import RaflleNumberPaymentsHistory from "./RaflleNumberPaymentsHistory";
+import { useState } from "react";
 
 const style = {
     position: 'absolute',
@@ -40,6 +41,12 @@ function ViewRaffleNumberModal({raffleNumber,setPaymentsSellNumbersModal, setPdf
 
     const params = useParams()
     const raffleId = params.raffleId ? +params.raffleId : 0
+
+    const [priceEspecial, setPriceEspecial] = useState(false)
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setPriceEspecial(event.target.checked);
+    };
 
     const initialValues: PayNumberForm   = {
         amount: +raffleNumber.paymentDue,
@@ -93,7 +100,8 @@ function ViewRaffleNumberModal({raffleNumber,setPaymentsSellNumbersModal, setPdf
         const data ={
             formData,
             raffleId,
-            raffleNumberId
+            raffleNumberId,
+            params: priceEspecial ? {descuento : true} : {}
         }
         
         mutate(data)
@@ -131,7 +139,13 @@ function ViewRaffleNumberModal({raffleNumber,setPaymentsSellNumbersModal, setPdf
             <h2 className="mb-5 text-2xl font-bold text-center uppercase text-azul">{'Rifa' + ' - ' +formatWithLeadingZeros(raffleNumber.number)}</h2>
 
             {raffleNumber.status === 'available' ? (
-                <p className="text-center">Valor de la Rifa:<span className="font-bold text-azul"> {formatCurrencyCOP(+raffleNumber.paymentDue)}</span></p>
+                <div className="text-center">
+                    <p>Valor de la Rifa:<span className="font-bold text-azul"> {formatCurrencyCOP(+raffleNumber.paymentDue)}</span></p>
+                    <FormControlLabel  labelPlacement="bottom" control={
+                        <Switch checked={priceEspecial} onChange={handleChange}/>
+                    } label="Aplicar Precio Especial" />
+                </div>
+                
             ) : (
                 <>
                 <p className="text-center">Valor total Abonado:<span className="font-bold text-azul"> {formatCurrencyCOP(+raffleNumber.paymentAmount)}</span></p>
@@ -153,7 +167,7 @@ function ViewRaffleNumberModal({raffleNumber,setPaymentsSellNumbersModal, setPdf
                 <FormControl size="small" fullWidth
                     sx={{display: 'flex', gap: 2}}
                 >
-                    <TextField id="amount" label="Monton" variant="outlined" 
+                    <TextField id="amount" label="Monto" variant="outlined" 
                         error={!!errors.amount}
                         helperText={errors.amount?.message}
                         {...register('amount', { 
@@ -216,6 +230,8 @@ function ViewRaffleNumberModal({raffleNumber,setPaymentsSellNumbersModal, setPdf
                         helperText={errors.address?.message}
                         {...register('address', {required: 'Dirección Obligatoria'})}
                     />
+
+                    
 
                     <Button
                         type="submit"

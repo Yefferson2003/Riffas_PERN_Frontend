@@ -1,19 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
-import { getRecaudoByRaffle } from "../../api/raffleApi";
-import { formatCurrencyCOP } from "../../utils";
 import { useEffect } from "react";
+import { getRecaudoByVendedor } from "../../api/raffleApi";
 import socket from "../../socket";
+import { formatCurrencyCOP } from "../../utils";
 
 
 type RecaudoPros = {
     raffleId: number
 }
 
-function Recaudo({raffleId}:RecaudoPros) {
+function RecaudoByVendedor({raffleId}:RecaudoPros) {
 
     const {data, refetch} = useQuery({
-        queryKey: ['recaudo', raffleId],
-        queryFn: () =>  getRecaudoByRaffle(raffleId)
+        queryKey: ['recaudoByVendedor', raffleId],
+        queryFn: () =>  getRecaudoByVendedor(raffleId)
     })
 
     useEffect(() => {
@@ -40,23 +40,27 @@ function Recaudo({raffleId}:RecaudoPros) {
     if (data)return (
         <div className="flex flex-wrap justify-around gap-3 text-xl font-bold text-center">
             <div>
+            <p>Números vendidos</p>
+            <p className=" text-azul">{(data.totalRaffleNumber[0])}</p>
+            </div>
+            <div>
+            <p>Números Pendientes</p>
+            <p className=" text-azul">{(data.totalRaffleNumber[1])}</p>
+            </div>
+            <div>
             <p>Recaudado</p>
             <p className=" text-azul">{formatCurrencyCOP(data.totalRecaudado)}</p>
             </div>
             <div>
-            <p>Vendido</p>
-            <p className=" text-azul">{formatCurrencyCOP(data.totalVendido)}</p>
-            </div>
-            <div>
             <p>Por Cobrar</p>
-            <p className=" text-azul">{formatCurrencyCOP(data.TotalCobrar)}</p>
+            <p className=" text-azul">{formatCurrencyCOP(data.totalCobrar)}</p>
             </div>
             <div>
             <p>Total Cancelado</p>
-            <p className=" text-azul">{formatCurrencyCOP(data.TotalCancelPays)}</p>
+            <p className=" text-azul">{formatCurrencyCOP(data.totalCancelado)}</p>
             </div>
         </div>
     );
 }
 
-export default Recaudo
+export default RecaudoByVendedor

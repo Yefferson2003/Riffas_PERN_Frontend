@@ -49,9 +49,9 @@ export async function getRaffleNumberById({raffleId, raffleNumberId} : {raffleId
     
 }
 
-export async function sellNumbers({formData, raffleId}:{formData : PayNumbersForm, raffleId: number}) {
+export async function sellNumbers({formData, raffleId, params}:{formData : PayNumbersForm, raffleId: number, params : object}) {
     try {
-        const {data} = await api.post(`/raffles-numbers/${raffleId}/sell-numbers`, formData)
+        const {data} = await api.post(`/raffles-numbers/${raffleId}/sell-numbers`, formData, {params})
         const response = RafflePayResponseSchema.safeParse(data)
         console.log(response.error);
         
@@ -66,9 +66,9 @@ export async function sellNumbers({formData, raffleId}:{formData : PayNumbersFor
     }
 }
 
-export async function amountNumber({formData, raffleId, raffleNumberId}:{formData : PayNumberForm, raffleId: number, raffleNumberId: number}) {
+export async function amountNumber({formData, raffleId, raffleNumberId, params}:{formData : PayNumberForm, raffleId: number, raffleNumberId: number, params: object}) {
     try {
-        const {data} = await api.post(`/raffles-numbers/${raffleId}/amount-number/${raffleNumberId}`, formData)
+        const {data} = await api.post(`/raffles-numbers/${raffleId}/amount-number/${raffleNumberId}`, formData, {params})
         const response = RafflePayResponseSchema.safeParse(data)
         if (response.success) {
             return response.data

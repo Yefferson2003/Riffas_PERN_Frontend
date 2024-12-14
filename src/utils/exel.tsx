@@ -64,7 +64,7 @@ const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable:
                 style: { numFmt: '#,##0.00' } // Formato numérico para moneda o números con decimales
             },
             { 
-                header: "Abonos acumulados", 
+                header: "Abonos Cancelados", 
                 key: "payments", 
                 width: 20, 
                 style: { numFmt: '#,##0.00' } // Formato numérico para moneda o números con decimales
@@ -86,7 +86,7 @@ const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable:
                 pa: raffle.address || '---',
                 paymentAmount: +raffle.paymentAmount || 0,
                 paymentDue: +raffle.paymentDue || 0,
-                payments: raffle.payments.reduce((sum, payment) => sum + +payment.amount, 0)
+                payments: raffle.payments.reduce((sum, payment) => sum + +payment.amount, 0) - +raffle.paymentAmount
             });
 
             let fillColor;

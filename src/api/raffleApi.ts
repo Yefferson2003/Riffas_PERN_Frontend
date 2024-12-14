@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { CreateRaffleForm, raffleByIdSchema, responseGetRafflesSchema, responseGetUsersByRaffle, totalSchema, UpdateRaffleForm } from "../types";
+import { CreateRaffleForm, raffleByIdSchema, responseGetRafflesSchema, responseGetUsersByRaffle, totalByVendedorSchema, totalSchema, UpdateRaffleForm } from "../types";
 
 export async function getRaffles(params = {}) {
     try {
@@ -51,6 +51,23 @@ export async function getRecaudoByRaffle(raffleId : number) {
     try {
         const {data} = await api.get(`/raffles/${raffleId}/recaudo`)
         const response = totalSchema.safeParse(data)
+        console.log(response.error);
+        
+        if (response.success) {
+            return response.data
+        }
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            // console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+export async function getRecaudoByVendedor(raffleId : number) {
+    try {
+        const {data} = await api.get(`/raffles/${raffleId}/recaudoByVendedor`)
+        const response = totalByVendedorSchema.safeParse(data)
+        console.log(response.error);
         if (response.success) {
             return response.data
         }

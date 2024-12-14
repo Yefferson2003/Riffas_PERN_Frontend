@@ -1,12 +1,13 @@
-import { Box, Button, FormControl, InputLabel, MenuItem, Modal, Select, TextField } from "@mui/material";
+import { Box, Button, FormControl, InputLabel, MenuItem, Modal, Select, SelectChangeEvent, TextField } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { sellNumbers } from "../../api/raffleNumbersApi";
 import { PayNumbersForm, RaffleNumbersPayments } from "../../types";
-import { formatWithLeadingZeros } from "../../utils";
+import { formatCurrencyCOP, formatWithLeadingZeros } from "../../utils";
 import ButtonCloseModal from "../ButtonCloseModal";
+import { useState } from "react";
 
 const style = {
     position: 'absolute',
@@ -29,6 +30,7 @@ type PayNumbersModalProps = {
         number: number;
     }[]
     raffleId: number
+    rafflePrice: string
     setNumbersSeleted: React.Dispatch<React.SetStateAction<{
         numberId: number;
         number: number;
@@ -37,7 +39,7 @@ type PayNumbersModalProps = {
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
 }
 
-function PayNumbersModal({numbersSeleted, raffleId, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData} : PayNumbersModalProps) {
+function PayNumbersModal({numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData} : PayNumbersModalProps) {
     
     // MODAL //
     const navigate = useNavigate(); 
@@ -45,6 +47,13 @@ function PayNumbersModal({numbersSeleted, raffleId, setNumbersSeleted, setPaymen
     const queryParams = new URLSearchParams(location.search);
     const modalSellNumbers = queryParams.get('sellNumbers')
     const show = modalSellNumbers ? true : false;
+
+    // Estado para gestionar el modo de acción (comprar o separar) 
+    const [actionMode, setActionMode] = useState<string>('buy')
+
+    const handleOnChange = ( e: SelectChangeEvent<string>) => {
+        setActionMode(e.target.value)
+    }
 
     const initialValues: PayNumbersForm   = {
         raffleNumbersIds: [],
@@ -75,17 +84,17 @@ function PayNumbersModal({numbersSeleted, raffleId, setNumbersSeleted, setPaymen
             setPaymentsSellNumbersModal(true)
             setPdfData(data)
         },
-    })
-    
-    const handlePayNumbers = (Data : PayNumbersForm) => {
-        const formData = {
-            ...Data,
-            raffleNumbersIds: numbersSeleted.map((item) => item.numberId)
-        }
-        const data = {
-            formData,
-            raffleId
-        }
+    }) 
+    const handleFormSubmit = (Data : PayNumbersForm) => { 
+        const formData = { 
+            ...Data, 
+            raffleNumbersIds: numbersSeleted.map((item) => item.numberId) 
+        } 
+        const data = { 
+            formData, 
+            raffleId, 
+            params: actionMode === 'separate' ? { separar: true } : {} 
+        } 
         mutate(data)
     }
     
@@ -110,9 +119,10 @@ function PayNumbersModal({numbersSeleted, raffleId, setNumbersSeleted, setPaymen
                     .join(" | ")}`
                 : "No hay números seleccionados."}
             </p>
+            <p className="mt-1 text-center">Total a pagar: <span className="font-bold text-azul">{formatCurrencyCOP(numbersSeleted.length * +rafflePrice)}</span></p>
 
             <form 
-                onSubmit={handleSubmit(handlePayNumbers)}
+                onSubmit={handleSubmit(handleFormSubmit)}
                 className='mt-10 space-y-3 text-center'
                 noValidate
                 autoComplete="off"
@@ -133,7 +143,7 @@ function PayNumbersModal({numbersSeleted, raffleId, setNumbersSeleted, setPaymen
                     />
                     <FormControl>
                         <InputLabel id="identificationTypelabel">Tipo de Indentificación</InputLabel>
-                        <Select id="identificationType" label="Tipo de Identificación" variant="outlined"
+                        <Select id="identificationType" label="Tipo de Identificación"          variant="outlined"
                             defaultValue={identificationType}
                             {...register('identificationType', {required: 'Seleccione un tipo'})}
                         >
@@ -170,12 +180,25 @@ function PayNumbersModal({numbersSeleted, raffleId, setNumbersSeleted, setPaymen
                         {...register('address', {required: 'Dirección Obligatoria'})}
                     />
 
+                    <FormControl>
+                    <InputLabel id="actionModeTypelabel">Tipo de reserva</InputLabel>
+                    <Select
+                        id="actionModeTypelabel"
+                        label="Tipo de reserva"
+                        value={actionMode}
+                        onChange={handleOnChange}
+                    >
+                        <MenuItem value={'buy'}>Comprar Números</MenuItem>
+                        <MenuItem value={'separate'}>Apartar Números</MenuItem>
+                    </Select>
+                    </FormControl>
+
                     <Button
                         type="submit"
                         variant="contained"
                         disabled={isPending}
                     >
-                        Comprar Boletas
+                        Reservar Boletas
                     </Button>
                 </FormControl>
                 

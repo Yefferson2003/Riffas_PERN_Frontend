@@ -109,21 +109,6 @@ export type PasswordEditForm = Pick<Auth, 'password' | 'confirmPassword' >
 
 // RAFFLE NUMBERS
 
-export const raffleNumbersSchema = z.object({
-    id: z.number(),
-    number: z.number(),
-    status: z.enum(statusRaffleNumbersEnum)
-})
-
-export const responseRaffleNumbersSchema = ResponsePaginationSchema.pick({
-    currentPage: true,
-    total: true,
-    totalPages: true,
-}).extend({
-    raffleNumbers: z.array(raffleNumbersSchema)
-})
-
-
 
 // RAFFLES
 
@@ -140,14 +125,11 @@ export const raffleSchema = z.object({
     banerImgUrl: z.string(),
 })
 
-
-
 export const raffleByIdSchema = raffleSchema.extend({
     userRiffle: z.array(z.object({
         userId: z.number()
     })).nullable()
 })
-
 
 export const createRaffleSchema = raffleSchema.pick({
     name: true,
@@ -287,6 +269,23 @@ export const responseGetNumbersByUser = ResponsePaginationSchema.extend({
     numbersPayments: z.array(RaffleNumberSchema)
 })
 
+
+export const raffleNumbersSchema = z.object({
+    id: z.number(),
+    number: z.number(),
+    status: z.enum(statusRaffleNumbersEnum),
+    payments: z.array(PaymentSchema.pick({
+        userId: true
+    }))
+})
+export const responseRaffleNumbersSchema = ResponsePaginationSchema.pick({
+    currentPage: true,
+    total: true,
+    totalPages: true,
+}).extend({
+    raffleNumbers: z.array(raffleNumbersSchema)
+})
+
 export const raffleNumberExelSchema = raffleNumbersSchema.pick({
     id: true,
     number: true,
@@ -313,6 +312,8 @@ export const responseRaffleNumbersExelSchema = ResponsePaginationSchema.pick({
     raffleNumbers: z.array(raffleNumberExelSchema)
 })
 
+
+
 export type RaffleNumberPayments = z.infer<typeof PaymentSchema>
 export type RaffleNumberUpdateForm = z.infer<typeof updateRaffleNumberCustomer>
 export type RaffleNumber = z.infer<typeof raffleNumberSchema> //
@@ -321,7 +322,16 @@ export type PayNumbersForm = z.infer<typeof payNumbersSchema>
 export type PayNumberForm = z.infer<typeof payNumberSchema>
 
 export const totalSchema = z.object({
-    total: z.number()
+    totalRecaudado: z.number(),
+    totalVendido: z.number(),
+    TotalCobrar: z.number(),
+    TotalCancelPays: z.number(),
+})
+export const totalByVendedorSchema = z.object({
+    totalRecaudado: z.number(),
+    totalCancelado: z.number(),
+    totalRaffleNumber: z.array(z.number()),
+    totalCobrar: z.number(),
 })
 
 

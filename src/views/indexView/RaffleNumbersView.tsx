@@ -21,6 +21,7 @@ import exportRaffleNumbers from '../../utils/exel';
 import LoaderView from "../LoaderView";
 import ButtonDeleteRaffle from '../../components/indexView/ButtonDeleteRaffle';
 import Recaudo from '../../components/indexView/Recaudo';
+import RecaudoByVendedor from '../../components/indexView/RecaudoByVendedor';
 
 const styleForm = {
     width: '100%',
@@ -233,6 +234,7 @@ function RaffleNumbersView() {
                 </div>}
                 
                 { raffle && raffleId && user.rol.name !== 'vendedor' && <Recaudo raffleId={+raffleId}/>}
+                { raffle && raffleId && user.rol.name == 'vendedor' && <RecaudoByVendedor raffleId={+raffleId}/>}
 
                 <img 
                     className="object-cover w-full h-40"
@@ -277,7 +279,6 @@ function RaffleNumbersView() {
                 <NumbersSeleted numbersSeleted={numbersSeleted} setNumbersSeleted={setNumbersSeleted}/>
                 <section className="grid grid-cols-5 cursor-pointer gap-x-1 gap-y-3 md:grid-cols-10 md:grid-rows-10">
                     
-                    
                     {isLoadingRaffleNumbers && <div className='col-span-full'><CircularProgress/></div>}
                     { raffleNumbers &&
                         raffleNumbers.raffleNumbers.length === 0 ? (
@@ -290,6 +291,12 @@ function RaffleNumbersView() {
                                     label={formatWithLeadingZeros(raffleNumber.number)} 
                                     variant="filled" 
                                     size="small"
+                                    disabled={
+                                        user.rol.name === 'vendedor' &&
+                                        raffleNumber.payments.length > 0 &&
+                                        raffleNumber.payments.at(-1)?.userId !== user.id &&
+                                        raffleNumber.status !== 'available'
+                                    }
                                     color={colorStatusRaffleNumber[raffleNumber.status]}
                                     onClick={optionSeleted ? 
                                         () => toggleSelectNumber(raffleNumber.id, raffleNumber.status, raffleNumber.number) : () => handleNavigateViewRaffleNumber(raffleNumber.id)
@@ -317,6 +324,7 @@ function RaffleNumbersView() {
         {raffle && raffleNumbers && <PayNumbersModal 
             numbersSeleted={numbersSeleted} 
             raffleId={raffle.id}
+            rafflePrice={raffle.price}
             setNumbersSeleted={setNumbersSeleted}
             setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
             setPdfData={setPdfData}
