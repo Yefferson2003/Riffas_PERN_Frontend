@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { z } from "zod";
+import {  z } from "zod";
 // AUTH & USERS & PAGINATION
 
 const rolNameEnum = ['admin', 'vendedor', 'responsable'] as const
@@ -301,7 +301,13 @@ export const raffleNumberExelSchema = raffleNumbersSchema.pick({
     paymentAmount: z.string(),
     paymentDue: z.string(),
     payments: z.array(z.object({
-        amount: z.string()
+        amount: z.string(),
+        isValid: z.boolean(),
+        user: z.object({
+            firstName: z.string(),
+            lastName: z.string(),
+            identificationNumber: z.string()
+        })
     }))
 })
 export const responseRaffleNumbersExelSchema = ResponsePaginationSchema.pick({

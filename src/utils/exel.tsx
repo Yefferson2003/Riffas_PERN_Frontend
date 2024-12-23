@@ -51,6 +51,7 @@ const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable:
             { header: "Apellido", key: "lastName", width: 15 },
             { header: "Teléfono", key: "phone", width: 15 },
             { header: "Dirección", key: "address", width: 25 },
+            { header: "Vendedor", key: "vendedor", width: 30},
             { 
                 header: "Valor abonado", 
                 key: "paymentAmount", 
@@ -83,7 +84,7 @@ const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable:
                 lastName: raffle.lastName || '---',
                 phone: raffle.phone || '---',
                 address: raffle.address || '---',
-                pa: raffle.address || '---',
+                vendedor: `${raffle.payments.find(payment => payment.user && payment.isValid === true)?.user.firstName || '---'} ${raffle.payments.find(payment => payment.user && payment.isValid === true)?.user.lastName || '---'}`,
                 paymentAmount: +raffle.paymentAmount || 0,
                 paymentDue: +raffle.paymentDue || 0,
                 payments: raffle.payments.reduce((sum, payment) => sum + +payment.amount, 0) - +raffle.paymentAmount
