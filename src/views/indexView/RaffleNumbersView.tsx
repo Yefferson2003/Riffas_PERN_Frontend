@@ -1,27 +1,29 @@
-import DescriptionIcon from '@mui/icons-material/Description';
-import EditIcon from '@mui/icons-material/Edit';
-import GroupIcon from '@mui/icons-material/Group';
-import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
 import LocalActivityIcon from '@mui/icons-material/LocalActivity';
-import { Chip, CircularProgress, FormControl, FormControlLabel, IconButton, MenuItem, Pagination, Select, SelectChangeEvent, Switch, TextField, Tooltip } from "@mui/material";
+import { Chip, CircularProgress, FormControl, FormControlLabel, MenuItem, Pagination, Select, SelectChangeEvent, Switch, TextField } from "@mui/material";
+import { useQueries } from '@tanstack/react-query';
 import { useEffect, useState } from "react";
+import { useMediaQuery } from 'react-responsive';
 import { Navigate, useNavigate, useOutletContext, useParams } from "react-router-dom";
-import { toast } from 'react-toastify';
+import { getRaffleById } from '../../api/raffleApi';
+import { getRaffleNumers } from '../../api/raffleNumbersApi';
 import NumbersSeleted from '../../components/indexView/NumbersSeleted';
 import PayNumbersModal from '../../components/indexView/PayNumbersModal';
 import PaymentSellNumbersModal from '../../components/indexView/PaymentSellNumbersModal';
+import Recaudo from '../../components/indexView/Recaudo';
+import RecaudoByVendedor from '../../components/indexView/RecaudoByVendedor';
 import UpdateRaffleModal from '../../components/indexView/UpdateRaffleModal';
 import ViewRaffleNumberData from '../../components/indexView/ViewRaffleNumberData';
 import ViewUsersOfRaffleModal from '../../components/indexView/ViewUsersOfRaffleModal';
-import { useRaffleById, useRaffleNumbers } from "../../hooks/useRaffle";
+import ViewAdminExpensesModal from '../../components/indexView/modal/Expenses/ViewAdminExpensesModal';
+import ViewExpensesByUserModal from '../../components/indexView/modal/Expenses/ViewExpensesByUserModal';
+import Awards from '../../components/indexView/raffle/Awards';
+import RaffleSideBar from '../../components/indexView/raffle/RaffleSideBar';
 import socket from '../../socket';
 import { RaffleNumbersPayments, User } from "../../types";
 import { colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros } from "../../utils";
-import exportRaffleNumbers from '../../utils/exel';
 import LoaderView from "../LoaderView";
-import ButtonDeleteRaffle from '../../components/indexView/ButtonDeleteRaffle';
-import Recaudo from '../../components/indexView/Recaudo';
-import RecaudoByVendedor from '../../components/indexView/RecaudoByVendedor';
+import { getAwards } from '../../api/awardsApi';
+
 
 const styleForm = {
     width: '100%',
@@ -37,9 +39,11 @@ const styleForm = {
 
 function RaffleNumbersView() {
     const navigate = useNavigate()
+
+    const isSmallDevice = useMediaQuery({ maxWidth: 768 });
     
     const { raffleId } = useParams<{ raffleId: string }>();
-    const parsedRaffleId = raffleId ? parseInt(raffleId, 10) : undefined;
+    // const parsedRaffleId = raffleId ? parseInt(raffleId, 10) : undefined;
     const user : User = useOutletContext();
     const [page, setPage] = useState<number>(1);
     const [rowsPerPage] = useState<number>(100);
@@ -59,18 +63,23 @@ function RaffleNumbersView() {
         setSearch(e.target.value)
     }
 
-    const handleFilterChange = (e : SelectChangeEvent<object | string>) => {
-        const value = e.target.value;
-
-        if (value === 'all') {
-            setFilter({});
-        } else if (value === 'sold') {
-            setFilter({ sold: true });
-        } else if (value === 'available') {
-            setFilter({ available: true });
-        } else if (value === 'pending') {
-            setFilter({ pending: true });
+    const handleFilterChange = (e: SelectChangeEvent<string>) => {
+        // Definir un tipo específico para los filtros
+        interface FilterOptions {
+            sold?: boolean;
+            available?: boolean;
+            pending?: boolean;
         }
+
+        const filters: Record<string, FilterOptions> = {
+            all: {},
+            sold: { sold: true },
+            available: { available: true },
+            pending: { pending: true },
+        };
+
+        // Actualizar el uso de setFilter
+        setFilter(filters[e.target.value] || {});
     };
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, newPage: number)=> {
@@ -81,63 +90,61 @@ function RaffleNumbersView() {
         setOptionSeleted(e.target.checked)
     }
 
-    const { data: raffleNumbers, isLoading : isLoadingRaffleNumbers, isError : isErrorRaffleNumbers, refetch} = useRaffleNumbers(parsedRaffleId!, {filter, page, limit: rowsPerPage, search});
+    // const { data: raffleNumbers, isLoading : isLoadingRaffleNumbers, isError : isErrorRaffleNumbers, refetch} = useRaffleNumbers(parsedRaffleId!, {filter, page, limit: rowsPerPage, search});
 
-    const { data: raffle, isLoading :isLoadingRaffle , isError: isErrorRaffle } = useRaffleById(parsedRaffleId!);
+    // const { data: raffle, isLoading :isLoadingRaffle , isError: isErrorRaffle } = useRaffleById(parsedRaffleId!);
     
-    const handleNavigateHome = () => {
-        navigate('/')
-    }
-    const handleNavigateUpdateRaffle = () => {
-        navigate('?updateRaffle=true')
-    }
-    const handleNavigateViewUsers = () => {
-        navigate('?viewUsers=true')
-    }
+    const [ raffleNumbersData, raffleData, awardsData] = useQueries({
+        queries: [
+            {
+                queryKey: ['raffleNumbers', search, raffleId, filter, page, rowsPerPage],
+                queryFn: () => getRaffleNumers({ raffleId: raffleId!, params: { filter, page, limit: rowsPerPage, search } }),
+                enabled: !!raffleId,
+            },
+            {
+                queryKey: ['raffles', raffleId],
+                queryFn: () => getRaffleById(raffleId!),
+            },
+            {
+                queryKey: ['awards', raffleId],
+                queryFn: () => getAwards({raffleId: raffleId!})
+            }
+        ]
+    });
+
+    const { data: raffleNumbers, isLoading : isLoadingRaffleNumbers, isError : isErrorRaffleNumbers, refetch } = raffleNumbersData
+    const { data: raffle, isLoading :isLoadingRaffle , isError: isErrorRaffle} = raffleData
+    const { data: awards, refetch: refechtAwards} = awardsData
+    
     const handleNavigateViewRaffleNumber = (raffleNumberId: number) => {
         navigate(`?viewRaffleNumber=${raffleNumberId}`)
     }
-    // const handleNavigateNumbersSold = () => {
-    //     navigate(`?numbersSold=true`)
-    // }
-
 
     const MAX_SELECTED_NUMBERS = 10; 
     const toggleSelectNumber = (raffleNumberId: number, raffleNumberStatus: string, raffleNumber: number) => {
-        if (raffleNumberStatus === 'available') {
-            setNumbersSeleted((prevSelected) => {
+        if (raffleNumberStatus !== 'available') return;
 
-                if (prevSelected.length >= MAX_SELECTED_NUMBERS) {
-                    return prevSelected
-                }
-                
-                if (!prevSelected) return [{ numberId: raffleNumberId, number: raffleNumber }];
-    
-                const isSelected = prevSelected.some((item) => item.numberId === raffleNumberId);
-    
-                if (isSelected) {
-                    return prevSelected.filter((item) => item.numberId !== raffleNumberId);
-                } else {
-                    return [...prevSelected, { numberId: raffleNumberId, number: raffleNumber }];
-                }
-            });
-        }
+        setNumbersSeleted((prevSelected) => {
+            if (prevSelected.length >= MAX_SELECTED_NUMBERS) return prevSelected;
+
+            const isSelected = prevSelected.some((item) => item.numberId === raffleNumberId);
+            return isSelected
+                ? prevSelected.filter((item) => item.numberId !== raffleNumberId)
+                : [...prevSelected, { numberId: raffleNumberId, number: raffleNumber }];
+        });
     };
 
-    useEffect(() => {
+    const isVisibleRaffleNumbes = (rafflePayments: { userId: number }[]) =>
+        user.rol.name === 'vendedor' && !rafflePayments.some(payment => payment.userId === user.id);
 
-        const handleUpdateQuery = (data: {raffleId: number}) => {
-            if (raffleId) {
-                if (data.raffleId === +raffleId) {
-                    refetch()
-                }
-            }
+    useEffect(() => {
+        const handleUpdateQuery = (data: { raffleId: number }) => {
+            if (raffleId && data.raffleId === +raffleId) refetch();
         };
-        
 
         socket.on('sellNumbers', handleUpdateQuery);
         socket.on('sellNumber', handleUpdateQuery);
-    
+
         return () => {
             socket.off('sellNumbers', handleUpdateQuery);
             socket.off('sellNumber', handleUpdateQuery);
@@ -150,56 +157,11 @@ function RaffleNumbersView() {
     
     return (
         <section className="flex flex-col-reverse w-full pb-10 text-center lg:flex-col *:bg-white *:p-2 gap-5 *:rounded-xl">
-            <div className='flex justify-between order-1 lg:order-none'>
-                <div className=''>
-                <IconButton>
-                    <Tooltip title='Regresar'
-                        onClick={handleNavigateHome}
-                    >
-                    <KeyboardReturnIcon/>
-                    </Tooltip>
-                </IconButton>
-                </div>
-                
-                
-                <div className=''>
-                { user.rol.name !== 'vendedor' && 
-                    <IconButton
-                        onClick={handleNavigateViewUsers}
-                    >
-                        <Tooltip title={'Colaboradores'} >
-                            <GroupIcon/>
-                        </Tooltip>
-                    </IconButton>
-                }
-                { user.rol.name === 'admin' && 
-                    <IconButton
-                        onClick={handleNavigateUpdateRaffle}
-                        >
-                        <Tooltip title={'Editar Categoria'} placement="bottom-start">
-                            <EditIcon/>
-                        </Tooltip>
-                    </IconButton>
-                }
-                {user.rol.name !== 'vendedor' && 
-                    <IconButton
-                        onClick={() => {
-                            exportRaffleNumbers(raffleId, raffle?.nitResponsable)
-                            toast.info('Descargando archivo...')
-                        }}
-                    >
-                        <Tooltip title={'Boletas Vendidas'} placement="bottom-start">
-                        <DescriptionIcon color='success'/>
-                        </Tooltip>
-                    </IconButton>
-                }
-                {user.rol.name === 'admin' && raffle &&
-                    <ButtonDeleteRaffle raffleId={raffle.id}/>
-                }
-                    
-                </div>
-                
-            </div>
+            
+            <RaffleSideBar 
+                raffleId={raffleId!} 
+                raffle={raffle!}
+            />
             
             <div className="space-y-3">
                 <div className="flex flex-col items-center lg:justify-between lg:flex-row">
@@ -215,6 +177,12 @@ function RaffleNumbersView() {
                 </div>
 
                 <p className="text-justify">{raffle?.description}</p>
+
+                <Awards 
+                    awards={awards}
+                    refecht={refechtAwards}
+                    raffleDate={raffle?.playDate}
+                />
                 
                 {raffle && 
                 <div className="space-y-3 md:justify-between md:flex md:space-y-0">
@@ -238,7 +206,7 @@ function RaffleNumbersView() {
 
                 <img 
                     className="object-cover w-full h-40"
-                    src={raffle?.banerImgUrl || '/banner_default.jpg'} 
+                    src={isSmallDevice ? raffle?.banerMovileImgUrl || '/banner_default.jpg' : raffle?.banerImgUrl  || '/banner_default.jpg'}
                     alt="banner riffa" 
                 />
             </div>
@@ -277,9 +245,11 @@ function RaffleNumbersView() {
                 </div>
                 
                 <NumbersSeleted numbersSeleted={numbersSeleted} setNumbersSeleted={setNumbersSeleted}/>
+                
                 <section className="grid grid-cols-5 cursor-pointer gap-x-1 gap-y-3 md:grid-cols-10 md:grid-rows-10">
                     
                     {isLoadingRaffleNumbers && <div className='col-span-full'><CircularProgress/></div>}
+                    
                     { raffleNumbers &&
                         raffleNumbers.raffleNumbers.length === 0 ? (
                             <p className='text-xl font-bold col-span-full text-azul'>No hay resultados...</p>
@@ -294,7 +264,7 @@ function RaffleNumbersView() {
                                     disabled={
                                         user.rol.name === 'vendedor' &&
                                         raffleNumber.payments.length > 0 &&
-                                        raffleNumber.payments.at(-1)?.userId !== user.id &&
+                                        isVisibleRaffleNumbes(raffleNumber.payments) &&
                                         raffleNumber.status !== 'available'
                                     }
                                     color={colorStatusRaffleNumber[raffleNumber.status]}
@@ -331,6 +301,7 @@ function RaffleNumbersView() {
         />}
         {raffle && raffleNumbers && pdfData && <PaymentSellNumbersModal
             raffle={raffle}
+            awards={awards!}
             setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
             setPdfData={setPdfData}
             paymentsSellNumbersModal={paymentsSellNumbersModal}
@@ -339,8 +310,15 @@ function RaffleNumbersView() {
         {raffle && raffleNumbers && <ViewRaffleNumberData
             setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
             setPdfData={setPdfData}
+            refect={refetch}
+            // refectRaffle={{ search, raffleId, filter, page, limit : rowsPerPage}}
         />}
         {/* {raffle && raffleNumbers && <ViewNumbersSoldModal/>} */}
+
+
+        <ViewAdminExpensesModal/>
+        <ViewExpensesByUserModal/>
+
         </section>
     )
 }

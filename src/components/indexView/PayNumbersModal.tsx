@@ -1,13 +1,14 @@
 import { Box, Button, FormControl, InputLabel, MenuItem, Modal, Select, SelectChangeEvent, TextField } from "@mui/material";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { sellNumbers } from "../../api/raffleNumbersApi";
 import { PayNumbersForm, RaffleNumbersPayments } from "../../types";
-import { formatCurrencyCOP, formatWithLeadingZeros } from "../../utils";
+import { formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from "../../utils";
 import ButtonCloseModal from "../ButtonCloseModal";
-import { useState } from "react";
+import PhoneNumberInput from "../PhoneNumberInput";
 
 const style = {
     position: 'absolute',
@@ -40,6 +41,8 @@ type PayNumbersModalProps = {
 }
 
 function PayNumbersModal({numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData} : PayNumbersModalProps) {
+
+    const queryClient = useQueryClient()
     
     // MODAL //
     const navigate = useNavigate(); 
@@ -65,10 +68,10 @@ function PayNumbersModal({numbersSeleted, raffleId, rafflePrice, setNumbersSelet
         phone: ''
     }
 
-    const {register, handleSubmit, watch, reset, formState: {errors}} = useForm({
+    const {register, handleSubmit, watch, reset, formState: {errors}, setValue} = useForm({
         defaultValues : initialValues
     })
-    const { identificationType} = watch();
+    const { identificationType, phone} = watch();
     
     const {mutate, isPending} = useMutation({
         mutationFn: sellNumbers,
@@ -77,6 +80,8 @@ function PayNumbersModal({numbersSeleted, raffleId, rafflePrice, setNumbersSelet
         },
         onSuccess(data) {
             // queryClient.invalidateQueries({queryKey: ['raffleNumbers', search, raffleId, filter, page, limit]})
+            queryClient.invalidateQueries({queryKey: ['recaudo', raffleId]})
+            queryClient.invalidateQueries({queryKey: ['recaudoByVendedor', raffleId]})
             toast.success('Rifas Compradas')
             reset()
             setNumbersSeleted([])
@@ -95,7 +100,13 @@ function PayNumbersModal({numbersSeleted, raffleId, rafflePrice, setNumbersSelet
             raffleId, 
             params: actionMode === 'separate' ? { separar: true } : {} 
         } 
-        mutate(data)
+        mutate(data, {
+            onSuccess: () => {
+                if (formData.phone) {
+                    redirectToWhatsApp(formData.phone)
+                }
+            }
+        })
     }
     
     return (
@@ -163,16 +174,12 @@ function PayNumbersModal({numbersSeleted, raffleId, rafflePrice, setNumbersSelet
                             },
                         })}
                     />
-                    <TextField id="phone" label="Teléfono" variant="outlined" 
-                        error={!!errors.phone}
-                        helperText={errors.phone?.message}
-                        {...register('phone', {
-                            required: "El Teléfono es obligatorio",
-                            pattern: {
-                                value: /^[0-9]+$/, // Solo números
-                                message: 'Solo se permiten números',
-                            },
-                        })}
+                    <p className="text-sm text-black text-start">Número de teléfono</p>
+                    <PhoneNumberInput
+                        value={phone}
+                        onChange={(value) => {
+                            setValue('phone', value);
+                        }}
                     />
                     <TextField id="address" label="Dirección" variant="outlined" 
                         error={!!errors.address}

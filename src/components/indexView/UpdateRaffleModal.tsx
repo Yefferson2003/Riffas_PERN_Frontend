@@ -42,6 +42,7 @@ function UpdateRaffleModal({raffle} : UpdateRaffleModalProps) {
     const show = modalUpdateRaffle ? true : false;
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [selectedFileMobile, setSelectedFileMobile] = useState<File | null>(null); 
 
     const initialValues: UpdateRaffleForm   = {
         name: raffle.name,
@@ -52,6 +53,7 @@ function UpdateRaffleModal({raffle} : UpdateRaffleModalProps) {
         editDate: dayjs(raffle.editDate),
         playDate: dayjs(raffle.playDate),
         banerImgUrl: raffle.banerImgUrl,
+        banerMovileImgUrl: raffle.banerMovileImgUrl
     }
 
     const {register, handleSubmit, setValue, watch, reset, formState: {errors}} = useForm({
@@ -96,9 +98,9 @@ function UpdateRaffleModal({raffle} : UpdateRaffleModalProps) {
             return 'La fecha de juego es obligatoria';
         }
         
-        if (startDate?.isBefore(today, 'day')) {
-            return 'La fecha de inicio no puede ser anterior a hoy.';
-        }
+        // if (startDate?.isBefore(today, 'day')) {
+        //     return 'La fecha de inicio no puede ser anterior a hoy.';
+        // }
         if (editDate?.isBefore(today, 'day')) {
             return 'La fecha límite de compra no puede ser anterior a hoy.';
         }
@@ -124,15 +126,21 @@ function UpdateRaffleModal({raffle} : UpdateRaffleModalProps) {
             return;
         }
 
-        let banerImgUrlUpdate = ''
+        let banerImgUrlUpdate = '';
+        let banerMovileImgUrl = ''; // Nueva variable para la segunda imagen
 
         if (selectedFile) {
             banerImgUrlUpdate = await uploadImageToCloudinary(selectedFile);
         }
 
+        if (selectedFileMobile) {
+            banerMovileImgUrl = await uploadImageToCloudinary(selectedFileMobile);
+        }
+
         const data = {
             newFormData: Data,
             banerImgUrlUpdate,
+            banerMovileImgUrl,
             raffleId: raffle.id
         }
         
@@ -218,7 +226,8 @@ function UpdateRaffleModal({raffle} : UpdateRaffleModalProps) {
                     </DemoContainer>
                     </LocalizationProvider>
 
-                    <UploadImageButton setSelectedFile={setSelectedFile}/>
+                    <UploadImageButton setSelectedFile={setSelectedFile} label="Subir Imagen Principal" />
+                    <UploadImageButton setSelectedFile={setSelectedFileMobile} label="Subir Imagen Móvil" /> 
 
                     <Button
                         type="submit"

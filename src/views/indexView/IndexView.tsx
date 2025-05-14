@@ -5,6 +5,7 @@ import { getRaffles } from "../../api/raffleApi"
 import { formatCurrencyCOP, formatDateTimeLarge } from "../../utils"
 import { useNavigate, useOutletContext } from "react-router-dom"
 import AddRaffleModal from "../../components/indexView/AddRaffleModal"
+import { useMediaQuery } from 'react-responsive';
 import { User } from "../../types"
 import socket from "../../socket"
 
@@ -14,6 +15,8 @@ function IndexView() {
     const [page, setPage] = useState<number>(1);
     const [rowsPerPage] = useState<number>(4);
     const user : User = useOutletContext();
+
+    const isSmallDevice = useMediaQuery({ maxWidth: 768 });
 
     const handleSeacrhChange = ( e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setSearch(e.target.value)
@@ -93,7 +96,7 @@ function IndexView() {
                     >
                         <img 
                             className="object-cover w-full h-40 "
-                            src={raffle.banerImgUrl || '/banner_default.jpg'} 
+                            src={isSmallDevice ? raffle.banerMovileImgUrl || '/banner_default.jpg' : raffle.banerImgUrl  || '/banner_default.jpg'}
                             alt="banner riffa" 
                         />
 

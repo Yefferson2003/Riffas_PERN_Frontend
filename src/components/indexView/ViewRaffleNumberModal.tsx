@@ -1,14 +1,15 @@
 import { Alert, Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { QueryObserverResult, RefetchOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { amountNumber, updateNumber } from "../../api/raffleNumbersApi";
-import { PayNumberForm, RaffleNumber, RaffleNumbersPayments } from "../../types";
-import { formatCurrencyCOP, formatWithLeadingZeros } from "../../utils";
+import { PayNumberForm, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types";
+import { formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from "../../utils";
 import ButttonDeleteRaffleNumber from "./ButtonDeleteRaffleNumber";
 import RaflleNumberPaymentsHistory from "./RaflleNumberPaymentsHistory";
-import { useState } from "react";
+import { useState } from "react";// Importa el componente de entrada de teléfono
+import PhoneNumberInput from "../PhoneNumberInput";
 
 const style = {
     position: 'absolute',
@@ -29,15 +30,17 @@ type ViewRaffleNumberModalProps = {
     raffleNumber: RaffleNumber
     setPaymentsSellNumbersModal: React.Dispatch<React.SetStateAction<boolean>>
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
+    refect: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
 }
 
-function ViewRaffleNumberModal({raffleNumber,setPaymentsSellNumbersModal, setPdfData} : ViewRaffleNumberModalProps) {
+function ViewRaffleNumberModal({raffleNumber,setPaymentsSellNumbersModal, setPdfData, refect} : ViewRaffleNumberModalProps) {
     const navigate = useNavigate(); 
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
     const modalviewRaffleNumber = queryParams.get('viewRaffleNumber')
     const show = modalviewRaffleNumber ? true : false;
     const raffleNumberId = Number(modalviewRaffleNumber)
+    
 
     const params = useParams()
     const raffleId = params.raffleId ? +params.raffleId : 0
@@ -57,7 +60,7 @@ function ViewRaffleNumberModal({raffleNumber,setPaymentsSellNumbersModal, setPdf
         address: raffleNumber.address || '',
         phone: raffleNumber.phone || ''
     }
-    const {register, handleSubmit, watch, reset, formState: {errors}} = useForm({
+    const {register, handleSubmit, watch, reset, setValue, formState: {errors}} = useForm({
         defaultValues : initialValues
     })
     const { identificationType, address, phone} = watch();
@@ -69,10 +72,12 @@ function ViewRaffleNumberModal({raffleNumber,setPaymentsSellNumbersModal, setPdf
             toast.error(error.message)
         },
         onSuccess(data) {
-            // queryClient.invalidateQueries({queryKey: ['raffleNumbers', search, raffleId, filter, page, limit]})
             queryClient.invalidateQueries({queryKey: ['raffleNumber', raffleId, raffleNumberId]})
+            queryClient.invalidateQueries({queryKey: ['recaudo', raffleId]})
+            queryClient.invalidateQueries({queryKey: ['recaudoByVendedor', raffleId]})
             toast.success('Pago Completado')
             reset()
+            refect()
             navigate(location.pathname, {replace: true})
             setPaymentsSellNumbersModal(true)
             setPdfData(data)
@@ -91,20 +96,31 @@ function ViewRaffleNumberModal({raffleNumber,setPaymentsSellNumbersModal, setPdf
         },
     })
 
-    const handlePayNumber = (Data :PayNumberForm) => {
+    const handlePayNumber = (Data: PayNumberForm) => {
         const formData = {
             ...Data,
             amount: +Data.amount
         }
 
-        const data ={
+        if (!formData.phone) {
+            toast.warn('El número de teléfono es obligatorio para continuar.');
+            return;
+        }
+
+        const data = {
             formData,
             raffleId,
             raffleNumberId,
-            params: priceEspecial ? {descuento : true} : {}
+            params: priceEspecial ? { descuento: true } : {}
         }
-        
-        mutate(data)
+
+        mutate(data, {
+            onSuccess: () => {
+                if (formData.phone) {
+                    redirectToWhatsApp(formData.phone)
+                }
+            }
+        });
     }
 
     const handelUpdateNumber = () => {
@@ -214,16 +230,12 @@ function ViewRaffleNumberModal({raffleNumber,setPaymentsSellNumbersModal, setPdf
                             },
                         })}
                     />
-                    <TextField id="phone" label="Teléfono" variant="outlined" 
-                        error={!!errors.phone}
-                        helperText={errors.phone?.message}
-                        {...register('phone', {
-                            required: "El Teléfono es obligatorio",
-                            pattern: {
-                                value: /^[0-9]+$/, // Solo números
-                                message: 'Solo se permiten números',
-                            },
-                        })}
+                    <p className="text-sm text-black text-start">Número de teléfono</p>
+                    <PhoneNumberInput
+                        value={phone}
+                        onChange={(value) => {
+                            setValue('phone', value);
+                        }}
                     />
                     <TextField id="address" label="Dirección" variant="outlined" 
                         error={!!errors.address}

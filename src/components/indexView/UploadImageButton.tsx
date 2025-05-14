@@ -16,9 +16,10 @@ const VisuallyHiddenInput = styled('input')({
 
 type UploadImageButtonProps = {
     setSelectedFile: React.Dispatch<React.SetStateAction<File | null>>
+    label: string
 }
 
-export default function UploadImageButton({setSelectedFile} : UploadImageButtonProps) {
+export default function UploadImageButton({setSelectedFile, label} : UploadImageButtonProps) {
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -37,12 +38,12 @@ export default function UploadImageButton({setSelectedFile} : UploadImageButtonP
             startIcon={<CloudUploadIcon />}
             // onClick={handleUpload}
         >
-            Upload files
-        <VisuallyHiddenInput
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-        />
+            {label}
+            <VisuallyHiddenInput
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+            />
         </Button>
     );
 }

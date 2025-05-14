@@ -14,7 +14,7 @@ import { useNavigate } from 'react-router-dom';
 function LoginView() {
 
     const [showPassword, setShowPassword] = useState(false);
-    const token = localStorage.getItem('AUTH_TOKEN')
+    // const token = localStorage.getItem('AUTH_TOKEN')
     // const {user} = useAuth()
     const navigate = useNavigate()
 
@@ -38,6 +38,8 @@ function LoginView() {
     const {mutate, isPending} = useMutation({
         mutationFn: login,
         onError(error) {
+            console.log(error.message);
+            
             toast.error(error.message)
         },
         onSuccess() {
@@ -101,7 +103,7 @@ function LoginView() {
                 <LoadingButton type="submit" variant="contained" color="primary"
                     id="button-login" loadingIndicator='Cargando...'
                     loading={isPending}
-                    disabled={!!token}
+                    // disabled={!!token}
                 >
                     Iniciar Sesión
                 </LoadingButton>

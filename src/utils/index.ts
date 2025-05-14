@@ -65,3 +65,13 @@ export const formatDateTimeLargeIsNull = (dateString: string | null): string => 
 export function formatWithLeadingZeros(num: number): string {
     return num.toString().padStart(3, '0');
 }
+
+
+
+export const redirectToWhatsApp = (phone: string) => {
+    if (!phone) return;
+
+    // Cambia el prefijo según tu país
+    const whatsappUrl = `https://wa.me/${phone}`;
+    window.open(whatsappUrl, '_blank');
+};

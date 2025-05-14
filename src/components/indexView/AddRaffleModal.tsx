@@ -45,6 +45,7 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
     const show = modalAddRaffle ? true : false;
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [selectedFileMobile, setSelectedFileMobile] = useState<File | null>(null); // Nuevo estado para la segunda imagen
 
     const initialValues: CreateRaffleForm   = {
         name: '',
@@ -56,7 +57,8 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
         playDate: null,
         price: '',
         banerImgUrl: '',
-        quantity: 1000
+        quantity: 1000,
+        banerMovileImgUrl: ''
     }
 
     const {register, handleSubmit, setValue, watch, reset, formState: {errors}} = useForm({
@@ -122,26 +124,39 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
         return null;
     };
 
-    const handleCreateRaffle = async (Data : CreateRaffleForm) => {
+    const handleCreateRaffle = async (data: CreateRaffleForm) => {
         const dateValidationError = validateDates();
         if (dateValidationError) {
-            toast.warning(dateValidationError)
+            toast.warning(dateValidationError);
             return;
         }
 
-        let banerImgUrl = ''
+        let banerImgUrl = '';
+        let banerMovileImgUrl = ''; // Nueva variable para la segunda imagen
 
         if (selectedFile) {
             banerImgUrl = await uploadImageToCloudinary(selectedFile);
         }
 
-        const data = {
-            newFormData: Data,
-            banerImgUrl
+        if (selectedFileMobile) {
+            banerMovileImgUrl = await uploadImageToCloudinary(selectedFileMobile);
         }
-        
-        mutate(data)
-    }
+
+        const newRaffleData = {
+            newFormData: {
+                ...data,
+            },
+            banerImgUrl,
+            banerMovileImgUrl
+        };
+
+        // if (!banerImgUrl || !banerMovileImgUrl) {
+        //     toast.error('Imagenes no cargadas')
+        //     return
+        // }
+
+        mutate(newRaffleData);
+    };
 
     const valuetext = (value: number | number[]) => {
         return (value as number).toString();
@@ -264,7 +279,8 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
                     </DemoContainer>
                     </LocalizationProvider>
 
-                    <UploadImageButton setSelectedFile={setSelectedFile}/>
+                    <UploadImageButton setSelectedFile={setSelectedFile} label="Subir Imagen Principal" />
+                    <UploadImageButton setSelectedFile={setSelectedFileMobile} label="Subir Imagen Móvil" /> 
                     
                 </FormControl>
                 

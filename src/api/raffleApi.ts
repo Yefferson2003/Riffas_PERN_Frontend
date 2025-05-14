@@ -17,7 +17,7 @@ export async function getRaffles(params = {}) {
     }
 }
 
-export async function getRaffleById(raffleId: number) {
+export async function getRaffleById(raffleId: string) {
     try {
         const {data} = await api.get(`/raffles/${raffleId}`)
         const response = raffleByIdSchema.safeParse(data)
@@ -81,7 +81,7 @@ export async function getRecaudoByVendedor(raffleId : number) {
 
 
 
-export async function createRaffle({newFormData, banerImgUrl} : {newFormData:  CreateRaffleForm, banerImgUrl: string}) {
+export async function createRaffle({newFormData, banerImgUrl, banerMovileImgUrl} : {newFormData:  CreateRaffleForm, banerImgUrl: string, banerMovileImgUrl: string}) {
     try {
         
         const formData = {
@@ -90,7 +90,8 @@ export async function createRaffle({newFormData, banerImgUrl} : {newFormData:  C
             startDate: newFormData.startDate?.toISOString(),
             editDate: newFormData.editDate?.toISOString(),
             playDate: newFormData.playDate?.toISOString(),
-            banerImgUrl: banerImgUrl
+            banerImgUrl: banerImgUrl,
+            banerMovileImgUrl: banerMovileImgUrl
         }
         const {data} = await api.post<string>('/raffles', formData)
         return data
@@ -102,7 +103,7 @@ export async function createRaffle({newFormData, banerImgUrl} : {newFormData:  C
     }
 }
 
-export async function updateRaffle({newFormData, banerImgUrlUpdate, raffleId} : {newFormData:  UpdateRaffleForm, banerImgUrlUpdate: string, raffleId: number}) {
+export async function updateRaffle({newFormData, banerImgUrlUpdate, banerMovileImgUrl, raffleId} : {newFormData:  UpdateRaffleForm, banerImgUrlUpdate: string, raffleId: number, banerMovileImgUrl: string}) {
     try {
         
         const banerImgUrl = banerImgUrlUpdate === '' ? newFormData.banerImgUrl : banerImgUrlUpdate
@@ -112,7 +113,8 @@ export async function updateRaffle({newFormData, banerImgUrlUpdate, raffleId} : 
             startDate: newFormData.startDate?.toISOString(),
             editDate: newFormData.editDate?.toISOString(),
             playDate: newFormData.playDate?.toISOString(),
-            banerImgUrl
+            banerImgUrl,
+            banerMovileImgUrl
         }
         const {data} = await api.put<string>(`/raffles/${raffleId}`, formData)
         return data

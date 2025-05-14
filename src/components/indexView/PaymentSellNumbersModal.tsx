@@ -1,7 +1,7 @@
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { Box, IconButton, Modal, Tooltip, Typography } from "@mui/material";
 import autoTable from "jspdf-autotable";
-import { Raffle, RaffleNumbersPayments } from "../../types";
+import { AwardType, Raffle, RaffleNumbersPayments } from "../../types";
 
 import CloseIcon from '@mui/icons-material/Close';
 import dayjs from 'dayjs';
@@ -26,13 +26,14 @@ const style = {
 
 type PaymentSellNumbersModalProps = {
     raffle: Raffle
+    awards: AwardType[]
     setPaymentsSellNumbersModal: React.Dispatch<React.SetStateAction<boolean>>
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
     paymentsSellNumbersModal: boolean
     pdfData: RaffleNumbersPayments
 }
 
-function PaymentSellNumbersModal({raffle,paymentsSellNumbersModal,pdfData,setPaymentsSellNumbersModal,setPdfData} : PaymentSellNumbersModalProps) {
+function PaymentSellNumbersModal({raffle, awards, paymentsSellNumbersModal,pdfData,setPaymentsSellNumbersModal,setPdfData} : PaymentSellNumbersModalProps) {
     const handleDownloadPDF = () => {
         const doc = new jsPDF();
     
@@ -54,10 +55,43 @@ function PaymentSellNumbersModal({raffle,paymentsSellNumbersModal,pdfData,setPay
         doc.setFont("normal");
         doc.text(raffleDescription, 105, 30, { align: "center" });
         doc.text(rafflePlayDate, 105, 35, { align: "center" });
-    
+        // Sección de premios
+        doc.setFontSize(14);
+        doc.setTextColor("#1446A0");
+        doc.text("Premios", 105, 45, { align: "center" });
+
+        let currentY = 55; // Variable para rastrear la posición Y actual
+
+        if (awards.length > 0) {
+            awards.forEach((award, index) => {
+            const yPosition = currentY + (index * 6); // Ajustar el espaciado dinámicamente
+
+            doc.setFontSize(12);
+            doc.setTextColor("#000");
+            doc.text(`Premio ${index + 1}:`, 12, yPosition);
+            doc.setFont("bold");
+            doc.setTextColor("#1446A0");
+            doc.text(award.name, 40, yPosition);
+
+            doc.setFont("normal");
+            doc.setTextColor("#000");
+            doc.text(`Fecha de Juego:`, 12, yPosition + 6);
+            doc.setFont("bold");
+            doc.setTextColor("#1446A0");
+            doc.text(formatDateTimeLarge(award.playDate), 40, yPosition + 6);
+
+            currentY = yPosition + 12; // Actualizar la posición Y actual
+            });
+        } else {
+            doc.setFontSize(12);
+            doc.setTextColor("#000");
+            doc.text("No hay premios registrados para esta rifa.", 105, currentY, { align: "center" });
+            currentY += 10; // Ajustar la posición Y para el siguiente contenido
+        }
+
         // Contenido principal
         pdfData.forEach((raffle, index) => {
-            const yStart = 50 + index * 90; // Ajustar el espaciado debido al título ampliado
+            const yStart = currentY + (index * 100); // Ajustar el espaciado dinámicamente para evitar superposición
     
             // Contenedor principal (borde para la sección)
             doc.setDrawColor(20, 70, 160);

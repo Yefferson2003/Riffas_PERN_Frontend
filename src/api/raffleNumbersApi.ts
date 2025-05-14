@@ -2,7 +2,7 @@ import { isAxiosError } from "axios";
 import api from "../lib/axios";
 import { PayNumberForm, PayNumbersForm, raffleNumberSchema, RaffleNumberUpdateForm, RafflePayResponseSchema, responseRaffleNumbersExelSchema, responseRaffleNumbersSchema } from "../types";
 
-export async function getRaffleNumers({params, raffleId} : {params : object, raffleId: number}) {
+export async function getRaffleNumers({params, raffleId} : {params : object, raffleId: string}) {
     try { 
 
         const {data} = await api.get(`/raffles-numbers/${raffleId}`, {params})

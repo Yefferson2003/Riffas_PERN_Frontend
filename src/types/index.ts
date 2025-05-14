@@ -123,6 +123,7 @@ export const raffleSchema = z.object({
     editDate: z.string(),
     price: z.string(),
     banerImgUrl: z.string(),
+    banerMovileImgUrl: z.string(),
 })
 
 export const raffleByIdSchema = raffleSchema.extend({
@@ -138,6 +139,7 @@ export const createRaffleSchema = raffleSchema.pick({
     banerImgUrl: true,
     nitResponsable: true,
     nameResponsable: true,
+    banerMovileImgUrl: true
 })
 .extend({
     quantity: z.number(),
@@ -163,7 +165,8 @@ export const updateRaffleSchema = createRaffleSchema.pick({
     nameResponsable: true,
     startDate: true,
     playDate:true,
-    editDate: true
+    editDate: true,
+    banerMovileImgUrl: true,
 })
 
 export const responseGetRafflesSchema = ResponsePaginationSchema.pick({
@@ -286,6 +289,8 @@ export const responseRaffleNumbersSchema = ResponsePaginationSchema.pick({
     raffleNumbers: z.array(raffleNumbersSchema)
 })
 
+export type RaffleNumbersResponseType = z.infer<typeof responseRaffleNumbersSchema>
+
 export const raffleNumberExelSchema = raffleNumbersSchema.pick({
     id: true,
     number: true,
@@ -340,4 +345,72 @@ export const totalByVendedorSchema = z.object({
     totalCobrar: z.number(),
 })
 
+export const expensesSchema = z.object({
+    id: z.number(),
+    name: z.string(),
+    amount: z.string(),
+    createdAt: z.string(),
+})
+
+export const expensesWithUserSchema = expensesSchema.extend({
+    user: z.object({
+        id: z.number(),
+        firstName: z.string(),
+        lastName: z.string(),
+        identificationNumber: z.string()
+    })
+})
+
+
+
+export const expenseFormSchema = expensesSchema.pick({
+    name: true,
+    amount: true
+})
+
+export const responseExpensesSchema = ResponsePaginationSchema.pick({
+    currentPage: true,
+    total: true,
+    totalPages: true,
+}).extend({
+    expenses: z.array(expensesSchema)
+})
+
+export const responseExpensesWithUserSchema = ResponsePaginationSchema.pick({
+    currentPage: true,
+    total: true,
+    totalPages: true,
+}).extend({
+    expenses: z.array(expensesWithUserSchema)
+})
+
+
+
+export const responseExpensesTotal = z.object({
+    total: z.number()
+})
+export type ExpenseFormType = z.infer<typeof expenseFormSchema>
+export type ExpensesType = z.infer<typeof expensesSchema>
+export type ExpensesWithUserType = z.infer<typeof expensesWithUserSchema>
+export type ExpenseResponseType = z.infer<typeof responseExpensesSchema>
+
+export const awardsShema = z.object({
+    id: z.number(),
+    name: z.string(),
+    playDate: z.string()
+})
+
+export const responseAwards = z.array(awardsShema)
+
+export const AwardFormSchema = awardsShema.pick({
+    name: true,
+}).extend({
+    playDate: z
+        .string()
+        .nullable()
+        .transform((date) => (date ? dayjs(date) : null)),
+})
+export type AwardFormType = z.infer<typeof AwardFormSchema>
+export type AwardsResponseType = z.infer<typeof responseAwards>
+export type AwardType = z.infer<typeof awardsShema>
 

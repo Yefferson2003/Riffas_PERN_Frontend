@@ -2,17 +2,20 @@ import { isAxiosError } from "axios";
 import api from "../lib/axios";
 import { UserLoginForm, userSchema } from "../types";
 
+
 export async function login(formData: UserLoginForm) {
     try {
         const url = '/auth/login'
         const {data} = await api.post(url, formData)
-        console.log(data);
         
         localStorage.setItem('AUTH_TOKEN', data)
         return data
     } catch (error) {
         if (isAxiosError(error) && error.response) {
-            throw new Error(error.response.data.error);
+            console.log(error);
+            throw new Error(error.response.data.errors);
+            // console.log(error.response.data.message);
+            
             
         }
     }

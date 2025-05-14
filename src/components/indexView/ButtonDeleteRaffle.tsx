@@ -23,8 +23,12 @@ function ButtonDeleteRaffle({raffleId} : ButtonDeleteRaffleProps) {
     })
 
     const handleDeleteRaffle = () =>{
-        mutate(raffleId)
+        const isConfirmed = window.confirm("¿Está seguro de que desea eliminar esta rifa?");
+        if (isConfirmed) {
+            mutate(raffleId);
+        }
     }
+
     return (
         <IconButton
             onClick={handleDeleteRaffle}
