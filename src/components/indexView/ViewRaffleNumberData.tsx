@@ -16,6 +16,7 @@ type ViewRaffleNumberDataProps = {
     setPaymentsSellNumbersModal: React.Dispatch<React.SetStateAction<boolean>>
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
     refect: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
+    setUrlWasap: React.Dispatch<React.SetStateAction<string>>
     // refectRaffle: {
     //     search: string;
     //     raffleId: string | undefined;
@@ -25,7 +26,7 @@ type ViewRaffleNumberDataProps = {
     // }
 }
 
-function ViewRaffleNumberData({ infoRaffle, setPaymentsSellNumbersModal, setPdfData, refect} : ViewRaffleNumberDataProps) {
+function ViewRaffleNumberData({ infoRaffle, setPaymentsSellNumbersModal, setPdfData, refect, setUrlWasap} : ViewRaffleNumberDataProps) {
     const queryParams = new URLSearchParams(location.search)
     const modalviewRaffleNumber = queryParams.get('viewRaffleNumber')
     const raffleNumberId = Number(modalviewRaffleNumber)
@@ -45,6 +46,7 @@ function ViewRaffleNumberData({ infoRaffle, setPaymentsSellNumbersModal, setPdfD
         setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
         setPdfData={setPdfData}
         refect={refect}
+        setUrlWasap={setUrlWasap}
     />
 }
 

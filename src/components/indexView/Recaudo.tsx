@@ -44,13 +44,13 @@ function Recaudo({raffleId, expenseTotal, expenseTotalByUser}:RecaudoPros) {
 
 
     if (data)return (
-        <div className="grid grid-cols-2 gap-3 text-xl font-bold text-center md:grid-cols-3 lg:grid-cols-5">
+        <div className="grid items-center grid-cols-1 gap-3 text-xl font-bold text-center md:grid-cols-3 lg:grid-cols-5">
             <div>
             <p>Recaudado</p>
             <p className="text-azul">{formatCurrencyCOP(data.totalRecaudado)}</p>
             </div>
             <div>
-            <p>Vendido</p>
+            <p>Pagados</p>
             <p className="text-azul">{formatCurrencyCOP(data.totalVendido)}</p>
             </div>
             <div>
@@ -58,7 +58,7 @@ function Recaudo({raffleId, expenseTotal, expenseTotalByUser}:RecaudoPros) {
             <p className="text-azul">{formatCurrencyCOP(data.TotalCobrar)}</p>
             </div>
             <div>
-            <p>Total Rechazados</p>
+            <p>Rechazados</p>
             <p className="text-azul">{formatCurrencyCOP(data.TotalCancelPays)}</p>
             </div>
             <div>

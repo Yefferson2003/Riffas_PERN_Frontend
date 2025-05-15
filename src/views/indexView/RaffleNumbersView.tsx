@@ -48,6 +48,7 @@ function RaffleNumbersView() {
     const user : User = useOutletContext();
     const [page, setPage] = useState<number>(1);
     const [rowsPerPage] = useState<number>(100);
+    const [urlWasap, setUrlWasap] = useState<string>('')
 
 
     const [paymentsSellNumbersModal, setPaymentsSellNumbersModal] = useState(false);
@@ -331,13 +332,14 @@ function RaffleNumbersView() {
             setPdfData={setPdfData}
             paymentsSellNumbersModal={paymentsSellNumbersModal}
             pdfData={pdfData}
+            urlWasap={urlWasap}
         />}
         {raffle && raffleNumbers && <ViewRaffleNumberData
             infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description}}
             setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
             setPdfData={setPdfData}
             refect={refetch}
-            
+            setUrlWasap={setUrlWasap}
             // refectRaffle={{ search, raffleId, filter, page, limit : rowsPerPage}}
         />}
         {/* {raffle && raffleNumbers && <ViewNumbersSoldModal/>} */}

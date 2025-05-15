@@ -31,9 +31,10 @@ type PaymentSellNumbersModalProps = {
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
     paymentsSellNumbersModal: boolean
     pdfData: RaffleNumbersPayments
+    urlWasap: string
 }
 
-function PaymentSellNumbersModal({raffle, awards, paymentsSellNumbersModal,pdfData,setPaymentsSellNumbersModal,setPdfData} : PaymentSellNumbersModalProps) {
+function PaymentSellNumbersModal({raffle, awards, paymentsSellNumbersModal,pdfData,setPaymentsSellNumbersModal,setPdfData, urlWasap} : PaymentSellNumbersModalProps) {
     const handleDownloadPDF = () => {
         const doc = new jsPDF();
     
@@ -208,12 +209,29 @@ function PaymentSellNumbersModal({raffle, awards, paymentsSellNumbersModal,pdfDa
             <Box sx={style}>
             <div className="flex justify-between w-full">
                 <IconButton
+                    href=''
                     onClick={handleDownloadPDF}
                 >
                     <Tooltip title='Descargar PDF'>
                         <PictureAsPdfIcon color="error"/>
                     </Tooltip>
                 </IconButton>
+                <a
+                    href={urlWasap}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', marginLeft: 8, marginRight: 8 }}
+                >
+                    <Tooltip title="Enviar por WhatsApp">
+                        <img
+                            src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+                            alt="WhatsApp"
+                            width={28}
+                            height={28}
+                            style={{ display: 'block' }}
+                        />
+                    </Tooltip>
+                </a>
                 <IconButton
                     onClick={handleCloseModal}
                 >

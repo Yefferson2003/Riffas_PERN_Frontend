@@ -81,9 +81,11 @@ type redirectToWhatsAppType = {
     infoRaffle: InfoRaffleType
 }
 
-export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, numbers }: redirectToWhatsAppType) => {
-    if (!phone) return;
-
+export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, numbers }: redirectToWhatsAppType) : string => {
+    if (!phone) return '';
+    let whatsappUrl = '' 
+    // Especifica el tipo de retorno como string
+    
     let paymentTypeMessage = '';
     const rafflePrice = +infoRaffle.amountRaffle;
 
@@ -119,6 +121,7 @@ export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, numbers }:
     `.trim();
 
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
+    whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
+    // window.open(whatsappUrl, '_blank');
+    return(whatsappUrl)
 };

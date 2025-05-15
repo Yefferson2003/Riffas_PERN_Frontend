@@ -33,9 +33,10 @@ type ViewRaffleNumberModalProps = {
     setPaymentsSellNumbersModal: React.Dispatch<React.SetStateAction<boolean>>
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
     refect: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
+    setUrlWasap: React.Dispatch<React.SetStateAction<string>>
 }
 
-function ViewRaffleNumberModal({ infoRaffle, raffleNumber,setPaymentsSellNumbersModal, setPdfData, refect} : ViewRaffleNumberModalProps) {
+function ViewRaffleNumberModal({ infoRaffle, raffleNumber,setPaymentsSellNumbersModal, setPdfData, refect, setUrlWasap} : ViewRaffleNumberModalProps) {
     const navigate = useNavigate(); 
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -119,7 +120,8 @@ function ViewRaffleNumberModal({ infoRaffle, raffleNumber,setPaymentsSellNumbers
         mutate(data, {
             onSuccess: () => {
                 if (formData.phone) {
-                    redirectToWhatsApp({ numbers: [{numberId: 0,number: raffleNumber.number}], phone: formData.phone, name: formData.firstName, amount: formData.amount, infoRaffle})
+                    setUrlWasap(redirectToWhatsApp({ numbers: [{numberId: 0,number: raffleNumber.number}], phone: formData.phone, name: formData.firstName, amount: formData.amount, infoRaffle}))
+                    
                 }
             }
         });
