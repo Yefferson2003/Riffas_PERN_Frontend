@@ -62,14 +62,16 @@ function RaffleSideBar( { raffleId, raffle }: RaffleSideBarProps) {
                     </Tooltip>
                 </IconButton>
 
+                {(user.rol.name === "responsable" || user.rol.name === "admin") && (
+                    <IconButton onClick={handleNavigateExpensesByRaffle}>
+                        <Tooltip title={"Gastos de la rifa"} placement="bottom-start">
+                        <RequestQuoteIcon />
+                        </Tooltip>
+                    </IconButton>
+                )}
+
                 {user.rol.name === "admin" && (
                     <>
-                        
-                        <IconButton onClick={handleNavigateExpensesByRaffle}>
-                            <Tooltip title={"Gastos de la rifa"} placement="bottom-start">
-                            <RequestQuoteIcon />
-                            </Tooltip>
-                        </IconButton>
                         
                         <IconButton onClick={handleNavigateViewUsers}>
                             <Tooltip title={"Colaboradores"}>

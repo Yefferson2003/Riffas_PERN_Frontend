@@ -1,5 +1,5 @@
 import { Box, Button, Modal, TablePagination } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { QueryObserverResult, RefetchOptions, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import ButtonCloseModal from "../../../ButtonCloseModal";
@@ -7,7 +7,7 @@ import { getExpensesByUser } from "../../../../api/expensesApi";
 import TableExpenses from "./TableExpenses";
 import AddExpenseModal from "./AddExpenseModal";
 import UpdateExpenseModal from "./UpdateExpenseModal";
-import { User } from "../../../../types";
+import { ExpensesTotal, User } from "../../../../types";
 
 
 const style = {
@@ -25,7 +25,12 @@ const style = {
     overflowY: 'auto',
 };
 
-function ViewExpensesByUserModal() {
+type ViewExpensesByUserModalProps = {
+    refechtExpenseTotal: (options?: RefetchOptions) => Promise<QueryObserverResult<ExpensesTotal | undefined, Error>>
+    refechtExpenseTotalByUser: (options?: RefetchOptions) => Promise<QueryObserverResult<ExpensesTotal | undefined, Error>>
+}
+
+function ViewExpensesByUserModal( { refechtExpenseTotal, refechtExpenseTotalByUser } : ViewExpensesByUserModalProps) {
 
     const navigate = useNavigate()
     const { raffleId } = useParams<{ raffleId: string }>();
@@ -115,9 +120,13 @@ function ViewExpensesByUserModal() {
 
                 <AddExpenseModal 
                     refecht={refetch}
+                    refechtExpenseTotal={refechtExpenseTotal}
+                    refechtExpenseTotalByUser={refechtExpenseTotalByUser}
                 />
                 <UpdateExpenseModal 
                     refecht={refetch}
+                    refechtExpenseTotal={refechtExpenseTotal}
+                    refechtExpenseTotalByUser={refechtExpenseTotalByUser}
                 />
                 
             </Box>

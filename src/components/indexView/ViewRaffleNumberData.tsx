@@ -4,7 +4,15 @@ import { getRaffleNumberById } from "../../api/raffleNumbersApi"
 import { RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types"
 import ViewRaffleNumberModal from "./ViewRaffleNumberModal"
 
+export type InfoRaffleType = {
+    name: string;
+    amountRaffle: string;
+    playDate: string;
+    description: string;
+}
+
 type ViewRaffleNumberDataProps = {
+    infoRaffle: InfoRaffleType
     setPaymentsSellNumbersModal: React.Dispatch<React.SetStateAction<boolean>>
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
     refect: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
@@ -17,7 +25,7 @@ type ViewRaffleNumberDataProps = {
     // }
 }
 
-function ViewRaffleNumberData({setPaymentsSellNumbersModal, setPdfData, refect} : ViewRaffleNumberDataProps) {
+function ViewRaffleNumberData({ infoRaffle, setPaymentsSellNumbersModal, setPdfData, refect} : ViewRaffleNumberDataProps) {
     const queryParams = new URLSearchParams(location.search)
     const modalviewRaffleNumber = queryParams.get('viewRaffleNumber')
     const raffleNumberId = Number(modalviewRaffleNumber)
@@ -31,7 +39,9 @@ function ViewRaffleNumberData({setPaymentsSellNumbersModal, setPdfData, refect} 
     })
 
     if (isError) return <Navigate to={'/404'}/> 
-    if (data) return <ViewRaffleNumberModal raffleNumber={data}
+    if (data) return <ViewRaffleNumberModal 
+        infoRaffle={infoRaffle}
+        raffleNumber={data}
         setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
         setPdfData={setPdfData}
         refect={refect}

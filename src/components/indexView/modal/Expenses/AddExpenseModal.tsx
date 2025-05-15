@@ -2,7 +2,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Box, Button, IconButton, Modal, Tooltip } from "@mui/material";
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from "react-router-dom";
-import { ExpenseFormType, ExpenseResponseType } from '../../../../types';
+import { ExpenseFormType, ExpenseResponseType, ExpensesTotal } from '../../../../types';
 import ExpenseForm from './ExpenseForm';
 import { QueryObserverResult, RefetchOptions, useMutation } from '@tanstack/react-query';
 import { addExpense } from '../../../../api/expensesApi';
@@ -25,9 +25,11 @@ const style = {
 
 type AddExpenseModalProps = {
     refecht: (options?: RefetchOptions) => Promise<QueryObserverResult<ExpenseResponseType | undefined, Error>>
+    refechtExpenseTotal: (options?: RefetchOptions) => Promise<QueryObserverResult<ExpensesTotal | undefined, Error>>
+    refechtExpenseTotalByUser: (options?: RefetchOptions) => Promise<QueryObserverResult<ExpensesTotal | undefined, Error>>
 }
 
-function AddExpenseModal( { refecht } : AddExpenseModalProps) {
+function AddExpenseModal( { refecht, refechtExpenseTotal, refechtExpenseTotalByUser } : AddExpenseModalProps) {
 
     const { raffleId } = useParams<{ raffleId: string }>();
     
@@ -57,6 +59,8 @@ function AddExpenseModal( { refecht } : AddExpenseModalProps) {
             toast.success(data)
             reset()
             refecht()
+            refechtExpenseTotal()
+            refechtExpenseTotalByUser()
             handleCloseModal()
         }
     })

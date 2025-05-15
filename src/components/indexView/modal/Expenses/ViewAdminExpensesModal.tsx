@@ -1,11 +1,11 @@
 import { Box, Modal, TablePagination } from "@mui/material";
-import { useNavigate, useParams } from "react-router-dom";
-import ButtonCloseModal from "../../../ButtonCloseModal";
-import { useState } from "react";
 import { useQueries } from "@tanstack/react-query";
-import { getExpenses, getExpensesTotal } from "../../../../api/expensesApi";
-import TableExpenses from "./TableExpenses";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { getExpenses } from "../../../../api/expensesApi";
 import { formatCurrencyCOP } from "../../../../utils";
+import ButtonCloseModal from "../../../ButtonCloseModal";
+import TableExpenses from "./TableExpenses";
 
 const style = {
     position: 'absolute',
@@ -22,7 +22,14 @@ const style = {
     overflowY: 'auto',
 };
 
-function ViewAdminExpensesModal() {
+type ViewAdminExpensesModalProps = {
+    expensesTotal: {
+        total: number;
+    } | undefined,
+    isLoadingExpenseTotal: boolean
+}
+
+function ViewAdminExpensesModal( { expensesTotal, isLoadingExpenseTotal } : ViewAdminExpensesModalProps) {
     const navigate = useNavigate();
     const { raffleId } = useParams<{ raffleId: string }>();
 
@@ -34,23 +41,18 @@ function ViewAdminExpensesModal() {
     const [limit, setLimit] = useState<number>(4);
 
     // Ejecutar ambos queries en paralelo
-    const [expensesQuery, expensesTotalQuery] = useQueries({
+    const [expensesQuery] = useQueries({
         queries: [
             {
                 queryKey: ['expensesByRaffler', raffleId, page, limit],
                 queryFn: () => getExpenses({ raffleId: raffleId!, params: { page: page + 1, limit } }),
                 enabled: show,
-            },
-            {
-                queryKey: ['expensesTotal', raffleId],
-                queryFn: () => getExpensesTotal({ raffleId: raffleId! }),
-                enabled: show,
-            },
+            }
         ],
     });
 
     const { data: expensesData, isLoading: isLoadingExpenses } = expensesQuery;
-    const { data: expensesTotal, isLoading: isLoadingTotal } = expensesTotalQuery;
+    // const { data: expensesTotal, isLoading: isLoadingTotal } = expensesTotalQuery;
 
     const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
         setLimit(parseInt(event.target.value, 10));
@@ -84,7 +86,7 @@ function ViewAdminExpensesModal() {
 
                 <div className="w-full h-1 my-3 bg-baclk"></div>
 
-                {(isLoadingExpenses || isLoadingTotal) && (
+                {(isLoadingExpenses || isLoadingExpenseTotal) && (
                     <div className="flex items-center justify-center w-full h-full">
                         <p className="text-2xl font-bold text-center">Cargando...</p>
                     </div>

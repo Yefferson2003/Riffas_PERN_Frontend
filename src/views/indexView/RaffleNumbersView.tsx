@@ -23,6 +23,7 @@ import { RaffleNumbersPayments, User } from "../../types";
 import { colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros } from "../../utils";
 import LoaderView from "../LoaderView";
 import { getAwards } from '../../api/awardsApi';
+import { getExpensesTotal, getExpensesTotalByUser } from '../../api/expensesApi';
 
 
 const styleForm = {
@@ -94,7 +95,7 @@ function RaffleNumbersView() {
 
     // const { data: raffle, isLoading :isLoadingRaffle , isError: isErrorRaffle } = useRaffleById(parsedRaffleId!);
     
-    const [ raffleNumbersData, raffleData, awardsData] = useQueries({
+    const [ raffleNumbersData, raffleData, awardsData, expensesTotalData, expensesTotalByUserData] = useQueries({
         queries: [
             {
                 queryKey: ['raffleNumbers', search, raffleId, filter, page, rowsPerPage],
@@ -108,13 +109,25 @@ function RaffleNumbersView() {
             {
                 queryKey: ['awards', raffleId],
                 queryFn: () => getAwards({raffleId: raffleId!})
-            }
+            },
+            {
+                queryKey: ['expensesTotal', raffleId],
+                queryFn: () => getExpensesTotal({ raffleId: raffleId! }),
+                enabled: !!raffleId,
+            },
+            {
+                queryKey: ['expensesTotalByUser', raffleId],
+                queryFn: () => getExpensesTotalByUser({ raffleId: raffleId! }),
+                enabled: !!raffleId,
+            },
         ]
     });
 
     const { data: raffleNumbers, isLoading : isLoadingRaffleNumbers, isError : isErrorRaffleNumbers, refetch } = raffleNumbersData
     const { data: raffle, isLoading :isLoadingRaffle , isError: isErrorRaffle} = raffleData
     const { data: awards, refetch: refechtAwards} = awardsData
+    const { data: expenseTotal, refetch: refechtExpenseTotal, isLoading: isLoadingExpenseTotal} = expensesTotalData
+    const { data: expenseTotalByUser, refetch: refechtExpenseTotalByUser,} = expensesTotalByUserData
     
     const handleNavigateViewRaffleNumber = (raffleNumberId: number) => {
         navigate(`?viewRaffleNumber=${raffleNumberId}`)
@@ -201,11 +214,22 @@ function RaffleNumbersView() {
                     </div>
                 </div>}
                 
-                { raffle && raffleId && user.rol.name !== 'vendedor' && <Recaudo raffleId={+raffleId}/>}
-                { raffle && raffleId && user.rol.name == 'vendedor' && <RecaudoByVendedor raffleId={+raffleId}/>}
+                { raffle && raffleId && user.rol.name !== 'vendedor' && 
+                    <Recaudo 
+                        raffleId={+raffleId}
+                        expenseTotal={expenseTotal!}
+                        expenseTotalByUser={expenseTotalByUser!}
+                    />
+                }
+                { raffle && raffleId && user.rol.name == 'vendedor' && 
+                    <RecaudoByVendedor 
+                        raffleId={+raffleId}
+                        expenseTotalByUser={expenseTotalByUser!}
+                    />
+                }
 
                 <img 
-                    className="object-cover w-full h-40"
+                    className="w-full lg:h-40 lg:object-cover"
                     src={isSmallDevice ? raffle?.banerMovileImgUrl || '/banner_default.jpg' : raffle?.banerImgUrl  || '/banner_default.jpg'}
                     alt="banner riffa" 
                 />
@@ -308,16 +332,24 @@ function RaffleNumbersView() {
             pdfData={pdfData}
         />}
         {raffle && raffleNumbers && <ViewRaffleNumberData
+            infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description}}
             setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
             setPdfData={setPdfData}
             refect={refetch}
+            
             // refectRaffle={{ search, raffleId, filter, page, limit : rowsPerPage}}
         />}
         {/* {raffle && raffleNumbers && <ViewNumbersSoldModal/>} */}
 
 
-        <ViewAdminExpensesModal/>
-        <ViewExpensesByUserModal/>
+        <ViewAdminExpensesModal
+            expensesTotal={expenseTotal}
+            isLoadingExpenseTotal={isLoadingExpenseTotal}
+        />
+        <ViewExpensesByUserModal
+            refechtExpenseTotal={refechtExpenseTotal}
+            refechtExpenseTotalByUser={refechtExpenseTotalByUser}
+        />
 
         </section>
     )

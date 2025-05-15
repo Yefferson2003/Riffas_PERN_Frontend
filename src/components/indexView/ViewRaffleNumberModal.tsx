@@ -10,6 +10,7 @@ import ButttonDeleteRaffleNumber from "./ButtonDeleteRaffleNumber";
 import RaflleNumberPaymentsHistory from "./RaflleNumberPaymentsHistory";
 import { useState } from "react";// Importa el componente de entrada de teléfono
 import PhoneNumberInput from "../PhoneNumberInput";
+import { InfoRaffleType } from "./ViewRaffleNumberData";
 
 const style = {
     position: 'absolute',
@@ -27,13 +28,14 @@ const style = {
 };
 
 type ViewRaffleNumberModalProps = {
+    infoRaffle: InfoRaffleType,
     raffleNumber: RaffleNumber
     setPaymentsSellNumbersModal: React.Dispatch<React.SetStateAction<boolean>>
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
     refect: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
 }
 
-function ViewRaffleNumberModal({raffleNumber,setPaymentsSellNumbersModal, setPdfData, refect} : ViewRaffleNumberModalProps) {
+function ViewRaffleNumberModal({ infoRaffle, raffleNumber,setPaymentsSellNumbersModal, setPdfData, refect} : ViewRaffleNumberModalProps) {
     const navigate = useNavigate(); 
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -117,7 +119,7 @@ function ViewRaffleNumberModal({raffleNumber,setPaymentsSellNumbersModal, setPdf
         mutate(data, {
             onSuccess: () => {
                 if (formData.phone) {
-                    redirectToWhatsApp(formData.phone)
+                    redirectToWhatsApp({phone: formData.phone, name: formData.firstName, amount: formData.amount, infoRaffle})
                 }
             }
         });

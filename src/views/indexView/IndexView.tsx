@@ -95,7 +95,7 @@ function IndexView() {
                         onClick={() => handleNavigateRaffleNumbers(raffle.id)}
                     >
                         <img 
-                            className="object-cover w-full h-40 "
+                            className="w-full lg:object-cover lg:h-40 "
                             src={isSmallDevice ? raffle.banerMovileImgUrl || '/banner_default.jpg' : raffle.banerImgUrl  || '/banner_default.jpg'}
                             alt="banner riffa" 
                         />

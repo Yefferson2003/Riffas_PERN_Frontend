@@ -1,3 +1,5 @@
+import { InfoRaffleType } from "../components/indexView/ViewRaffleNumberData";
+
 export const azul = '#1446A0'
 
 export const rifflesNumbersStatusEnum = ['available', 'sold', 'pending'] as const;
@@ -66,12 +68,34 @@ export function formatWithLeadingZeros(num: number): string {
     return num.toString().padStart(3, '0');
 }
 
+type redirectToWhatsAppType = {
+    phone: string,
+    name: string,
+    amount: number,
+    infoRaffle: InfoRaffleType
+}
 
-
-export const redirectToWhatsApp = (phone: string) => {
+export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone }: redirectToWhatsAppType) => {
     if (!phone) return;
 
-    // Cambia el prefijo según tu país
-    const whatsappUrl = `https://wa.me/${phone}`;
+    const message = `
+Hola ${name},
+
+Gracias por tu interés en nuestra rifa "${infoRaffle.name}". 
+El valor total a pagar es de ${formatCurrencyCOP(amount)}.
+
+Detalles de la rifa:
+- Descripción: ${infoRaffle.description}
+- Valor: ${formatCurrencyCOP(+infoRaffle.amountRaffle)} 
+- Fecha del sorteo: ${formatDateTimeLarge(infoRaffle.playDate)}
+
+Por favor, contáctanos si tienes alguna pregunta. ¡Buena suerte!
+
+Saludos,
+El equipo de Rifas
+    `.trim();
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');
 };

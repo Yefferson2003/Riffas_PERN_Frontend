@@ -3,13 +3,18 @@ import { useEffect } from "react";
 import { getRecaudoByVendedor } from "../../api/raffleApi";
 import socket from "../../socket";
 import { formatCurrencyCOP } from "../../utils";
+import { ExpensesTotal, User } from "../../types";
+import { useOutletContext } from "react-router-dom";
 
 
 type RecaudoPros = {
     raffleId: number
+    expenseTotalByUser: ExpensesTotal
 }
 
-function RecaudoByVendedor({raffleId}:RecaudoPros) {
+function RecaudoByVendedor({raffleId, expenseTotalByUser}:RecaudoPros) {
+
+    const user : User = useOutletContext();
 
     const {data, refetch} = useQuery({
         queryKey: ['recaudoByVendedor', raffleId],
@@ -38,7 +43,7 @@ function RecaudoByVendedor({raffleId}:RecaudoPros) {
 
 
     if (data)return (
-        <div className="flex flex-wrap justify-around gap-3 text-xl font-bold text-center">
+        <div className="grid grid-cols-2 gap-3 text-xl font-bold text-center md:grid-cols-3 lg:grid-cols-5">
             <div>
             <p>Números vendidos</p>
             <p className=" text-azul">{(data.totalRaffleNumber[0])}</p>
@@ -59,6 +64,12 @@ function RecaudoByVendedor({raffleId}:RecaudoPros) {
             <p>Total Cancelado</p>
             <p className=" text-azul">{formatCurrencyCOP(data.totalCancelado)}</p>
             </div>
+            {user.rol.name === 'responsable' &&
+            <>
+            <p>Mi Gasto Total</p>
+            <p className="text-azul">{formatCurrencyCOP(expenseTotalByUser.total)}</p>
+            </>
+            }
         </div>
     );
 }

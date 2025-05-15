@@ -393,6 +393,9 @@ export type ExpenseFormType = z.infer<typeof expenseFormSchema>
 export type ExpensesType = z.infer<typeof expensesSchema>
 export type ExpensesWithUserType = z.infer<typeof expensesWithUserSchema>
 export type ExpenseResponseType = z.infer<typeof responseExpensesSchema>
+export type ExpensesTotal = {
+    total: number
+}
 
 export const awardsShema = z.object({
     id: z.number(),
