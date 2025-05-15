@@ -71,14 +71,17 @@ export function formatWithLeadingZeros(num: number): string {
 }
 
 type redirectToWhatsAppType = {
-    number: number
+    numbers: {
+        numberId: number;
+        number: number;
+    }[]
     phone: string,
     name: string,
     amount: number,
     infoRaffle: InfoRaffleType
 }
 
-export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, number }: redirectToWhatsAppType) => {
+export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, numbers }: redirectToWhatsAppType) => {
     if (!phone) return;
 
     let paymentTypeMessage = '';
@@ -94,21 +97,25 @@ export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, number }: 
         paymentTypeMessage = `Has realizado un pago de ${formatCurrencyCOP(amount)} para la rifa "${infoRaffle.name}".`;
     }
 
+    const numbersList = numbers
+        .map(n => formatWithLeadingZeros(n.number))
+        .join(', ');
+
     const message = `
-Hola ${name},
+    Hola ${name},
 
-${paymentTypeMessage}
+    ${paymentTypeMessage}
 
-Detalles de la rifa:
-- Número: ${formatWithLeadingZeros(number)}
-- Descripción: ${infoRaffle.description}
-- Valor: ${formatCurrencyCOP(rafflePrice)} 
-- Fecha del sorteo: ${formatDateTimeLarge(infoRaffle.playDate)}
+    Detalles de la rifa:
+    - Números: ${numbersList}
+    - Descripción: ${infoRaffle.description}
+    - Valor: ${formatCurrencyCOP(rafflePrice)} 
+    - Fecha del sorteo: ${formatDateTimeLarge(infoRaffle.playDate)}
 
-Por favor, contáctanos si tienes alguna pregunta. ¡Buena suerte!
+    Por favor, contáctanos si tienes alguna pregunta. ¡Buena suerte!
 
-Saludos,
-El equipo de Rifas
+    Saludos,
+    El equipo de Rifas
     `.trim();
 
     const encodedMessage = encodeURIComponent(message);
