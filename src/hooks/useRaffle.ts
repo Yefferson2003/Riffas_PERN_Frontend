@@ -4,7 +4,7 @@ import { getRaffleNumers } from '../api/raffleNumbersApi';
 
 
 export const useRaffleById = (raffleId: number) => {
-    return useQuery({queryKey: ['raffles', raffleId], queryFn: () => getRaffleById(raffleId)});
+    return useQuery({queryKey: ['raffles', raffleId], queryFn: () => getRaffleById(raffleId.toString())});
 };
 
 export const useRaffleNumbers = (raffleId: number, {filter, page, limit, search} : {filter : object, page : number, limit : number, search: string}) => {
@@ -17,7 +17,7 @@ export const useRaffleNumbers = (raffleId: number, {filter, page, limit, search}
     }
     return useQuery({
         queryKey: ['raffleNumbers', search, raffleId, filter, page, limit ],
-        queryFn: () => getRaffleNumers({ raffleId, params }),
+        queryFn: () => getRaffleNumers({ raffleId: raffleId.toString(), params }),
         enabled: !!raffleId,
     });
 };
