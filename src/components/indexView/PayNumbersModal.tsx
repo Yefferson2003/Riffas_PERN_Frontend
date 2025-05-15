@@ -9,6 +9,7 @@ import { PayNumbersForm, RaffleNumbersPayments } from "../../types";
 import { formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from "../../utils";
 import ButtonCloseModal from "../ButtonCloseModal";
 import PhoneNumberInput from "../PhoneNumberInput";
+import { InfoRaffleType } from "./ViewRaffleNumberData";
 
 const style = {
     position: 'absolute',
@@ -26,6 +27,7 @@ const style = {
 };
 
 type PayNumbersModalProps = {
+    infoRaffle: InfoRaffleType,
     numbersSeleted: {
         numberId: number;
         number: number;
@@ -40,7 +42,7 @@ type PayNumbersModalProps = {
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
 }
 
-function PayNumbersModal({numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData} : PayNumbersModalProps) {
+function PayNumbersModal({infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData} : PayNumbersModalProps) {
 
     const queryClient = useQueryClient()
     
@@ -103,7 +105,7 @@ function PayNumbersModal({numbersSeleted, raffleId, rafflePrice, setNumbersSelet
         mutate(data, {
             onSuccess: () => {
                 if (formData.phone) {
-                    redirectToWhatsApp(formData.phone)
+                    redirectToWhatsApp({phone: formData.phone, name: formData.firstName, amount: +infoRaffle.amountRaffle, infoRaffle})
                 }
             }
         })

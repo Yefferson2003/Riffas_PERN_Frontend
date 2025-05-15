@@ -78,15 +78,27 @@ type redirectToWhatsAppType = {
 export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone }: redirectToWhatsAppType) => {
     if (!phone) return;
 
+    let paymentTypeMessage = '';
+    const rafflePrice = +infoRaffle.amountRaffle;
+
+    if (amount === 0) {
+        paymentTypeMessage = `Has realizado un apartado de número(s) en la rifa "${infoRaffle.name}".`;
+    } else if (amount < rafflePrice) {
+        paymentTypeMessage = `Has realizado un abono de ${formatCurrencyCOP(amount)} para la rifa "${infoRaffle.name}".`;
+    } else if (amount === rafflePrice) {
+        paymentTypeMessage = `Has realizado el pago completo de ${formatCurrencyCOP(amount)} para la rifa "${infoRaffle.name}".`;
+    } else {
+        paymentTypeMessage = `Has realizado un pago de ${formatCurrencyCOP(amount)} para la rifa "${infoRaffle.name}".`;
+    }
+
     const message = `
 Hola ${name},
 
-Gracias por tu interés en nuestra rifa "${infoRaffle.name}". 
-El valor total a pagar es de ${formatCurrencyCOP(amount)}.
+${paymentTypeMessage}
 
 Detalles de la rifa:
 - Descripción: ${infoRaffle.description}
-- Valor: ${formatCurrencyCOP(+infoRaffle.amountRaffle)} 
+- Valor: ${formatCurrencyCOP(rafflePrice)} 
 - Fecha del sorteo: ${formatDateTimeLarge(infoRaffle.playDate)}
 
 Por favor, contáctanos si tienes alguna pregunta. ¡Buena suerte!

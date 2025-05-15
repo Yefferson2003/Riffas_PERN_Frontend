@@ -316,6 +316,7 @@ function RaffleNumbersView() {
         {raffle && <ViewUsersOfRaffleModal raffleId={raffle.id}/>}
         {raffle && <UpdateRaffleModal raffle={raffle} />}
         {raffle && raffleNumbers && <PayNumbersModal 
+            infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description}}
             numbersSeleted={numbersSeleted} 
             raffleId={raffle.id}
             rafflePrice={raffle.price}
