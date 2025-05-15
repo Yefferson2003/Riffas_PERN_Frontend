@@ -59,13 +59,13 @@ function RecaudoByVendedor({raffleId, expenseTotalByUser}:RecaudoPros) {
             <p className=" text-azul">{formatCurrencyCOP(data.totalCobrar)}</p>
             </div>
             <div>
-            <p>Total Cancelado</p>
+            <p>Total Rechazados</p>
             <p className=" text-azul">{formatCurrencyCOP(data.totalCancelado)}</p>
             </div>
-            <>
+            <div>
             <p>Mi Gasto Total</p>
             <p className="text-azul">{formatCurrencyCOP(expenseTotalByUser.total)}</p>
-            </>
+            </div>
         </div>
     );
 }

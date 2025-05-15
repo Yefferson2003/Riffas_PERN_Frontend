@@ -105,7 +105,7 @@ function PayNumbersModal({infoRaffle, numbersSeleted, raffleId, rafflePrice, set
         mutate(data, {
             onSuccess: () => {
                 if (formData.phone) {
-                    redirectToWhatsApp({phone: formData.phone, name: formData.firstName, amount: +infoRaffle.amountRaffle, infoRaffle})
+                    redirectToWhatsApp({ number: 0, phone: formData.phone, name: formData.firstName, amount: +infoRaffle.amountRaffle, infoRaffle})
                 }
             }
         })

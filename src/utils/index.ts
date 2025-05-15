@@ -1,8 +1,10 @@
+
 import { InfoRaffleType } from "../components/indexView/ViewRaffleNumberData";
 
 export const azul = '#1446A0'
 
 export const rifflesNumbersStatusEnum = ['available', 'sold', 'pending'] as const;
+
 export const colorStatusRaffleNumber : {[key: string] : "warning" | "default" | "success"  } = {
     available: 'default',
     sold: 'success',
@@ -69,13 +71,14 @@ export function formatWithLeadingZeros(num: number): string {
 }
 
 type redirectToWhatsAppType = {
+    number: number
     phone: string,
     name: string,
     amount: number,
     infoRaffle: InfoRaffleType
 }
 
-export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone }: redirectToWhatsAppType) => {
+export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, number }: redirectToWhatsAppType) => {
     if (!phone) return;
 
     let paymentTypeMessage = '';
@@ -97,6 +100,7 @@ Hola ${name},
 ${paymentTypeMessage}
 
 Detalles de la rifa:
+- Número: ${formatWithLeadingZeros(number)}
 - Descripción: ${infoRaffle.description}
 - Valor: ${formatCurrencyCOP(rafflePrice)} 
 - Fecha del sorteo: ${formatDateTimeLarge(infoRaffle.playDate)}

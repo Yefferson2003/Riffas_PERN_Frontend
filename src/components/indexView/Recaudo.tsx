@@ -66,10 +66,10 @@ function Recaudo({raffleId, expenseTotal, expenseTotalByUser}:RecaudoPros) {
             <p className="text-azul">{formatCurrencyCOP(expenseTotal.total)}</p>
             </div>
             {user.rol.name === 'responsable' &&
-            <>
+            <div>
             <p>Mi Gasto Total</p>
             <p className="text-azul">{formatCurrencyCOP(expenseTotalByUser.total)}</p>
-            </>
+            </div>
             }
         </div>
     );

@@ -2,16 +2,18 @@ import { IconButton, Tooltip } from "@mui/material"
 import { useNavigate } from "react-router-dom"
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { QueryObserverResult, RefetchOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteNumberClient } from "../../api/raffleNumbersApi";
 import { toast } from "react-toastify";
+import { RaffleNumbersResponseType } from "../../types";
 
 type ButtonDeleteRaffleNumberProps = {
     raffleId: number
     raffleNumberId: number
+    refect: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
 }
 
-function ButtonDeleteRaffleNumber({raffleId, raffleNumberId} : ButtonDeleteRaffleNumberProps) {
+function ButtonDeleteRaffleNumber({raffleId, raffleNumberId, refect} : ButtonDeleteRaffleNumberProps) {
     const navigate = useNavigate()
 
     const queryClient = useQueryClient()
@@ -24,6 +26,7 @@ function ButtonDeleteRaffleNumber({raffleId, raffleNumberId} : ButtonDeleteRaffl
             queryClient.invalidateQueries({queryKey: ['raffleNumber', raffleId, raffleNumberId]})
             toast.success(data)
             navigate(location.pathname, {replace: true})
+            refect()
         },
     })
 

@@ -119,7 +119,7 @@ function ViewRaffleNumberModal({ infoRaffle, raffleNumber,setPaymentsSellNumbers
         mutate(data, {
             onSuccess: () => {
                 if (formData.phone) {
-                    redirectToWhatsApp({phone: formData.phone, name: formData.firstName, amount: formData.amount, infoRaffle})
+                    redirectToWhatsApp({ number: raffleNumber.number, phone: formData.phone, name: formData.firstName, amount: formData.amount, infoRaffle})
                 }
             }
         });
@@ -152,6 +152,7 @@ function ViewRaffleNumberModal({ infoRaffle, raffleNumber,setPaymentsSellNumbers
             <ButttonDeleteRaffleNumber 
                 raffleId={raffleId} 
                 raffleNumberId={raffleNumberId}
+                refect={refect}
             />
 
             <h2 className="mb-5 text-2xl font-bold text-center uppercase text-azul">{'Rifa' + ' - ' +formatWithLeadingZeros(raffleNumber.number)}</h2>

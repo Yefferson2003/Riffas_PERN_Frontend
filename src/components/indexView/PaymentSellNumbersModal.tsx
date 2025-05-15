@@ -86,17 +86,23 @@ function PaymentSellNumbersModal({raffle, awards, paymentsSellNumbersModal,pdfDa
             doc.setFontSize(12);
             doc.setTextColor("#000");
             doc.text("No hay premios registrados para esta rifa.", 105, currentY, { align: "center" });
-            currentY += 10; // Ajustar la posición Y para el siguiente contenido
+            currentY += 3; // Ajustar la posición Y para el siguiente contenido
         }
+
+        // currentY += 4;
+        doc.setDrawColor(20, 70, 160);
+        doc.setLineWidth(0.5);
+        doc.line(12, currentY, 198, currentY);
+        currentY += 8;
 
         // Contenido principal
         pdfData.forEach((raffle, index) => {
             const yStart = currentY + (index * 100); // Ajustar el espaciado dinámicamente para evitar superposición
     
             // Contenedor principal (borde para la sección)
-            doc.setDrawColor(20, 70, 160);
-            doc.setLineWidth(0.5);
-            doc.roundedRect(10, yStart - 5, 190, 80, 3, 3);
+            // doc.setDrawColor(20, 70, 160);
+            // doc.setLineWidth(0.5);
+            // doc.roundedRect(10, yStart - 5, 190, 80, 3, 3);
     
             // Número de rifa
             doc.setFontSize(12);
