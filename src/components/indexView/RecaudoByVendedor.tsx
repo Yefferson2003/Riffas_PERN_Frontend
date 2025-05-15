@@ -2,9 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { getRecaudoByVendedor } from "../../api/raffleApi";
 import socket from "../../socket";
+import { ExpensesTotal } from "../../types";
 import { formatCurrencyCOP } from "../../utils";
-import { ExpensesTotal, User } from "../../types";
-import { useOutletContext } from "react-router-dom";
 
 
 type RecaudoPros = {
@@ -14,7 +13,6 @@ type RecaudoPros = {
 
 function RecaudoByVendedor({raffleId, expenseTotalByUser}:RecaudoPros) {
 
-    const user : User = useOutletContext();
 
     const {data, refetch} = useQuery({
         queryKey: ['recaudoByVendedor', raffleId],
@@ -64,12 +62,10 @@ function RecaudoByVendedor({raffleId, expenseTotalByUser}:RecaudoPros) {
             <p>Total Cancelado</p>
             <p className=" text-azul">{formatCurrencyCOP(data.totalCancelado)}</p>
             </div>
-            {user.rol.name === 'responsable' &&
             <>
             <p>Mi Gasto Total</p>
             <p className="text-azul">{formatCurrencyCOP(expenseTotalByUser.total)}</p>
             </>
-            }
         </div>
     );
 }

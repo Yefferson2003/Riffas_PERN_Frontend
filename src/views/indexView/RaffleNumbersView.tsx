@@ -218,7 +218,7 @@ function RaffleNumbersView() {
                     <Recaudo 
                         raffleId={+raffleId}
                         expenseTotal={expenseTotal!}
-                        expenseTotalByUser={expenseTotalByUser!}
+                        expenseTotalByUser={expenseTotalByUser! || 0}
                     />
                 }
                 { raffle && raffleId && user.rol.name == 'vendedor' && 
