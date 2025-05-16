@@ -96,11 +96,11 @@ function RaffleNumbersView() {
 
     // const { data: raffle, isLoading :isLoadingRaffle , isError: isErrorRaffle } = useRaffleById(parsedRaffleId!);
     
-    const [ raffleNumbersData, raffleData, awardsData, expensesTotalData, expensesTotalByUserData] = useQueries({
+    const [raffleNumbersData, raffleData, awardsData, expensesTotalData, expensesTotalByUserData] = useQueries({
         queries: [
             {
                 queryKey: ['raffleNumbers', search, raffleId, filter, page, rowsPerPage],
-                queryFn: () => getRaffleNumers({ raffleId: raffleId!, params: { filter, page, limit: rowsPerPage, search } }),
+                queryFn: () => getRaffleNumers({ raffleId: raffleId!, params: { filter, page, limit: rowsPerPage, search, ...filter} }),
                 enabled: !!raffleId,
             },
             {
@@ -109,17 +109,19 @@ function RaffleNumbersView() {
             },
             {
                 queryKey: ['awards', raffleId],
-                queryFn: () => getAwards({raffleId: raffleId!})
+                queryFn: () => getAwards({ raffleId: raffleId! }),
             },
+            // Solo mostrar el total de gastos si es admin o vendedor responsable
             {
                 queryKey: ['expensesTotal', raffleId],
                 queryFn: () => getExpensesTotal({ raffleId: raffleId! }),
-                enabled: !!raffleId,
+                enabled: !!raffleId && (user.rol.name !== 'vendedor' ),
             },
+            // Solo mostrar el total de gastos por usuario si es vendedor responsable
             {
                 queryKey: ['expensesTotalByUser', raffleId],
                 queryFn: () => getExpensesTotalByUser({ raffleId: raffleId! }),
-                enabled: !!raffleId,
+                enabled: !!raffleId && user.rol.name !== 'admin',
             },
         ]
     });

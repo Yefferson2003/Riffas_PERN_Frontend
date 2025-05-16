@@ -4,8 +4,7 @@ import { PayNumberForm, PayNumbersForm, raffleNumberSchema, RaffleNumberUpdateFo
 
 export async function getRaffleNumers({params, raffleId} : {params : object, raffleId: string}) {
     try { 
-
-        const {data} = await api.get(`/raffles-numbers/${raffleId}`, {params})
+        const {data} = await api.get(`/raffles-numbers/${raffleId}`, { params });
         const response = responseRaffleNumbersSchema.safeParse(data)
         if (response.success) {
             return response.data

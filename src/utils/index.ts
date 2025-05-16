@@ -81,13 +81,18 @@ type redirectToWhatsAppType = {
     infoRaffle: InfoRaffleType
 }
 
-export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, numbers }: redirectToWhatsAppType) : string => {
+export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, numbers}: redirectToWhatsAppType) : string => {
     if (!phone) return '';
-    let whatsappUrl = '' 
-    // Especifica el tipo de retorno como string
-    
+    let whatsappUrl =  ''
+
     let paymentTypeMessage = '';
+    // const due = +dueRaffleNumber;
     const rafflePrice = +infoRaffle.amountRaffle;
+
+    // let dueMessage = '';
+    // if (due > 0) {
+    //     dueMessage = `- Valor restante a deber: ${formatCurrencyCOP(due)}\n`;
+    // }
 
     if (amount === 0) {
         paymentTypeMessage = `Has realizado un apartado de número(s) en la rifa "${infoRaffle.name}".`;
@@ -107,6 +112,7 @@ export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, numbers }:
     Hola ${name},
 
     ${paymentTypeMessage}
+
 
     Detalles de la rifa:
     - Números: ${numbersList}

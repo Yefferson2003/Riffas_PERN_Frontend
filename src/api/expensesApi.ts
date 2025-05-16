@@ -81,7 +81,7 @@ export async function getExpensesByUser( {raffleId, params} :  Pick<ExpensesType
         }
     } catch (error) {
         if (isAxiosError(error) && error.response) {
-            console.log(error);
+            // console.log(error);
             throw new Error(error.response.data.error);
         }
     }

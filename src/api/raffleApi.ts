@@ -51,7 +51,6 @@ export async function getRecaudoByRaffle(raffleId : number) {
     try {
         const {data} = await api.get(`/raffles/${raffleId}/recaudo`)
         const response = totalSchema.safeParse(data)
-        console.log(response.error);
         
         if (response.success) {
             return response.data
@@ -67,7 +66,6 @@ export async function getRecaudoByVendedor(raffleId : number) {
     try {
         const {data} = await api.get(`/raffles/${raffleId}/recaudoByVendedor`)
         const response = totalByVendedorSchema.safeParse(data)
-        console.log(response.error);
         if (response.success) {
             return response.data
         }
