@@ -35,6 +35,7 @@ export async function getRaffleNumberById({raffleId, raffleNumberId} : {raffleId
     try {
         const {data} = await api.get(`/raffles-numbers/${raffleId}/number/${raffleNumberId}`)
         const response = raffleNumberSchema.safeParse(data)
+        console.log(response.error);
         
         if (response.success) {
             return response.data

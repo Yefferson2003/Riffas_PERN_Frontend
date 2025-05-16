@@ -1,4 +1,3 @@
-
 import { InfoRaffleType } from "../components/indexView/ViewRaffleNumberData";
 
 export const azul = '#1446A0'
@@ -79,20 +78,34 @@ type redirectToWhatsAppType = {
     name: string,
     amount: number,
     infoRaffle: InfoRaffleType
+    payments?: {
+        amount: string;
+        isValid: boolean
+    }[]
 }
 
-export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, numbers}: redirectToWhatsAppType) : string => {
+export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, numbers, payments}: redirectToWhatsAppType) : string => {
     if (!phone) return '';
     let whatsappUrl =  ''
 
     let paymentTypeMessage = '';
-    // const due = +dueRaffleNumber;
     const rafflePrice = +infoRaffle.amountRaffle;
 
-    // let dueMessage = '';
-    // if (due > 0) {
-    //     dueMessage = `- Valor restante a deber: ${formatCurrencyCOP(due)}\n`;
-    // }
+    // Calcular deuda SIEMPRE
+    let deudaMessage = '';
+    let deuda = 0;
+    if (payments && payments.length > 0) {
+        // Sumar los abonos válidos
+        const abonosValidos = payments
+            .filter(p => p.isValid)
+            .reduce((acc, p) => acc + Number(p.amount), 0);
+        // Sumar el abono actual
+        const totalAbonado = abonosValidos + amount;
+        deuda = Math.max(rafflePrice - totalAbonado, 0);
+    } else {
+        deuda = Math.max((rafflePrice - amount)* numbers.length, 0);
+    }
+    deudaMessage = `\n- Deuda actual: ${formatCurrencyCOP(deuda)}`;
 
     if (amount === 0) {
         paymentTypeMessage = `Has realizado un apartado de número(s) en la rifa "${infoRaffle.name}".`;
@@ -113,11 +126,10 @@ export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, numbers}: 
 
     ${paymentTypeMessage}
 
-
     Detalles de la rifa:
     - Números: ${numbersList}
     - Descripción: ${infoRaffle.description}
-    - Valor: ${formatCurrencyCOP(rafflePrice)} 
+    - Valor: ${formatCurrencyCOP(rafflePrice)}${deudaMessage}
     - Fecha del sorteo: ${formatDateTimeLarge(infoRaffle.playDate)}
 
     Por favor, contáctanos si tienes alguna pregunta. ¡Buena suerte!
@@ -128,6 +140,5 @@ export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, numbers}: 
 
     const encodedMessage = encodeURIComponent(message);
     whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
-    // window.open(whatsappUrl, '_blank');
     return(whatsappUrl)
 };

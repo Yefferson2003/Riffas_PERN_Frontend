@@ -100,7 +100,7 @@ function RaffleNumbersView() {
         queries: [
             {
                 queryKey: ['raffleNumbers', search, raffleId, filter, page, rowsPerPage],
-                queryFn: () => getRaffleNumers({ raffleId: raffleId!, params: { filter, page, limit: rowsPerPage, search, ...filter} }),
+                queryFn: () => getRaffleNumers({ raffleId: raffleId!, params: { page, limit: rowsPerPage, search, ...filter} }),
                 enabled: !!raffleId,
             },
             {
@@ -326,6 +326,7 @@ function RaffleNumbersView() {
             setNumbersSeleted={setNumbersSeleted}
             setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
             setPdfData={setPdfData}
+            setUrlWasap={setUrlWasap}
         />}
         {raffle && raffleNumbers && pdfData && <PaymentSellNumbersModal
             raffle={raffle}

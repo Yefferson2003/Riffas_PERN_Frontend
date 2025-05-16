@@ -40,9 +40,10 @@ type PayNumbersModalProps = {
     }[]>>
     setPaymentsSellNumbersModal: React.Dispatch<React.SetStateAction<boolean>>
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
+    setUrlWasap: React.Dispatch<React.SetStateAction<string>>
 }
 
-function PayNumbersModal({infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData} : PayNumbersModalProps) {
+function PayNumbersModal({infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap} : PayNumbersModalProps) {
 
     const queryClient = useQueryClient()
     
@@ -105,7 +106,16 @@ function PayNumbersModal({infoRaffle, numbersSeleted, raffleId, rafflePrice, set
         mutate(data, {
             onSuccess: () => {
                 if (formData.phone) {
-                    redirectToWhatsApp({ numbers: numbersSeleted, phone: formData.phone, name: formData.firstName, amount: +infoRaffle.amountRaffle, infoRaffle})
+                    setUrlWasap(
+                        redirectToWhatsApp({
+                            numbers: numbersSeleted,
+                            phone: formData.phone,
+                            name: formData.firstName,
+                            amount: actionMode === 'buy' ? +rafflePrice : 0,
+                            infoRaffle
+                        })
+                    )
+                    
                 }
             }
         })

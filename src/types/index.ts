@@ -218,7 +218,8 @@ const PaymentSchema = z.object({
     riffleNumberId: z.number(),
     userId: z.number(),
     createdAt: z.string(), 
-    updatedAt: z.string(), 
+    updatedAt: z.string(),
+    isValid: z.boolean(),
     user: userVendedor
 });
 export const RaffleNumberSchema = z.object({

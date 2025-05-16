@@ -166,13 +166,15 @@ function PaymentSellNumbersModal({raffle, awards, paymentsSellNumbersModal,pdfDa
             doc.setTextColor("#000");
             doc.text(`Pagos realizados:`, 12, yStart + 45);
     
-            // Tabla de pagos
-            const payments = raffle.payments.map((payment) => [
-                formatCurrencyCOP(+payment.amount),
-                payment.paidAt ? formatDateTimeLargeIsNull(payment.paidAt) : formatDateTimeLarge(payment.createdAt),
-                `${payment.user.firstName} ${payment.user.lastName}`,
-                payment.user.identificationNumber,
-            ]);
+            // Tabla de pagos solo con pagos válidos
+            const payments = raffle.payments
+                .filter(payment => payment.isValid) // Solo pagos válidos
+                .map((payment) => [
+                    formatCurrencyCOP(+payment.amount),
+                    payment.paidAt ? formatDateTimeLargeIsNull(payment.paidAt) : formatDateTimeLarge(payment.createdAt),
+                    `${payment.user.firstName} ${payment.user.lastName}`,
+                    payment.user.identificationNumber,
+                ]);
     
             autoTable(doc, {
                 startY: yStart + 50,
