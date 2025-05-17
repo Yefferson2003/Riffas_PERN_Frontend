@@ -1,16 +1,17 @@
 import { Alert, Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
 import { QueryObserverResult, RefetchOptions, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react"; // Importa el componente de entrada de teléfono
 import { useForm } from "react-hook-form";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { amountNumber, updateNumber } from "../../api/raffleNumbersApi";
 import { PayNumberForm, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types";
 import { formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from "../../utils";
-import ButttonDeleteRaffleNumber from "./ButtonDeleteRaffleNumber";
-import RaflleNumberPaymentsHistory from "./RaflleNumberPaymentsHistory";
-import { useState } from "react";// Importa el componente de entrada de teléfono
 import PhoneNumberInput from "../PhoneNumberInput";
+import RaflleNumberPaymentsHistory from "./RaflleNumberPaymentsHistory";
 import { InfoRaffleType } from "./ViewRaffleNumberData";
+import ButtonsRaffleModal from "./raffleNumber/ButtonsRaffleModal";
+import ButtoToWasap from "./raffleNumber/ButtoToWasap";
 
 const style = {
     position: 'absolute',
@@ -126,6 +127,32 @@ function ViewRaffleNumberModal({ infoRaffle, raffleNumber,setPaymentsSellNumbers
             }
         });
     }
+    const handleToWasap = () => {
+        const firstName = watch('firstName');
+        const phone = watch('phone');
+        const amount = watch('amount');
+
+        if (raffleNumber.status !== 'available') {
+            const url = redirectToWhatsApp({
+                numbers: [{ numberId: 0, number: raffleNumber.number }],
+                phone,
+                name: firstName,
+                amount,
+                infoRaffle,
+                payments: raffleNumber.payments,
+                statusRaffleNumber: raffleNumber.status
+            });
+            setUrlWasap(url);
+
+            // Detect if device is mobile
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile) {
+                window.location.href = url;
+            } else {
+                window.open(url, '_blank');
+            }
+        }
+    }
 
     const handelUpdateNumber = () => {
         const formData={
@@ -151,11 +178,18 @@ function ViewRaffleNumberModal({ infoRaffle, raffleNumber,setPaymentsSellNumbers
             aria-describedby="modal-modal-description"
         >
             <Box sx={style}>
-            <ButttonDeleteRaffleNumber 
+            <ButtonsRaffleModal
                 raffleId={raffleId} 
                 raffleNumberId={raffleNumberId}
                 refect={refect}
             />
+            
+            { raffleNumber.status !== 'available' && 
+                <ButtoToWasap 
+                    handleToWasap={handleToWasap}
+                />
+            }
+            
 
             <h2 className="mb-5 text-2xl font-bold text-center uppercase text-azul">{'Rifa' + ' - ' +formatWithLeadingZeros(raffleNumber.number)}</h2>
 

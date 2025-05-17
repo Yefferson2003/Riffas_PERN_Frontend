@@ -82,9 +82,10 @@ type redirectToWhatsAppType = {
         amount: string;
         isValid: boolean
     }[]
+    statusRaffleNumber?: "sold" | "pending"
 }
 
-export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, numbers, payments}: redirectToWhatsAppType) : string => {
+export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, numbers, payments, statusRaffleNumber}: redirectToWhatsAppType) : string => {
     if (!phone) return '';
     let whatsappUrl =  ''
 
@@ -94,20 +95,31 @@ export const redirectToWhatsApp = ({ amount, infoRaffle, name, phone, numbers, p
     // Calcular deuda SIEMPRE
     let deudaMessage = '';
     let deuda = 0;
-    if (payments && payments.length > 0) {
+    if (statusRaffleNumber && statusRaffleNumber === 'pending' && payments) {
+        const abonosValidos = payments
+            .filter(p => p.isValid)
+            .reduce((acc, p) => acc + Number(p.amount), 0);
+        deuda = Math.max((rafflePrice * numbers.length) - abonosValidos, 0);
+    } else if (payments && payments.length > 0) {
         // Sumar los abonos válidos
         const abonosValidos = payments
             .filter(p => p.isValid)
             .reduce((acc, p) => acc + Number(p.amount), 0);
         // Sumar el abono actual
         const totalAbonado = abonosValidos + amount;
-        deuda = Math.max(rafflePrice - totalAbonado, 0);
+        deuda = Math.max((rafflePrice * numbers.length) - totalAbonado, 0);
     } else {
-        deuda = Math.max((rafflePrice - amount)* numbers.length, 0);
+        deuda = Math.max((rafflePrice * numbers.length) - amount, 0);
     }
     deudaMessage = `\n- Deuda actual: ${formatCurrencyCOP(deuda)}`;
-
-    if (amount === 0) {
+    
+    if (statusRaffleNumber === 'pending' && payments && payments.length > 0) {
+        // Sumar los abonos válidos
+        const abonosValidos = payments
+            .filter(p => p.isValid)
+            .reduce((acc, p) => acc + Number(p.amount), 0);
+        paymentTypeMessage = `Has realizado abonos por un total de ${formatCurrencyCOP(abonosValidos)} para la rifa "${infoRaffle.name}".`;
+    } else if (amount === 0) {
         paymentTypeMessage = `Has realizado un apartado de número(s) en la rifa "${infoRaffle.name}".`;
     } else if (amount < rafflePrice) {
         paymentTypeMessage = `Has realizado un abono de ${formatCurrencyCOP(amount)} para la rifa "${infoRaffle.name}".`;
