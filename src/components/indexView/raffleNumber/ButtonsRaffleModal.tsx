@@ -5,15 +5,18 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { QueryObserverResult, RefetchOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteNumberClient } from "../../../api/raffleNumbersApi";
 import { toast } from "react-toastify";
-import { RaffleNumbersResponseType } from "../../../types";
+import { RaffleNumber, RaffleNumbersResponseType } from "../../../types";
+import ButtoToWasap from "./ButtoToWasap";
 
 type ButtonsRaffleModalProps = {
     raffleId: number
     raffleNumberId: number
     refect: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
+    raffleNumberStatus: RaffleNumber['status']
+    handleToWasap: () => void
 }
 
-function ButtonsRaffleModal({raffleId, raffleNumberId, refect} : ButtonsRaffleModalProps) {
+function ButtonsRaffleModal({raffleId, raffleNumberId, refect, handleToWasap, raffleNumberStatus} : ButtonsRaffleModalProps) {
     const navigate = useNavigate()
 
     const queryClient = useQueryClient()
@@ -44,6 +47,13 @@ function ButtonsRaffleModal({raffleId, raffleNumberId, refect} : ButtonsRaffleMo
                     <DeleteIcon color={isPending ? 'disabled' : 'error'}/>
                 </Tooltip>
             </IconButton>
+
+            { raffleNumberStatus !== 'available' && 
+                <ButtoToWasap
+                    handleToWasap={handleToWasap}
+                />
+            }
+
             
             <IconButton
                 onClick={() => navigate(location.pathname, {replace: true})}

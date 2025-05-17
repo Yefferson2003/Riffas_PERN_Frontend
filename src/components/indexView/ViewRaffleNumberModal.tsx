@@ -8,10 +8,9 @@ import { amountNumber, updateNumber } from "../../api/raffleNumbersApi";
 import { PayNumberForm, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types";
 import { formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from "../../utils";
 import PhoneNumberInput from "../PhoneNumberInput";
+import ButtonsRaffleModal from "./raffleNumber/ButtonsRaffleModal";
 import RaflleNumberPaymentsHistory from "./RaflleNumberPaymentsHistory";
 import { InfoRaffleType } from "./ViewRaffleNumberData";
-import ButtonsRaffleModal from "./raffleNumber/ButtonsRaffleModal";
-import ButtoToWasap from "./raffleNumber/ButtoToWasap";
 
 const style = {
     position: 'absolute',
@@ -178,19 +177,15 @@ function ViewRaffleNumberModal({ infoRaffle, raffleNumber,setPaymentsSellNumbers
             aria-describedby="modal-modal-description"
         >
             <Box sx={style}>
+                
             <ButtonsRaffleModal
                 raffleId={raffleId} 
                 raffleNumberId={raffleNumberId}
                 refect={refect}
+                raffleNumberStatus={raffleNumber.status}
+                handleToWasap={handleToWasap}
             />
             
-            { raffleNumber.status !== 'available' && 
-                <ButtoToWasap 
-                    handleToWasap={handleToWasap}
-                />
-            }
-            
-
             <h2 className="mb-5 text-2xl font-bold text-center uppercase text-azul">{'Rifa' + ' - ' +formatWithLeadingZeros(raffleNumber.number)}</h2>
 
             {raffleNumber.status === 'available' ? (
