@@ -324,6 +324,23 @@ export const responseRaffleNumbersExelSchema = ResponsePaginationSchema.pick({
     raffleNumbers: z.array(raffleNumberExelSchema)
 })
 
+export const raffleNumbersExelFilterSchema = z.object({
+    userName: z.string(),
+    userLastName: z.string(),
+    rafflePrice: z.string(),
+    raffleNumbers: z.array(raffleNumbersSchema.pick({
+        id: true,
+        number: true,
+        status: true,
+    }).extend({
+        paymentAmount: z.string(),
+        paymentDue: z.string(),
+        firstName: z.string(),
+        lastName: z.string(),
+        phone: z.string(),
+    })),
+})
+
 
 
 export type RaffleNumberPayments = z.infer<typeof PaymentSchema>

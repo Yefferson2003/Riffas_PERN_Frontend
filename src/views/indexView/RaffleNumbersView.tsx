@@ -1,5 +1,5 @@
 import LocalActivityIcon from '@mui/icons-material/LocalActivity';
-import { Chip, CircularProgress, FormControl, FormControlLabel, MenuItem, Pagination, Select, SelectChangeEvent, Switch, TextField } from "@mui/material";
+import { Chip, CircularProgress, FormControl, FormControlLabel, IconButton, MenuItem, Pagination, Select, SelectChangeEvent, Switch, TextField, Tooltip } from "@mui/material";
 import { useQueries } from '@tanstack/react-query';
 import { useEffect, useState } from "react";
 import { useMediaQuery } from 'react-responsive';
@@ -24,6 +24,9 @@ import { colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, format
 import LoaderView from "../LoaderView";
 import { getAwards } from '../../api/awardsApi';
 import { getExpensesTotal, getExpensesTotalByUser } from '../../api/expensesApi';
+import ArticleIcon from '@mui/icons-material/Article';
+import { exelRaffleNumbersFilter } from '../../utils/exel';
+import { toast } from 'react-toastify';
 
 
 const styleForm = {
@@ -58,12 +61,26 @@ function RaffleNumbersView() {
     const [optionSeleted, setOptionSeleted] = useState(false)
     const [numbersSeleted, setNumbersSeleted] = useState<{numberId: number, number: number}[]>([])
 
-    const [filter, setFilter] = useState({});
-    const [search, setSearch] = useState('');
+    const [filter, setFilter] = useState<{ sold?: boolean; available?: boolean; pending?: boolean }>({});
+    const [searchParams, setSearchParams] = useState({ 
+        search: '', 
+        searchAmount: '' 
+    });
 
-    const handleChangeSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearch(e.target.value)
-    }
+    const handleChangeSearchParams = (e : React.ChangeEvent<HTMLInputElement>) => {
+        setSearchParams(prev => ({
+            ...prev,
+            [e.target.name]: e.target.value
+        }));
+    };
+
+    // const handleChangeSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     setSearchParams(prev => ({ ...prev, search: e.target.value }));
+    // }
+    
+    // const handleChangeSearchAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     setSearchParams(prev => ({ ...prev, searchAmount: e.target.value }));
+    // }
 
     const handleFilterChange = (e: SelectChangeEvent<string>) => {
         // Definir un tipo específico para los filtros
@@ -82,6 +99,8 @@ function RaffleNumbersView() {
 
         // Actualizar el uso de setFilter
         setFilter(filters[e.target.value] || {});
+
+        setSearchParams({ search: '', searchAmount: '' });
     };
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, newPage: number)=> {
@@ -99,8 +118,8 @@ function RaffleNumbersView() {
     const [raffleNumbersData, raffleData, awardsData, expensesTotalData, expensesTotalByUserData] = useQueries({
         queries: [
             {
-                queryKey: ['raffleNumbers', search, raffleId, filter, page, rowsPerPage],
-                queryFn: () => getRaffleNumers({ raffleId: raffleId!, params: { page, limit: rowsPerPage, search, ...filter} }),
+                queryKey: ['raffleNumbers', searchParams.search, raffleId, filter, page, rowsPerPage, searchParams.searchAmount],
+                queryFn: () => getRaffleNumers({ raffleId: raffleId!, params: { page, limit: rowsPerPage, search: searchParams.search, amount: searchParams.searchAmount, ...filter} }),
                 enabled: !!raffleId,
             },
             {
@@ -262,12 +281,43 @@ function RaffleNumbersView() {
                             <MenuItem value={'pending'}>Pendientes</MenuItem>
                             <MenuItem value={'sold'}>Vendidos</MenuItem>
                         </Select>
-                        <TextField id='search' label="Buscar..." size='small'
+                        
+                        <TextField id='search' label="Buscar por C.C. o Número" size='small'
                             variant='filled'
-                            value={search}
-                            onChange={handleChangeSearch}
+                            name='search'
+                            value={searchParams.search}
+                            onChange={handleChangeSearchParams}
                         />
+                        
+                        { filter.pending === true && 
+                            <TextField id='searchAmount' label="Buscar por Monto" size='small'
+                                variant='filled'
+                                name='searchAmount'
+                                value={searchParams.searchAmount}
+                                onChange={handleChangeSearchParams}
+                            />
+                        }
+
                     </FormControl>
+                    
+                    {(searchParams.search || searchParams.searchAmount || Object.keys(filter).length > 0) && (
+                        <IconButton
+                            onClick={() => {
+                                
+                                toast.info('Descargando archivo...', { autoClose: 2000 });
+                                exelRaffleNumbersFilter(raffleId!, {
+                                    search: searchParams.search,
+                                    amount: searchParams.searchAmount,
+                                    ...filter,
+                                });
+                            }}
+                        >
+                            <Tooltip title={"Descargar Búsqueda"} placement="bottom-start">
+                                <ArticleIcon color="success" />
+                            </Tooltip>
+                        </IconButton>
+                    )}
+                    
                     <FormControlLabel control={<Switch value={optionSeleted} onChange={handleSwitchChange} />} label="Seleccionar Números" />
                 </div>
                 

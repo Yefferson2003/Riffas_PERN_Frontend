@@ -2,6 +2,15 @@ import { InfoRaffleType } from "../components/indexView/ViewRaffleNumberData";
 
 export const azul = '#1446A0'
 
+export function translateRaffleStatus(status: "available" | "sold" | "pending"): string {
+    const translations: Record<typeof status, string> = {
+        available: "Disponible",
+        sold: "Vendido",
+        pending: "Pendiente"
+    };
+    return translations[status] || status;
+}
+
 export const rifflesNumbersStatusEnum = ['available', 'sold', 'pending'] as const;
 
 export const colorStatusRaffleNumber : {[key: string] : "warning" | "default" | "success"  } = {

@@ -1,8 +1,8 @@
 import dayjs from 'dayjs';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import { formatDateTimeLargeIsNull, formatWithLeadingZeros } from '.';
-import { getRaffleNumersExel } from '../api/raffleNumbersApi';
+import { formatCurrencyCOP, formatDateTimeLargeIsNull, formatWithLeadingZeros, translateRaffleStatus } from '.';
+import { getRaffleNumersExel, getRaffleNumersExelFilter } from '../api/raffleNumbersApi';
 
 
 export const fetchRaffleNumbers = async (raffleId: number) => {
@@ -20,7 +20,89 @@ export const fetchRaffleNumbers = async (raffleId: number) => {
 };
 
 
-const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable: string | undefined) => {
+export const exelRaffleNumbersFilter = async (raffleId: string, params: object) => {
+
+    try {
+        const data = await getRaffleNumersExelFilter({ params, raffleId });
+        if (!data) {
+            console.error("No se obtuvieron datos de la rifa");
+            return;
+        }
+
+        const { raffleNumbers, rafflePrice, userLastName, userName } = data;
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Resumen Rifa");
+
+        // Cabecera personalizada
+        worksheet.mergeCells('A1:C1');
+        worksheet.getCell('A1').value = `Responsable: ${userLastName || '---'}, ${userName || '---'}`;
+        worksheet.getCell('A1').font = { bold: true, size: 14 };
+
+        worksheet.mergeCells('A2:C2');
+        worksheet.getCell('A2').value = `Precio de la Boleta: ${formatCurrencyCOP(+rafflePrice) || '---'}`;
+        worksheet.getCell('A2').font = { bold: true, size: 12 };
+
+        // Encabezados de columnas
+        worksheet.addRow([]);
+        worksheet.addRow(['Número', 'Abonado', 'Deuda', ' Nombre',  'Apellido','Teléfono', 'Estado']);
+        worksheet.getRow(6).font = { bold: true, size: 14 };
+
+
+        // Agregar los números de la rifa y su estado con color de fondo según el estado
+        raffleNumbers.forEach((raffle) => {
+            const row = worksheet.addRow([
+                formatWithLeadingZeros(raffle.number),
+                formatCurrencyCOP(+raffle.paymentAmount) || 0,
+                formatCurrencyCOP(+raffle.paymentDue) || 0,
+                raffle.firstName || '---',
+                raffle.lastName || '---',
+                raffle.phone || '---',
+                translateRaffleStatus(raffle.status),
+            ]);
+
+            let fillColor;
+            switch (raffle.status) {
+            case "sold":
+                fillColor = "FF00FF00"; // Verde
+                break;
+            case "pending":
+                fillColor = "FFFFFF00"; // Amarillo
+                break;
+            case "available":
+                fillColor = "FFFFFFFF"; // Blanco
+                break;
+            default:
+                fillColor = "FFFFFFFF"; // Por defecto Blanco
+            }
+
+            row.eachCell((cell) => {
+            cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: fillColor },
+            };
+            });
+        });
+
+        // Ajustar ancho de columnas
+        worksheet.columns = [
+            { width: 15 },
+            { width: 20 },
+        ];
+
+        // Guardar el archivo
+        const todayDate = dayjs().format('DDMMYYYY');
+        const filename = `Resumen_Rifa_${userLastName || 'responsable'}_${userName || ''}_${todayDate}.xlsx`;
+        const buffer = await workbook.xlsx.writeBuffer();
+        saveAs(new Blob([buffer]), filename);
+
+    } catch (error) {
+        console.error("Error al exportar los números de la rifa:", error);
+    }
+}
+
+export const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable: string | undefined) => {
     if (!raffleId) {
         console.error(" error de datos");
         return;
@@ -157,4 +239,3 @@ const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable:
     }
 };
 
-export default exportRaffleNumbers;

@@ -8,8 +8,8 @@ import { IconButton, Tooltip } from '@mui/material';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Raffle, User } from '../../../types';
 import ButtonDeleteRaffle from '../ButtonDeleteRaffle';
-import exportRaffleNumbers from '../../../utils/exel';
 import { toast } from 'react-toastify';
+import { exportRaffleNumbers } from '../../../utils/exel';
 
 type RaffleSideBarProps = {
     raffleId: string;
@@ -88,7 +88,7 @@ function RaffleSideBar( { raffleId, raffle }: RaffleSideBarProps) {
                         <IconButton
                             onClick={() => {
                             exportRaffleNumbers(raffleId, raffle?.nitResponsable);
-                            toast.info("Descargando archivo...");
+                                toast.info("Descargando archivo...");
                             }}
                         >
                             <Tooltip title={"Descargar informe"} placement="bottom-start">
