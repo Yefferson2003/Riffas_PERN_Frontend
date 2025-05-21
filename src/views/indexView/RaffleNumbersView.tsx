@@ -67,10 +67,18 @@ function RaffleNumbersView() {
         searchAmount: '' 
     });
 
-    const handleChangeSearchParams = (e : React.ChangeEvent<HTMLInputElement>) => {
+    const handleChangeSearchParams = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+
+        // Validar solo si el campo es 'searchAmount'
+        if (name === 'searchAmount' && value && !/^\d*$/.test(value)) {
+            toast.error('Solo se permiten números en el campo de monto.', { autoClose: 2000 });
+            return;
+        }
+
         setSearchParams(prev => ({
             ...prev,
-            [e.target.name]: e.target.value
+            [name]: value
         }));
     };
 
