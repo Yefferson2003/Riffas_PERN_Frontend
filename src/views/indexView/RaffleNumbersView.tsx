@@ -307,7 +307,7 @@ function RaffleNumbersView() {
 
                     </FormControl>
                     
-                    {(searchParams.search || searchParams.searchAmount || Object.keys(filter).length > 0) && (
+                    {user.rol.name !== 'vendedor' && (searchParams.search || searchParams.searchAmount || Object.keys(filter).length > 0) && (
                         <div className="flex gap-2">
                             <button
                                 className="px-4 py-2 font-semibold text-white transition rounded bg-azul hover:scale-105 hover:shadow-lg"
