@@ -328,6 +328,7 @@ export const raffleNumbersExelFilterSchema = z.object({
     userName: z.string(),
     userLastName: z.string(),
     rafflePrice: z.string(),
+    count: z.number(),
     raffleNumbers: z.array(raffleNumbersSchema.pick({
         id: true,
         number: true,

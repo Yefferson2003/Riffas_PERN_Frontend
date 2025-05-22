@@ -20,7 +20,7 @@ export const fetchRaffleNumbers = async (raffleId: number) => {
 };
 
 
-export const exelRaffleNumbersFilter = async (raffleId: string, params: object) => {
+export const exelRaffleNumbersFilterDetails = async (raffleId: string, params: object) => {
 
     try {
         const data = await getRaffleNumersExelFilter({ params, raffleId });
@@ -29,11 +29,15 @@ export const exelRaffleNumbersFilter = async (raffleId: string, params: object) 
             return;
         }
 
-        const { raffleNumbers, rafflePrice, userLastName, userName } = data;
+        const { raffleNumbers, rafflePrice, userLastName, userName, count } = data;
 
+        
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("Resumen Rifa");
-
+        
+        worksheet.mergeCells('A3:C3');
+        worksheet.getCell('A3').value = `Números: ${count ?? raffleNumbers.length}`;
+        worksheet.getCell('A3').font = { bold: true, size: 12 };
         // Cabecera personalizada
         worksheet.mergeCells('A1:C1');
         worksheet.getCell('A1').value = `Responsable: ${userLastName || '---'}, ${userName || '---'}`;
@@ -94,6 +98,78 @@ export const exelRaffleNumbersFilter = async (raffleId: string, params: object) 
         // Guardar el archivo
         const todayDate = dayjs().format('DDMMYYYY');
         const filename = `Resumen_Rifa_${userLastName || 'responsable'}_${userName || ''}_${todayDate}.xlsx`;
+        const buffer = await workbook.xlsx.writeBuffer();
+        saveAs(new Blob([buffer]), filename);
+
+    } catch (error) {
+        console.error("Error al exportar los números de la rifa:", error);
+    }
+}
+
+export const exelRaffleNumbersFilter = async (raffleId: string, params: object) => {
+
+    try {
+        const data = await getRaffleNumersExelFilter({ params, raffleId });
+        if (!data) {
+            console.error("No se obtuvieron datos de la rifa");
+            return;
+        }
+
+        const { raffleNumbers, rafflePrice, userLastName, userName, count } = data;
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Resumen Rifa");
+
+        // Cabecera personalizada
+        worksheet.mergeCells('A1:C1');
+        worksheet.getCell('A1').value = `Responsable: ${userLastName || '---'}, ${userName || '---'}`;
+        worksheet.getCell('A1').font = { bold: true, size: 14 };
+
+        worksheet.mergeCells('A2:C2');
+        worksheet.getCell('A2').value = `Precio de la Boleta: ${formatCurrencyCOP(+rafflePrice) || '---'}`;
+        worksheet.getCell('A2').font = { bold: true, size: 12 };
+
+        worksheet.mergeCells('A3:C3');
+        worksheet.getCell('A3').value = `Números: ${count ?? raffleNumbers.length}`;
+        worksheet.getCell('A3').font = { bold: true, size: 12 };
+
+        // Agrupar números por centenas
+        const grupos: Record<string, string[]> = {};
+        raffleNumbers.forEach((raffle) => {
+            const num = Number(raffle.number);
+            const centena = Math.floor(num / 100) * 100;
+            const key = `${formatWithLeadingZeros(centena)}-${formatWithLeadingZeros(centena + 99)}`;
+            if (!grupos[key]) grupos[key] = [];
+            grupos[key].push(formatWithLeadingZeros(num));
+        });
+
+        // Determinar el máximo de números en un grupo para las filas
+        const maxFilas = Math.max(...Object.values(grupos).map(arr => arr.length));
+        const columnas = Object.keys(grupos).sort((a, b) => {
+            const aNum = parseInt(a.split('-')[0]);
+            const bNum = parseInt(b.split('-')[0]);
+            return aNum - bNum;
+        });
+
+        // Encabezado de columnas por rango
+        worksheet.addRow([]);
+        worksheet.addRow(columnas);
+        if (worksheet.lastRow) {
+            worksheet.getRow(worksheet.lastRow.number).font = { bold: true, size: 14 };
+        }
+
+        // Agregar filas de números agrupados
+        for (let i = 0; i < maxFilas; i++) {
+            const fila = columnas.map(col => grupos[col][i] || '');
+            worksheet.addRow(fila);
+        }
+
+        // Ajustar ancho de columnas
+        worksheet.columns = columnas.map(() => ({ width: 12 }));
+
+        // Guardar el archivo
+        const todayDate = dayjs().format('DDMMYYYY');
+        const filename = `Resumen_Rifa_NumerosAgrupados_${userLastName || 'responsable'}_${userName || ''}_${todayDate}.xlsx`;
         const buffer = await workbook.xlsx.writeBuffer();
         saveAs(new Blob([buffer]), filename);
 

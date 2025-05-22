@@ -1,9 +1,12 @@
 import LocalActivityIcon from '@mui/icons-material/LocalActivity';
-import { Chip, CircularProgress, FormControl, FormControlLabel, IconButton, MenuItem, Pagination, Select, SelectChangeEvent, Switch, TextField, Tooltip } from "@mui/material";
+import { Chip, CircularProgress, FormControl, FormControlLabel, MenuItem, Pagination, Select, SelectChangeEvent, Switch, TextField } from "@mui/material";
 import { useQueries } from '@tanstack/react-query';
 import { useEffect, useState } from "react";
 import { useMediaQuery } from 'react-responsive';
 import { Navigate, useNavigate, useOutletContext, useParams } from "react-router-dom";
+import { toast } from 'react-toastify';
+import { getAwards } from '../../api/awardsApi';
+import { getExpensesTotal, getExpensesTotalByUser } from '../../api/expensesApi';
 import { getRaffleById } from '../../api/raffleApi';
 import { getRaffleNumers } from '../../api/raffleNumbersApi';
 import NumbersSeleted from '../../components/indexView/NumbersSeleted';
@@ -21,12 +24,8 @@ import RaffleSideBar from '../../components/indexView/raffle/RaffleSideBar';
 import socket from '../../socket';
 import { RaffleNumbersPayments, User } from "../../types";
 import { colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros } from "../../utils";
+import { exelRaffleNumbersFilter, exelRaffleNumbersFilterDetails } from '../../utils/exel';
 import LoaderView from "../LoaderView";
-import { getAwards } from '../../api/awardsApi';
-import { getExpensesTotal, getExpensesTotalByUser } from '../../api/expensesApi';
-import ArticleIcon from '@mui/icons-material/Article';
-import { exelRaffleNumbersFilter } from '../../utils/exel';
-import { toast } from 'react-toastify';
 
 
 const styleForm = {
@@ -309,21 +308,34 @@ function RaffleNumbersView() {
                     </FormControl>
                     
                     {(searchParams.search || searchParams.searchAmount || Object.keys(filter).length > 0) && (
-                        <IconButton
-                            onClick={() => {
-                                
-                                toast.info('Descargando archivo...', { autoClose: 2000 });
-                                exelRaffleNumbersFilter(raffleId!, {
-                                    search: searchParams.search,
-                                    amount: searchParams.searchAmount,
-                                    ...filter,
-                                });
-                            }}
-                        >
-                            <Tooltip title={"Descargar Búsqueda"} placement="bottom-start">
-                                <ArticleIcon color="success" />
-                            </Tooltip>
-                        </IconButton>
+                        <div className="flex gap-2">
+                            <button
+                                className="px-4 py-2 font-semibold text-white transition rounded bg-azul hover:scale-105 hover:shadow-lg"
+                                onClick={() => {
+                                    toast.info('Descargando archivo...', { autoClose: 2000 });
+                                    exelRaffleNumbersFilterDetails(raffleId!, {
+                                        search: searchParams.search,
+                                        amount: searchParams.searchAmount,
+                                        ...filter,
+                                    });
+                                }}
+                            >
+                                Descargar Búsqueda Detallada
+                            </button>
+                            <button
+                                className="px-4 py-2 font-semibold text-white transition rounded bg-azul hover:scale-105 hover:shadow-lg"
+                                onClick={() => {
+                                    toast.info('Descargando archivo...', { autoClose: 2000 });
+                                    exelRaffleNumbersFilter(raffleId!, {
+                                        search: searchParams.search,
+                                        amount: searchParams.searchAmount,
+                                        ...filter,
+                                    });
+                                }}
+                            >
+                                Descargar Búsqueda Simple
+                            </button>
+                        </div>
                     )}
                     
                     <FormControlLabel control={<Switch value={optionSeleted} onChange={handleSwitchChange} />} label="Seleccionar Números" />
