@@ -109,7 +109,7 @@ export const redirectToWhatsApp = ({
     numbers,
     payments,
     statusRaffleNumber,
-    }: redirectToWhatsAppType): string => {
+}: redirectToWhatsAppType): string => {
     if (!phone) return "";
 
     const rafflePrice = +infoRaffle.amountRaffle;
@@ -117,13 +117,13 @@ export const redirectToWhatsApp = ({
 
     if (statusRaffleNumber === "pending" && payments) {
         const abonosValidos = payments
-        .filter(p => p.isValid)
-        .reduce((acc, p) => acc + Number(p.amount), 0);
+            .filter(p => p.isValid)
+            .reduce((acc, p) => acc + Number(p.amount), 0);
         deuda = Math.max((rafflePrice * numbers.length) - abonosValidos, 0);
     } else if (payments && payments.length > 0) {
         const abonosValidos = payments
-        .filter(p => p.isValid)
-        .reduce((acc, p) => acc + Number(p.amount), 0);
+            .filter(p => p.isValid)
+            .reduce((acc, p) => acc + Number(p.amount), 0);
         const totalAbonado = abonosValidos + amount;
         deuda = Math.max((rafflePrice * numbers.length) - totalAbonado, 0);
     } else {
@@ -133,17 +133,17 @@ export const redirectToWhatsApp = ({
     let paymentTypeMessage = "";
     if (payments && statusRaffleNumber === "pending" && payments?.length > 0) {
         const abonosValidos = payments
-        .filter(p => p.isValid)
-        .reduce((acc, p) => acc + Number(p.amount), 0);
-        paymentTypeMessage = `Has realizado abonos por un total de ${formatCurrencyCOP(abonosValidos)} “${infoRaffle.name}” 💸`;
+            .filter(p => p.isValid)
+            .reduce((acc, p) => acc + Number(p.amount), 0);
+        paymentTypeMessage = `Has realizado abonos por un total de *${formatCurrencyCOP(abonosValidos)}* para la rifa *“${infoRaffle.name}”* 💸`;
     } else if (amount === 0) {
-        paymentTypeMessage = `Has apartado el/los número(s) en la rifa “${infoRaffle.name}” 🎟`;
+        paymentTypeMessage = `Has apartado el/los número(s) en la rifa *“${infoRaffle.name}”* 🎟`;
     } else if (amount < rafflePrice) {
-        paymentTypeMessage = `Has realizado un abono de ${formatCurrencyCOP(amount)} para la rifa “${infoRaffle.name}” 💵`;
+        paymentTypeMessage = `Has realizado un abono de *${formatCurrencyCOP(amount)}* para la rifa *“${infoRaffle.name}”* 💵`;
     } else if (amount === rafflePrice) {
-        paymentTypeMessage = `Has realizado el pago completo de ${formatCurrencyCOP(amount)} para la rifa “${infoRaffle.name}” ✅`;
+        paymentTypeMessage = `Has realizado el pago completo de *${formatCurrencyCOP(amount)}* para la rifa *“${infoRaffle.name}”* ✅`;
     } else {
-        paymentTypeMessage = `Has realizado un pago de ${formatCurrencyCOP(amount)} para la rifa “${infoRaffle.name}” 💰`;
+        paymentTypeMessage = `Has realizado un pago de *${formatCurrencyCOP(amount)}* para la rifa *“${infoRaffle.name}”* 💰`;
     }
 
     const numbersList = numbers
@@ -151,22 +151,22 @@ export const redirectToWhatsApp = ({
         .join(", ");
 
     const message = `
-    ✨ Hola ${name},
+✨ Hola *${name}*,
 
-    ${paymentTypeMessage}
+${paymentTypeMessage}
 
-    📌 Detalles:
-    🔢 Números: ${numbersList}
-    💬 Descripción: ${infoRaffle.description}
-    💵 Valor por número: ${formatCurrencyCOP(rafflePrice)}
-    📉 Deuda actual: ${formatCurrencyCOP(deuda)}
-    🗓 Sorteo: ${formatDateTimeLarge(infoRaffle.playDate)}
+📌 Detalles:
+🔢 Números: *${numbersList}*
+💬 Descripción: *${infoRaffle.description}*
+💵 Valor por número: *${formatCurrencyCOP(rafflePrice)}*
+📉 Deuda actual: *${formatCurrencyCOP(deuda)}*
+🗓 Sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*
 
-    Si tienes alguna pregunta, estamos aquí para ayudarte 🤝
+Si tienes alguna pregunta, estamos aquí para ayudarte 🤝
 
-    Saludos,  
-    ${infoRaffle.responsable}
-    `.trim();
+Saludos,  
+*${infoRaffle.responsable}*
+`.trim();
 
     const encodedMessage = encodeURIComponent(message);
     return `https://wa.me/${phone}?text=${encodedMessage}`;
