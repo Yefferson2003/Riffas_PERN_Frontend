@@ -151,7 +151,7 @@ export const redirectToWhatsApp = ({
         .join(", ");
 
     const message = `
-✨ Hola *${name.trim}*
+✨ Hola *${name.trim()}*
 
 ${paymentTypeMessage}
 
@@ -165,7 +165,7 @@ ${paymentTypeMessage}
 Si tienes alguna pregunta, estamos aquí para ayudarte 🤝
 
 Saludos,  
-*${infoRaffle.responsable.trim}*
+*${infoRaffle.responsable.trim()}*
 `.trim();
 
     const encodedMessage = encodeURIComponent(message);
