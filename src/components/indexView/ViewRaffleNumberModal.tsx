@@ -232,16 +232,16 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                     <TextField id="amount" label="Monto" variant="outlined" 
                         error={!!errors.amount}
                         helperText={errors.amount?.message}
-                        {...register('amount', { 
-                            required: 'Monto obligatorio', 
-                            pattern: {
-                                value: /^[0-9]+$/,
-                                message: 'Solo se permiten números',
-                            },
-                            validate: {
-                                maxValue: (value) => 
-                                    Number(value) <= +raffleNumber.paymentDue || `El monto no puede superar los ${formatWithLeadingZeros(+raffleNumber.paymentDue, totalNumbers)}`,
-                            },
+                        {...register('amount', {
+                        required: 'Monto obligatorio',
+                        pattern: {
+                            value: /^[0-9]+(?:\.[0-9]{1,2})?$/, // Allows numbers with up to 2 decimal places
+                            message: 'El monto debe ser numérico (puede incluir decimales con hasta dos cifras)',
+                        },
+                        validate: {
+                            maxValue: (value) =>
+                            Number(value) <= +raffleNumber.paymentDue || `El monto no puede superar los ${formatCurrencyCOP(+raffleNumber.paymentDue)}`, // Use formatCurrencyCOP here for consistency
+                        },
                         })}
                     />
                     <TextField id="firstName" label="Nombres" variant="outlined" 

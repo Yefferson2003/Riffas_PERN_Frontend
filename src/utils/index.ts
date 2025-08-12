@@ -21,11 +21,11 @@ export const colorStatusRaffleNumber : {[key: string] : "warning" | "default" | 
 }
 
 export function formatCurrencyCOP(amount: number) {
-    return new Intl.NumberFormat('es-CO', {
+    return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'COP',
-        minimumFractionDigits: 0, // No decimales
-        maximumFractionDigits: 0  // No decimales
+        currency: 'USD',
+        minimumFractionDigits: 2, // Mostrar siempre dos decimales
+        maximumFractionDigits: 2  // Redondear a dos decimales si hay más
     }).format(amount);
 }
 
