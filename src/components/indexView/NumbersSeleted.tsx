@@ -3,6 +3,7 @@ import { formatWithLeadingZeros } from "../../utils";
 import { useNavigate } from "react-router-dom";
 
 type NumbersSeletedProps = {
+    totalNumbers: number
     numbersSeleted: {
         numberId: number;
         number: number;
@@ -13,7 +14,7 @@ type NumbersSeletedProps = {
     }[]>>
 }
 
-function NumbersSeleted({numbersSeleted, setNumbersSeleted} : NumbersSeletedProps) {
+function NumbersSeleted({totalNumbers, numbersSeleted, setNumbersSeleted} : NumbersSeletedProps) {
     const navigate = useNavigate()
 
     const handleDelete = (raffleNumberId: number) => {
@@ -31,7 +32,7 @@ function NumbersSeleted({numbersSeleted, setNumbersSeleted} : NumbersSeletedProp
             {numbersSeleted.map((item) => (
                 <Chip key={item.numberId} 
                     sx={{height: 35, fontWeight: 'bold' }}
-                    label={formatWithLeadingZeros(item.number)} 
+                    label={formatWithLeadingZeros(item.number, totalNumbers)} 
                     variant="filled" 
                     size="small"
                     color="primary"

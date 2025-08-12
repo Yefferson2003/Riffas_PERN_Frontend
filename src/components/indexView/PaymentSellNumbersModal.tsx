@@ -1,12 +1,10 @@
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { Box, IconButton, Modal, Tooltip, Typography } from "@mui/material";
-import autoTable from "jspdf-autotable";
 import { AwardType, Raffle, RaffleNumbersPayments } from "../../types";
 
 import CloseIcon from '@mui/icons-material/Close';
-import dayjs from 'dayjs';
-import jsPDF from 'jspdf';
-import { formatCurrencyCOP, formatDateTimeLarge, formatDateTimeLargeIsNull, formatWithLeadingZeros } from '../../utils';
+
+import { formatCurrencyCOP, formatDateTimeLarge, formatDateTimeLargeIsNull, formatWithLeadingZeros, handleDownloadPDF } from '../../utils';
 
 
 const style = {
@@ -24,7 +22,8 @@ const style = {
     overflowY: 'auto',
 };
 
-type PaymentSellNumbersModalProps = {
+export type PaymentSellNumbersModalProps = {
+    totalNumbers: number,
     raffle: Raffle
     awards: AwardType[]
     setPaymentsSellNumbersModal: React.Dispatch<React.SetStateAction<boolean>>
@@ -34,167 +33,174 @@ type PaymentSellNumbersModalProps = {
     urlWasap: string
 }
 
-function PaymentSellNumbersModal({raffle, awards, paymentsSellNumbersModal,pdfData,setPaymentsSellNumbersModal,setPdfData, urlWasap} : PaymentSellNumbersModalProps) {
-    const handleDownloadPDF = () => {
-        const doc = new jsPDF();
-    
-        // Formatear el título con la información adicional
-        const raffleInfo = `Rifa: ${raffle.id} - NIT: ${raffle.nitResponsable}`;
-        const raffleDescription = raffle.description || "Sin descripción";
-        const rafflePlayDate = `Fecha de Juego: ${formatDateTimeLarge(raffle.playDate)}`;
-    
-        // Título principal
-        doc.setFontSize(18);
-        doc.setTextColor("#1446A0");
-        doc.text("Resumen de Compra", 105, 15, { align: "center" });
-    
-        // Subtítulos (información adicional de la rifa)
-        doc.setFontSize(12);
-        doc.setFont("bold");
-        doc.setTextColor("#000");
-        doc.text(raffleInfo, 105, 25, { align: "center" });
-        doc.setFont("normal");
-        doc.text(raffleDescription, 105, 30, { align: "center" });
-        doc.text(rafflePlayDate, 105, 35, { align: "center" });
-        // Sección de premios
-        doc.setFontSize(14);
-        doc.setTextColor("#1446A0");
-        doc.text("Premios", 105, 45, { align: "center" });
+function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNumbersModal,pdfData,setPaymentsSellNumbersModal,setPdfData, urlWasap} : PaymentSellNumbersModalProps) {
 
-        let currentY = 55; // Variable para rastrear la posición Y actual
+    // const handleDownloadPDF = ( raffle, totalNumbers, awards, setPdfData ) => {
+    // const doc = new jsPDF({
+    //     orientation: "portrait",
+    //     unit: "mm",
+    //     format: [80, 150],
+    // });
 
-        if (awards.length > 0) {
-            awards.forEach((award, index) => {
-            const yPosition = currentY + (index * 6); // Ajustar el espaciado dinámicamente
+    // pdfData.forEach((entry, index) => {
+    //     const yStart = index === 0 ? 10 : doc.internal.pageSize.height * index + 10;
+    //     let y = yStart;
 
-            doc.setFontSize(12);
-            doc.setTextColor("#000");
-            doc.text(`Premio ${index + 1}:`, 12, yPosition);
-            doc.setFont("bold");
-            doc.setTextColor("#1446A0");
-            doc.text(award.name, 40, yPosition);
+    //     if (index > 0) doc.addPage([80, 150]);
 
-            doc.setFont("normal");
-            doc.setTextColor("#000");
-            doc.text(`Fecha de Juego:`, 12, yPosition + 6);
-            doc.setFont("bold");
-            doc.setTextColor("#1446A0");
-            doc.text(formatDateTimeLarge(award.playDate), 40, yPosition + 6);
+    //     // 🧾 Encabezado
+    //     doc.setFont("courier", "bold");
+    //     doc.setFontSize(11);
+    //     doc.text(raffle.name, 40, y, { align: "center" });
+    //     y += 5;
+    //     doc.setFontSize(9);
+    //     doc.text(`Responsable: ${raffle.nameResponsable}`, 40, y, { align: "center" });
+    //     y += 4;
+    //     doc.text(`NIT: ${raffle.nitResponsable}`, 40, y, { align: "center" });
+    //     y += 4;
+    //     doc.setFont("courier", "normal");
+    //     doc.text(`"${raffle.description}"`, 40, y, { align: "center" });
+    //     y += 6;
+    //     doc.setDrawColor(0);
+    //     doc.setLineWidth(0.2);
+    //     doc.line(5, y, 75, y);
+    //     y += 4;
 
-            currentY = yPosition + 12; // Actualizar la posición Y actual
-            });
-        } else {
-            doc.setFontSize(12);
-            doc.setTextColor("#000");
-            doc.text("No hay premios registrados para esta rifa.", 105, currentY, { align: "center" });
-            currentY += 3; // Ajustar la posición Y para el siguiente contenido
-        }
+    //     // 👤 Detalles del comprador
+    //     doc.setFont("courier", "bold");
+    //     doc.text("Detalles del Comprador", 40, y, { align: "center" });
+    //     y += 3;
+    //     doc.line(5, y, 75, y);
+    //     y += 4;
 
-        // currentY += 4;
-        doc.setDrawColor(20, 70, 160);
-        doc.setLineWidth(0.5);
-        doc.line(12, currentY, 198, currentY);
-        currentY += 8;
+    //     doc.setFont("courier", "normal");
+    //     doc.text(`Boleto #:`, 5, y);
+    //     doc.setFont("courier", "bold");
+    //     doc.text(`${entry.number}`, 30, y);
+    //     y += 4;
 
-        // Contenido principal
-        pdfData.forEach((raffle, index) => {
-            const yStart = currentY + (index * 100); // Ajustar el espaciado dinámicamente para evitar superposición
-    
-            // Contenedor principal (borde para la sección)
-            // doc.setDrawColor(20, 70, 160);
-            // doc.setLineWidth(0.5);
-            // doc.roundedRect(10, yStart - 5, 190, 80, 3, 3);
-    
-            // Número de rifa
-            doc.setFontSize(12);
-            doc.setTextColor("#000");
-            doc.text(`Número:`, 12, yStart);
-            doc.setFont("bold");
-            doc.setTextColor("#1446A0");
-            doc.text(formatWithLeadingZeros(raffle.number), 40, yStart);
-    
-            // Nombre
-            doc.setFont("normal");
-            doc.setTextColor("#000");
-            doc.text(`Nombre:`, 12, yStart + 6);
-            doc.setFont("bold");
-            doc.setTextColor("#1446A0");
-            doc.text(`${raffle.firstName} ${raffle.lastName}`, 40, yStart + 6);
-    
-            // Teléfono
-            doc.setFont("normal");
-            doc.setTextColor("#000");
-            doc.text(`Teléfono:`, 12, yStart + 12);
-            doc.setFont("bold");
-            doc.setTextColor("#1446A0");
-            doc.text(raffle.phone, 40, yStart + 12);
-    
-            // Dirección
-            doc.setFont("normal");
-            doc.setTextColor("#000");
-            doc.text(`Dirección:`, 12, yStart + 18);
-            doc.setFont("bold");
-            doc.setTextColor("#1446A0");
-            doc.text(raffle.address, 40, yStart + 18);
-    
-            // Monto Pagado
-            doc.setFont("normal");
-            doc.setTextColor("#000");
-            doc.text(`Monto Pagado:`, 12, yStart + 24);
-            doc.setFont("bold");
-            doc.setTextColor("#1446A0");
-            doc.text(formatCurrencyCOP(+raffle.paymentAmount), 60, yStart + 24);
-    
-            // Monto A Deber
-            doc.setFont("normal");
-            doc.setTextColor("#000");
-            doc.text(`Monto A Deber:`, 12, yStart + 30);
-            doc.setFont("bold");
-            doc.setTextColor("#1446A0");
-            doc.text(formatCurrencyCOP(+raffle.paymentDue), 60, yStart + 30);
-    
-            // Fecha Reservado
-            doc.setFont("normal");
-            doc.setTextColor("#000");
-            doc.text(`Fecha Reservado:`, 12, yStart + 36);
-            doc.setFont("bold");
-            doc.setTextColor("#1446A0");
-            doc.text(formatDateTimeLarge(raffle.reservedDate), 60, yStart + 36);
-    
-            // Pagos realizados
-            doc.setFont("normal");
-            doc.setTextColor("#000");
-            doc.text(`Pagos realizados:`, 12, yStart + 45);
-    
-            // Tabla de pagos solo con pagos válidos
-            const payments = raffle.payments
-                .filter(payment => payment.isValid) // Solo pagos válidos
-                .map((payment) => [
-                    formatCurrencyCOP(+payment.amount),
-                    payment.paidAt ? formatDateTimeLargeIsNull(payment.paidAt) : formatDateTimeLarge(payment.createdAt),
-                    `${payment.user.firstName} ${payment.user.lastName}`,
-                    payment.user.identificationNumber,
-                ]);
-    
-            autoTable(doc, {
-                startY: yStart + 50,
-                head: [["Monto", "Fecha", "Vendedor", "Identificación"]],
-                body: payments,
-                theme: "grid",
-                styles: { fontSize: 10, textColor: "#000", halign: "center" },
-                columnStyles: {
-                    0: { cellWidth: 40 },
-                    1: { cellWidth: 40 },
-                    2: { cellWidth: 60 },
-                    3: { cellWidth: 50 },
-                },
-                margin: { left: 12 },
-            });
-        });
-    
-        // Guardar el PDF
-        doc.save(`resumen_compra_${dayjs().format("DDMMYYYY")}.pdf`);
-    };
+    //     doc.setFont("courier", "normal");
+    //     doc.text(`Nombre:`, 5, y);
+    //     doc.setFont("courier", "bold");
+    //     doc.text(`${entry.firstName} ${entry.lastName}`, 30, y);
+    //     y += 4;
+
+    //     doc.setFont("courier", "normal");
+    //     doc.text(`ID:`, 5, y);
+    //     doc.setFont("courier", "bold");
+    //     doc.text(`${entry.identificationType} ${entry.identificationNumber}`, 30, y);
+    //     y += 4;
+
+    //     doc.setFont("courier", "normal");
+    //     doc.text(`Teléfono:`, 5, y);
+    //     doc.setFont("courier", "bold");
+    //     doc.text(`${entry.phone}`, 30, y);
+    //     y += 4;
+
+    //     doc.setFont("courier", "normal");
+    //     doc.text(`Dirección:`, 5, y);
+    //     doc.setFont("courier", "bold");
+    //     doc.text(`${entry.address || "No registrada"}`, 30, y);
+    //     y += 6;
+
+    //     // 🎯 Detalles de la rifa
+    //     doc.setFont("courier", "bold");
+    //     doc.text("Detalles de la Rifa", 40, y, { align: "center" });
+    //     y += 3;
+    //     doc.line(5, y, 75, y);
+    //     y += 4;
+
+    //     doc.setFont("courier", "normal");
+    //     doc.text(`Fecha Juego:`, 5, y);
+    //     doc.setFont("courier", "bold");
+    //     doc.text(`${formatDateTimeLarge(raffle.playDate)}`, 30, y);
+    //     y += 4;
+
+    //     doc.setFont("courier", "normal");
+    //     doc.text(`Valor Rifa:`, 5, y);
+    //     doc.setFont("courier", "bold");
+    //     doc.text(`${formatCurrencyCOP(+raffle.price)}`, 30, y);
+    //     y += 6;
+
+    //     if (awards.length > 0) {
+    //     doc.setFont("courier", "bold");
+    //     doc.text("Premios", 40, y, { align: "center" });
+    //     y += 3;
+    //     doc.line(5, y, 75, y);
+    //     y += 4;
+    //     awards.forEach((award) => {
+    //         doc.setFont("courier", "normal");
+    //         doc.text(`• ${award.name}`, 5, y);
+    //         doc.setFont("courier", "italic");
+    //         doc.text(`${formatDateTimeLarge(award.playDate)}`, 10, y + 3);
+    //         y += 6;
+    //     });
+    //     } else {
+    //     doc.setFont("courier", "italic");
+    //     doc.text("Sin premios registrados", 40, y, { align: "center" });
+    //     y += 6;
+    //     }
+
+    //     // 💰 Resumen de pago
+    //     doc.setFont("courier", "bold");
+    //     doc.text("Resumen de Pago", 40, y, { align: "center" });
+    //     y += 3;
+    //     doc.line(5, y, 75, y);
+    //     y += 4;
+
+    //     doc.setFont("courier", "normal");
+    //     doc.text(`Valor:`, 5, y);
+    //     doc.setFont("courier", "bold");
+    //     doc.text(`${formatCurrencyCOP(+entry.paymentAmount)}`, 30, y);
+    //     y += 4;
+
+    //     const abonado = entry.payments
+    //     .filter(p => p.isValid)
+    //     .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+    //     doc.setFont("courier", "normal");
+    //     doc.text(`Abonado:`, 5, y);
+    //     doc.setFont("courier", "bold");
+    //     doc.text(`${formatCurrencyCOP(abonado)}`, 30, y);
+    //     y += 4;
+
+    //     doc.setFont("courier", "normal");
+    //     doc.text(`Deuda:`, 5, y);
+    //     doc.setFont("courier", "bold");
+    //     doc.text(`${formatCurrencyCOP(+entry.paymentDue)}`, 30, y);
+    //     y += 6;
+
+    //     // 📄 Pagos realizados
+    //     if (entry.payments.length > 0) {
+    //     doc.setFont("courier", "bold");
+    //     doc.text("Pagos", 40, y, { align: "center" });
+    //     y += 3;
+    //     doc.line(5, y, 75, y);
+    //     y += 4;
+    //     doc.setFont("courier", "normal");
+    //     entry.payments
+    //         .filter(p => p.isValid)
+    //         .forEach((p) => {
+    //         doc.text(`${formatCurrencyCOP(+p.amount)} - ${p.user.firstName}`, 5, y);
+    //         y += 4;
+    //         });
+    //     } else {
+    //     doc.setFont("courier", "italic");
+    //     doc.text("Sin pagos registrados", 40, y, { align: "center" });
+    //     y += 4;
+    //     }
+
+    //     // 🙏 Pie de página
+    //     y += 6;
+    //     doc.setFont("courier", "italic");
+    //     doc.text(`Reservado: ${formatDateTimeLarge(entry.reservedDate)}`, 5, y);
+    //     y += 4;
+    //     doc.setFont("courier", "bold");
+    //     doc.text("¡Gracias por su compra!", 40, y, { align: "center" });
+    // });
+
+    // doc.save(`tickets_rifa_${raffle.id}.pdf`);
+    // };
+
     
     
 
@@ -212,7 +218,7 @@ function PaymentSellNumbersModal({raffle, awards, paymentsSellNumbersModal,pdfDa
             <div className="flex justify-between w-full">
                 <IconButton
                     href=''
-                    onClick={handleDownloadPDF}
+                    onClick={() => handleDownloadPDF({awards, pdfData, raffle})}
                 >
                     <Tooltip title='Descargar PDF'>
                         <PictureAsPdfIcon color="error"/>
@@ -267,7 +273,7 @@ function PaymentSellNumbersModal({raffle, awards, paymentsSellNumbersModal,pdfDa
                     <Box key={raffle.id} sx={{ mb: 2, border: "3px solid #1446A0", p: 2, borderRadius: 2}}>
                         <div className='flex gap-3'>
                         <p>Número:</p>
-                        <p className='font-bold text-azul'>{formatWithLeadingZeros(raffle.number)}</p>
+                        <p className='font-bold text-azul'>{formatWithLeadingZeros(raffle.number, totalNumbers)}</p>
                         </div>
                         
                         <div className='flex gap-3'>

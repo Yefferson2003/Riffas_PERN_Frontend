@@ -162,16 +162,17 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
         return (value as number).toString();
     };
 
-    const marks = [
-        {
+
+    const marks = [{
             value: 100,
             label: '100',
-        },
-        {
-            value: 1000,
-            label: '1000',
-        },
-    ];
+        },];
+    for (let i = 1000; i <= 10000; i += 1000) { // Increment by 1000 for better spacing
+        marks.push({
+            value: i,
+            label: i.toString(),
+        });
+    }
 
     return (
         <Modal
@@ -255,7 +256,7 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
                         step={100}
                         marks={marks}
                         min={100}
-                        max={1000}
+                        max={10000}
                         onChange={(_, value) => setValue("quantity", value as number)}
                     />
                     </Box>

@@ -1,16 +1,17 @@
-import { Alert, Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
+import { Alert, Box, Button, FormControl, FormControlLabel, IconButton, InputLabel, MenuItem, Modal, Select, Switch, TextField, Tooltip } from "@mui/material";
 import { QueryObserverResult, RefetchOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react"; // Importa el componente de entrada de teléfono
 import { useForm } from "react-hook-form";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { amountNumber, updateNumber } from "../../api/raffleNumbersApi";
-import { PayNumberForm, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types";
-import { formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from "../../utils";
+import { AwardType, PayNumberForm, Raffle, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types";
+import { formatCurrencyCOP, formatWithLeadingZeros, handleDownloadPDF, redirectToWhatsApp } from "../../utils";
 import PhoneNumberInput from "../PhoneNumberInput";
 import ButtonsRaffleModal from "./raffleNumber/ButtonsRaffleModal";
 import RaflleNumberPaymentsHistory from "./RaflleNumberPaymentsHistory";
 import { InfoRaffleType } from "./ViewRaffleNumberData";
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 const style = {
     position: 'absolute',
@@ -28,6 +29,10 @@ const style = {
 };
 
 type ViewRaffleNumberModalProps = {
+    pdfData: RaffleNumbersPayments
+    raffle: Raffle
+    awards: AwardType[]
+    totalNumbers: number,
     infoRaffle: InfoRaffleType,
     raffleNumber: RaffleNumber
     setPaymentsSellNumbersModal: React.Dispatch<React.SetStateAction<boolean>>
@@ -36,7 +41,7 @@ type ViewRaffleNumberModalProps = {
     setUrlWasap: React.Dispatch<React.SetStateAction<string>>
 }
 
-function ViewRaffleNumberModal({ infoRaffle, raffleNumber,setPaymentsSellNumbersModal, setPdfData, refect, setUrlWasap} : ViewRaffleNumberModalProps) {
+function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaffle, raffleNumber,setPaymentsSellNumbersModal, setPdfData, refect, setUrlWasap} : ViewRaffleNumberModalProps) {
     const navigate = useNavigate(); 
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -120,7 +125,7 @@ function ViewRaffleNumberModal({ infoRaffle, raffleNumber,setPaymentsSellNumbers
         mutate(data, {
             onSuccess: () => {
                 if (formData.phone) {
-                    setUrlWasap(redirectToWhatsApp({ numbers: [{numberId: 0,number: raffleNumber.number}], phone: formData.phone, name: formData.firstName, amount: formData.amount, infoRaffle, payments: raffleNumber.payments}))
+                    setUrlWasap(redirectToWhatsApp({ numbers: [{numberId: 0,number: raffleNumber.number}], phone: formData.phone, name: formData.firstName, amount: formData.amount, infoRaffle, payments: raffleNumber.payments, totalNumbers}))
                     
                 }
             }
@@ -139,7 +144,8 @@ function ViewRaffleNumberModal({ infoRaffle, raffleNumber,setPaymentsSellNumbers
                 amount,
                 infoRaffle,
                 payments: raffleNumber.payments,
-                statusRaffleNumber: raffleNumber.status
+                statusRaffleNumber: raffleNumber.status,
+                totalNumbers
             });
             setUrlWasap(url);
 
@@ -185,8 +191,22 @@ function ViewRaffleNumberModal({ infoRaffle, raffleNumber,setPaymentsSellNumbers
                 raffleNumberStatus={raffleNumber.status}
                 handleToWasap={handleToWasap}
             />
+
+            {raffleNumber.status != 'available' &&
+                <div>
+                    <IconButton
+                        href=''
+                        onClick={() => handleDownloadPDF({awards, pdfData, raffle})}
+                    >
+                        <Tooltip title='Descargar PDF'>
+                            <PictureAsPdfIcon color="error"/>
+                        </Tooltip>
+                    </IconButton>
+                </div>
+            }
+
             
-            <h2 className="mb-5 text-2xl font-bold text-center uppercase text-azul">{'Rifa' + ' - ' +formatWithLeadingZeros(raffleNumber.number)}</h2>
+            <h2 className="mb-5 text-2xl font-bold text-center uppercase text-azul">{'# ' +formatWithLeadingZeros(raffleNumber.number, totalNumbers)}</h2>
 
             {raffleNumber.status === 'available' ? (
                 <div className="text-center">
@@ -228,7 +248,7 @@ function ViewRaffleNumberModal({ infoRaffle, raffleNumber,setPaymentsSellNumbers
                             },
                             validate: {
                                 maxValue: (value) => 
-                                    Number(value) <= +raffleNumber.paymentDue || `El monto no puede superar los ${formatWithLeadingZeros(+raffleNumber.paymentDue)}`,
+                                    Number(value) <= +raffleNumber.paymentDue || `El monto no puede superar los ${formatWithLeadingZeros(+raffleNumber.paymentDue, totalNumbers)}`,
                             },
                         })}
                     />

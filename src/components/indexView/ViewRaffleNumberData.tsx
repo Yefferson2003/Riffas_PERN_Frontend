@@ -1,7 +1,7 @@
 import { QueryObserverResult, RefetchOptions, useQuery } from "@tanstack/react-query"
 import { Navigate, useParams } from "react-router-dom"
 import { getRaffleNumberById } from "../../api/raffleNumbersApi"
-import { RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types"
+import { AwardType, Raffle, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types"
 import ViewRaffleNumberModal from "./ViewRaffleNumberModal"
 
 export type InfoRaffleType = {
@@ -9,9 +9,13 @@ export type InfoRaffleType = {
     amountRaffle: string;
     playDate: string;
     description: string;
+    responsable: string
 }
 
 type ViewRaffleNumberDataProps = {
+    raffle: Raffle
+    awards: AwardType[]
+    totalNumbers: number
     infoRaffle: InfoRaffleType
     setPaymentsSellNumbersModal: React.Dispatch<React.SetStateAction<boolean>>
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
@@ -26,7 +30,7 @@ type ViewRaffleNumberDataProps = {
     // }
 }
 
-function ViewRaffleNumberData({ infoRaffle, setPaymentsSellNumbersModal, setPdfData, refect, setUrlWasap} : ViewRaffleNumberDataProps) {
+function ViewRaffleNumberData({ awards, raffle, totalNumbers, infoRaffle, setPaymentsSellNumbersModal, setPdfData, refect, setUrlWasap} : ViewRaffleNumberDataProps) {
     const queryParams = new URLSearchParams(location.search)
     const modalviewRaffleNumber = queryParams.get('viewRaffleNumber')
     const raffleNumberId = Number(modalviewRaffleNumber)
@@ -41,6 +45,10 @@ function ViewRaffleNumberData({ infoRaffle, setPaymentsSellNumbersModal, setPdfD
 
     if (isError) return <Navigate to={'/404'}/> 
     if (data) return <ViewRaffleNumberModal 
+        awards={awards}
+        pdfData={[data]}
+        raffle={raffle}
+        totalNumbers={totalNumbers}
         infoRaffle={infoRaffle}
         raffleNumber={data}
         setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}

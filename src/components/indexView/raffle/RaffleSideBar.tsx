@@ -14,9 +14,10 @@ import { exportRaffleNumbers } from '../../../utils/exel';
 type RaffleSideBarProps = {
     raffleId: string;
     raffle: Raffle
+    totalNumbers: number
 }
 
-function RaffleSideBar( { raffleId, raffle }: RaffleSideBarProps) {
+function RaffleSideBar( { raffleId, raffle, totalNumbers}: RaffleSideBarProps) {
 
     const user : User = useOutletContext();
     const navigate = useNavigate()
@@ -87,7 +88,7 @@ function RaffleSideBar( { raffleId, raffle }: RaffleSideBarProps) {
                         
                         <IconButton
                             onClick={() => {
-                            exportRaffleNumbers(raffleId, raffle?.nitResponsable);
+                            exportRaffleNumbers(raffleId, raffle?.nitResponsable, totalNumbers);
                                 toast.info("Descargando archivo...");
                             }}
                         >

@@ -20,7 +20,7 @@ export const fetchRaffleNumbers = async (raffleId: number) => {
 };
 
 
-export const exelRaffleNumbersFilterDetails = async (raffleId: string, params: object) => {
+export const exelRaffleNumbersFilterDetails = async (raffleId: string, params: object, totalNumbers: number) => {
 
     try {
         const data = await getRaffleNumersExelFilter({ params, raffleId });
@@ -56,7 +56,7 @@ export const exelRaffleNumbersFilterDetails = async (raffleId: string, params: o
         // Agregar los números de la rifa y su estado con color de fondo según el estado
         raffleNumbers.forEach((raffle) => {
             const row = worksheet.addRow([
-                formatWithLeadingZeros(raffle.number),
+                formatWithLeadingZeros(raffle.number, totalNumbers),
                 formatCurrencyCOP(+raffle.paymentAmount) || 0,
                 formatCurrencyCOP(+raffle.paymentDue) || 0,
                 raffle.firstName || '---',
@@ -106,7 +106,7 @@ export const exelRaffleNumbersFilterDetails = async (raffleId: string, params: o
     }
 }
 
-export const exelRaffleNumbersFilter = async (raffleId: string, params: object) => {
+export const exelRaffleNumbersFilter = async (raffleId: string, params: object, totalNumbers: number) => {
 
     try {
         const data = await getRaffleNumersExelFilter({ params, raffleId });
@@ -138,9 +138,9 @@ export const exelRaffleNumbersFilter = async (raffleId: string, params: object) 
         raffleNumbers.forEach((raffle) => {
             const num = Number(raffle.number);
             const centena = Math.floor(num / 100) * 100;
-            const key = `${formatWithLeadingZeros(centena)}-${formatWithLeadingZeros(centena + 99)}`;
+            const key = `${formatWithLeadingZeros(centena, totalNumbers)}-${formatWithLeadingZeros((centena + 99), totalNumbers)}`;
             if (!grupos[key]) grupos[key] = [];
-            grupos[key].push(formatWithLeadingZeros(num));
+            grupos[key].push(formatWithLeadingZeros(num, totalNumbers));
         });
 
         // Determinar el máximo de números en un grupo para las filas
@@ -178,7 +178,7 @@ export const exelRaffleNumbersFilter = async (raffleId: string, params: object) 
     }
 }
 
-export const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable: string | undefined) => {
+export const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable: string | undefined, totalNumbers: number) => {
     if (!raffleId) {
         console.error(" error de datos");
         return;
@@ -233,7 +233,7 @@ export const exportRaffleNumbers = async (raffleId: string | undefined, nitRespo
         // Agregar filas y estilos
         raffleNumbers.forEach((raffle) => {
             const row = worksheet.addRow({
-                number: formatWithLeadingZeros(raffle.number),
+                number: formatWithLeadingZeros(raffle.number, totalNumbers),
                 // status: statusRaffleTraslations[raffle.status],
                 reservedDate: formatDateTimeLargeIsNull(raffle.reservedDate),
                 identificationType: raffle.identificationType || '---',

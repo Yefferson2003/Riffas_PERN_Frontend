@@ -225,16 +225,16 @@ const PaymentSchema = z.object({
 export const RaffleNumberSchema = z.object({
     id: z.number(),
     number: z.number(),
-    reservedDate: z.string(), 
-    status: z.string(), 
-    identificationType: z.string(),
-    identificationNumber: z.string(),
-    firstName: z.string(),
-    lastName: z.string(),
-    phone: z.string(),
-    address: z.string(),
-    paymentAmount: z.string(), 
-    paymentDue: z.string(), 
+    reservedDate: z.string().nullable(), 
+    status: z.enum(statusRaffleNumbersEnum),
+    identificationType: z.enum(identificationTypeEnum).nullable(),
+    identificationNumber: z.string().nullable(),
+    firstName:  z.string().nullable(),
+    lastName:  z.string().nullable(),
+    phone: z.string().nullable(),
+    address: z.string().nullable(),
+    paymentAmount: z.string(),
+    paymentDue: z.string(),    
     raffleId: z.number(),
     createdAt: z.string(), 
     updatedAt: z.string(), 
@@ -260,6 +260,9 @@ export const raffleNumberSchema  = z.object({
     address: z.string().nullable(),
     paymentAmount: z.string(),
     paymentDue: z.string(),
+    // createdAt: z.string(), 
+    // updatedAt: z.string(), 
+    // raffleId: z.number(),
 }).extend({
     payments: z.array(PaymentSchema),
 })
@@ -336,9 +339,9 @@ export const raffleNumbersExelFilterSchema = z.object({
     }).extend({
         paymentAmount: z.string(),
         paymentDue: z.string(),
-        firstName: z.string(),
-        lastName: z.string(),
-        phone: z.string(),
+        firstName: z.string().nullable(),
+        lastName: z.string().nullable(),
+        phone: z.string().nullable(),
     })),
 })
 
@@ -346,7 +349,7 @@ export const raffleNumbersExelFilterSchema = z.object({
 
 export type RaffleNumberPayments = z.infer<typeof PaymentSchema>
 export type RaffleNumberUpdateForm = z.infer<typeof updateRaffleNumberCustomer>
-export type RaffleNumber = z.infer<typeof raffleNumberSchema> //
+export type RaffleNumber = z.infer<typeof RaffleNumberSchema> //
 export type RaffleNumbersPayments = z.infer<typeof RafflePayResponseSchema>
 export type PayNumbersForm = z.infer<typeof payNumbersSchema>
 export type PayNumberForm = z.infer<typeof payNumberSchema>

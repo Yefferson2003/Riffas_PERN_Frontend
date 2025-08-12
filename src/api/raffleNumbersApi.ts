@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { PayNumberForm, PayNumbersForm, raffleNumberSchema, raffleNumbersExelFilterSchema, RaffleNumberUpdateForm, RafflePayResponseSchema, responseRaffleNumbersExelSchema, responseRaffleNumbersSchema } from "../types";
+import { PayNumberForm, PayNumbersForm, RaffleNumberSchema, raffleNumbersExelFilterSchema, RaffleNumberUpdateForm, RafflePayResponseSchema, responseRaffleNumbersExelSchema, responseRaffleNumbersSchema } from "../types";
 
 export async function getRaffleNumers({params, raffleId} : {params : object, raffleId: string}) {
     try { 
@@ -20,6 +20,9 @@ export async function getRaffleNumersExelFilter({params, raffleId} : {params : o
     try { 
         const {data} = await api.get(`/raffles-numbers/${raffleId}/exel-filter`, { params });
         const response = raffleNumbersExelFilterSchema.safeParse(data)
+
+        console.log(response.error);
+        
         if (response.success) {
             return response.data
         }
@@ -48,7 +51,7 @@ export async function getRaffleNumersExel({params, raffleId} : {params : object,
 export async function getRaffleNumberById({raffleId, raffleNumberId} : {raffleId: number, raffleNumberId: number}) {
     try {
         const {data} = await api.get(`/raffles-numbers/${raffleId}/number/${raffleNumberId}`)
-        const response = raffleNumberSchema.safeParse(data)
+        const response = RaffleNumberSchema.safeParse(data)
         console.log(response.error);
         
         if (response.success) {

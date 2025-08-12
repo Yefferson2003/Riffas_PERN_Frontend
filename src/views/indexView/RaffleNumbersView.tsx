@@ -200,10 +200,13 @@ function RaffleNumbersView() {
     return (
         <section className="flex flex-col-reverse w-full pb-10 text-center lg:flex-col *:bg-white *:p-2 gap-5 *:rounded-xl">
             
-            <RaffleSideBar 
-                raffleId={raffleId!} 
-                raffle={raffle!}
-            />
+            {raffleNumbers &&
+                <RaffleSideBar 
+                    raffleId={raffleId!} 
+                    raffle={raffle!}
+                    totalNumbers={raffleNumbers?.total}
+                />
+            }
             
             <div className="space-y-3">
                 <div className="flex flex-col items-center lg:justify-between lg:flex-row">
@@ -272,6 +275,7 @@ function RaffleNumbersView() {
                 
                 <div className='flex flex-col items-center justify-center gap-2 mb-5'>
                     {raffle && <h3 className='text-xl font-bold '>{formatCurrencyCOP(+raffle.price)}</h3>}
+                    
                     <FormControl size="small"
                         variant='filled'
                         sx={styleForm}
@@ -307,41 +311,56 @@ function RaffleNumbersView() {
 
                     </FormControl>
                     
-                    {user.rol.name !== 'vendedor' && (searchParams.search || searchParams.searchAmount || Object.keys(filter).length > 0) && (
-                        <div className="flex gap-2">
-                            <button
-                                className="px-4 py-2 font-semibold text-white transition rounded bg-azul hover:scale-105 hover:shadow-lg"
-                                onClick={() => {
-                                    toast.info('Descargando archivo...', { autoClose: 2000 });
-                                    exelRaffleNumbersFilterDetails(raffleId!, {
-                                        search: searchParams.search,
-                                        amount: searchParams.searchAmount,
-                                        ...filter,
-                                    });
-                                }}
-                            >
-                                Descargar Búsqueda Detallada
-                            </button>
-                            <button
-                                className="px-4 py-2 font-semibold text-white transition rounded bg-azul hover:scale-105 hover:shadow-lg"
-                                onClick={() => {
-                                    toast.info('Descargando archivo...', { autoClose: 2000 });
-                                    exelRaffleNumbersFilter(raffleId!, {
-                                        search: searchParams.search,
-                                        amount: searchParams.searchAmount,
-                                        ...filter,
-                                    });
-                                }}
-                            >
-                                Descargar Búsqueda Simple
-                            </button>
+                    {user.rol.name !== 'vendedor' &&
+                    (searchParams.search || searchParams.searchAmount || Object.keys(filter).length > 0) &&
+                    raffleNumbers && (
+                        <div className="flex flex-wrap gap-2 mt-4 sm:flex-nowrap sm:gap-4">
+                        <button
+                            className="w-full px-4 py-2 font-semibold text-white transition-all duration-200 rounded sm:w-auto bg-azul hover:scale-105 hover:shadow-md"
+                            onClick={() => {
+                            toast.info('Descargando archivo...', { autoClose: 2000 });
+                            exelRaffleNumbersFilterDetails(
+                                raffleId!,
+                                {
+                                search: searchParams.search,
+                                amount: searchParams.searchAmount,
+                                ...filter,
+                                },
+                                raffleNumbers?.total
+                            );
+                            }}
+                        >
+                            📄 Descargar Búsqueda Detallada
+                        </button>
+                        <button
+                            className="w-full px-4 py-2 font-semibold text-white transition-all duration-200 rounded sm:w-auto bg-azul hover:scale-105 hover:shadow-md"
+                            onClick={() => {
+                            toast.info('Descargando archivo...', { autoClose: 2000 });
+                            exelRaffleNumbersFilter(
+                                raffleId!,
+                                {
+                                search: searchParams.search,
+                                amount: searchParams.searchAmount,
+                                ...filter,
+                                },
+                                raffleNumbers.total
+                            );
+                            }}
+                        >
+                            📁 Descargar Búsqueda Simple
+                        </button>
                         </div>
                     )}
                     
                     <FormControlLabel control={<Switch value={optionSeleted} onChange={handleSwitchChange} />} label="Seleccionar Números" />
                 </div>
                 
-                <NumbersSeleted numbersSeleted={numbersSeleted} setNumbersSeleted={setNumbersSeleted}/>
+                {raffleNumbers &&
+                    <NumbersSeleted 
+                    numbersSeleted={numbersSeleted} 
+                    setNumbersSeleted={setNumbersSeleted}
+                    totalNumbers={raffleNumbers.total}
+                />}
                 
                 <section className="grid grid-cols-5 cursor-pointer gap-x-1 gap-y-3 md:grid-cols-10 md:grid-rows-10">
                     
@@ -355,7 +374,7 @@ function RaffleNumbersView() {
                                 <Chip 
                                     sx={{height: 35, fontWeight: 'bold' }}
                                     key={raffleNumber.id} 
-                                    label={formatWithLeadingZeros(raffleNumber.number)} 
+                                    label={formatWithLeadingZeros(raffleNumber.number, raffleNumbers.total)} 
                                     variant="filled" 
                                     size="small"
                                     disabled={
@@ -389,7 +408,8 @@ function RaffleNumbersView() {
         {raffle && <ViewUsersOfRaffleModal raffleId={raffle.id}/>}
         {raffle && <UpdateRaffleModal raffle={raffle} />}
         {raffle && raffleNumbers && <PayNumbersModal 
-            infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description}}
+            totalNumbers={raffleNumbers.total}
+            infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description, responsable: raffle.nameResponsable}}
             numbersSeleted={numbersSeleted} 
             raffleId={raffle.id}
             rafflePrice={raffle.price}
@@ -399,6 +419,7 @@ function RaffleNumbersView() {
             setUrlWasap={setUrlWasap}
         />}
         {raffle && raffleNumbers && pdfData && <PaymentSellNumbersModal
+            totalNumbers={raffleNumbers.total}
             raffle={raffle}
             awards={awards!}
             setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
@@ -407,8 +428,11 @@ function RaffleNumbersView() {
             pdfData={pdfData}
             urlWasap={urlWasap}
         />}
-        {raffle && raffleNumbers && <ViewRaffleNumberData
-            infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description}}
+        {raffle && raffleNumbers && awards && <ViewRaffleNumberData
+            totalNumbers={raffleNumbers.total}
+            raffle={raffle}
+            awards={awards}
+            infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description, responsable: raffle.nameResponsable}}
             setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
             setPdfData={setPdfData}
             refect={refetch}

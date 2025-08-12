@@ -27,6 +27,7 @@ const style = {
 };
 
 type PayNumbersModalProps = {
+    totalNumbers: number
     infoRaffle: InfoRaffleType,
     numbersSeleted: {
         numberId: number;
@@ -43,7 +44,7 @@ type PayNumbersModalProps = {
     setUrlWasap: React.Dispatch<React.SetStateAction<string>>
 }
 
-function PayNumbersModal({infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap} : PayNumbersModalProps) {
+function PayNumbersModal({ totalNumbers,infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap} : PayNumbersModalProps) {
 
     const queryClient = useQueryClient()
     
@@ -108,6 +109,7 @@ function PayNumbersModal({infoRaffle, numbersSeleted, raffleId, rafflePrice, set
                 if (formData.phone) {
                     setUrlWasap(
                         redirectToWhatsApp({
+                            totalNumbers,
                             numbers: numbersSeleted,
                             phone: formData.phone,
                             name: formData.firstName,
@@ -138,7 +140,7 @@ function PayNumbersModal({infoRaffle, numbersSeleted, raffleId, rafflePrice, set
             <p className="font-bold text-center text-azul text-wrap"> {
                 numbersSeleted.length > 0
                 ? `${numbersSeleted
-                    .map((num) => formatWithLeadingZeros(num.number))
+                    .map((num) => formatWithLeadingZeros(num.number, totalNumbers))
                     .join(" | ")}`
                 : "No hay números seleccionados."}
             </p>
