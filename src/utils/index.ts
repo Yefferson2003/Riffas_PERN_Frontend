@@ -137,7 +137,7 @@ export const redirectToWhatsApp = ({
             .reduce((acc, p) => acc + Number(p.amount), 0);
         paymentTypeMessage = `Has realizado abonos por un total de *${formatCurrencyCOP(abonosValidos)}* para la rifa *“${infoRaffle.name}”* 💸`;
     } else if (amount === 0) {
-        paymentTypeMessage = `Has apartado el/los número(s) en la rifa *“${infoRaffle.name}”* 🎟`;
+        paymentTypeMessage = `Has apartado el/los número(s) en la rifa *“${infoRaffle.name.trim()}”* 🎟`;
     } else if (amount < rafflePrice) {
         paymentTypeMessage = `Has realizado un abono de *${formatCurrencyCOP(amount)}* para la rifa *“${infoRaffle.name}”* 💵`;
     } else if (amount === rafflePrice) {
@@ -157,7 +157,7 @@ ${paymentTypeMessage}
 
 📌 Detalles:
 🔢 Números: *${numbersList}*
-💬 Descripción: *${infoRaffle.description}*
+💬 Descripción: *${infoRaffle.description.trim()}*
 💵 Valor por número: *${formatCurrencyCOP(rafflePrice)}*
 📉 Deuda actual: *${formatCurrencyCOP(deuda)}*
 🗓 Sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*
