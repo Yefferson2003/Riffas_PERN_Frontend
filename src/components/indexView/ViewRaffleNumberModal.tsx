@@ -236,7 +236,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                         required: 'Monto obligatorio',
                         pattern: {
                             value: /^[0-9]+(?:\.[0-9]{1,2})?$/, // Allows numbers with up to 2 decimal places
-                            message: 'El monto debe ser numérico (puede incluir decimales con hasta dos cifras)',
+                            message: 'El monto debe ser numérico (puede incluir decimales con hasta dos cifras, solo punto)',
                         },
                         validate: {
                             maxValue: (value) =>

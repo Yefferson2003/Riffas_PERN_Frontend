@@ -237,10 +237,11 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
                         helperText={errors.price?.message}
                         {...register('price', {required: 'Precio Obligatorio',
                             pattern: {
-                                value: /^[0-9]+$/, // Solo números
+                                value: /^[0-9]+(?:\.[0-9]{1,2})?$/, // Solo números
                                 message: 'Solo se permiten números',
                             },
                         })}
+                        
                     />
 
                     <Box sx={{ width: '100%', px: 3}}>
