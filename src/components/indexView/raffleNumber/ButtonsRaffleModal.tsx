@@ -5,10 +5,17 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { QueryObserverResult, RefetchOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteNumberClient } from "../../../api/raffleNumbersApi";
 import { toast } from "react-toastify";
-import { RaffleNumber, RaffleNumbersResponseType } from "../../../types";
+import { AwardType, Raffle, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../../types";
 import ButtoToWasap from "./ButtoToWasap";
+import { handleDownloadPDF } from "../../../utils";
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+
 
 type ButtonsRaffleModalProps = {
+    raffleStatus: "available" | "sold" | "pending"
+    pdfData: RaffleNumbersPayments
+    raffle: Raffle
+    awards: AwardType[]
     raffleId: number
     raffleNumberId: number
     refect: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
@@ -16,7 +23,7 @@ type ButtonsRaffleModalProps = {
     handleToWasap: () => void
 }
 
-function ButtonsRaffleModal({raffleId, raffleNumberId, refect, handleToWasap, raffleNumberStatus} : ButtonsRaffleModalProps) {
+function ButtonsRaffleModal({ awards, pdfData, raffle, raffleStatus, raffleId, raffleNumberId, refect, handleToWasap, raffleNumberStatus} : ButtonsRaffleModalProps) {
     const navigate = useNavigate()
 
     const queryClient = useQueryClient()
@@ -52,6 +59,19 @@ function ButtonsRaffleModal({raffleId, raffleNumberId, refect, handleToWasap, ra
                 <ButtoToWasap
                     handleToWasap={handleToWasap}
                 />
+            }
+
+            {raffleStatus != 'available' &&
+                <div>
+                    <IconButton
+                        href=''
+                        onClick={() => handleDownloadPDF({awards, pdfData, raffle})}
+                    >
+                        <Tooltip title='Descargar PDF'>
+                            <PictureAsPdfIcon color="error"/>
+                        </Tooltip>
+                    </IconButton>
+                </div>
             }
 
             

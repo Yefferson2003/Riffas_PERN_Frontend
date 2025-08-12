@@ -135,7 +135,7 @@ export const redirectToWhatsApp = ({
         const abonosValidos = payments
         .filter(p => p.isValid)
         .reduce((acc, p) => acc + Number(p.amount), 0);
-        paymentTypeMessage = `Has realizado abonos por un total de ${formatCurrencyCOP(abonosValidos)} “${infoRaffle.responsable}” 💸`;
+        paymentTypeMessage = `Has realizado abonos por un total de ${formatCurrencyCOP(abonosValidos)} “${infoRaffle.name}” 💸`;
     } else if (amount === 0) {
         paymentTypeMessage = `Has apartado el/los número(s) en la rifa “${infoRaffle.name}” 🎟`;
     } else if (amount < rafflePrice) {

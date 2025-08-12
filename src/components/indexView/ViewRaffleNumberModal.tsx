@@ -1,4 +1,4 @@
-import { Alert, Box, Button, FormControl, FormControlLabel, IconButton, InputLabel, MenuItem, Modal, Select, Switch, TextField, Tooltip } from "@mui/material";
+import { Alert, Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
 import { QueryObserverResult, RefetchOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react"; // Importa el componente de entrada de teléfono
 import { useForm } from "react-hook-form";
@@ -6,12 +6,11 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { amountNumber, updateNumber } from "../../api/raffleNumbersApi";
 import { AwardType, PayNumberForm, Raffle, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types";
-import { formatCurrencyCOP, formatWithLeadingZeros, handleDownloadPDF, redirectToWhatsApp } from "../../utils";
+import { formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from "../../utils";
 import PhoneNumberInput from "../PhoneNumberInput";
 import ButtonsRaffleModal from "./raffleNumber/ButtonsRaffleModal";
 import RaflleNumberPaymentsHistory from "./RaflleNumberPaymentsHistory";
 import { InfoRaffleType } from "./ViewRaffleNumberData";
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 const style = {
     position: 'absolute',
@@ -185,6 +184,10 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
             <Box sx={style}>
                 
             <ButtonsRaffleModal
+                awards={awards}
+                pdfData={pdfData}
+                raffle={raffle}
+                raffleStatus={raffleNumber.status}
                 raffleId={raffleId} 
                 raffleNumberId={raffleNumberId}
                 refect={refect}
@@ -192,18 +195,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                 handleToWasap={handleToWasap}
             />
 
-            {raffleNumber.status != 'available' &&
-                <div>
-                    <IconButton
-                        href=''
-                        onClick={() => handleDownloadPDF({awards, pdfData, raffle})}
-                    >
-                        <Tooltip title='Descargar PDF'>
-                            <PictureAsPdfIcon color="error"/>
-                        </Tooltip>
-                    </IconButton>
-                </div>
-            }
+            
 
             
             <h2 className="mb-5 text-2xl font-bold text-center uppercase text-azul">{'# ' +formatWithLeadingZeros(raffleNumber.number, totalNumbers)}</h2>
