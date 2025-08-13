@@ -124,7 +124,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
         mutate(data, {
             onSuccess: () => {
                 if (formData.phone) {
-                    setUrlWasap(redirectToWhatsApp({ numbers: [{numberId: 0,number: raffleNumber.number}], phone: formData.phone, name: formData.firstName, amount: formData.amount, infoRaffle, payments: raffleNumber.payments, totalNumbers, awards, pdfData}))
+                    setUrlWasap(redirectToWhatsApp({ numbers: [{numberId: 0,number: raffleNumber.number}], phone: formData.phone, name: formData.firstName, amount: formData.amount, infoRaffle, payments: raffleNumber.payments, totalNumbers,}))
                     
                 }
             }
@@ -145,8 +145,6 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                 payments: raffleNumber.payments,
                 statusRaffleNumber: raffleNumber.status,
                 totalNumbers,
-                awards, 
-                pdfData
             });
             setUrlWasap(url);
 

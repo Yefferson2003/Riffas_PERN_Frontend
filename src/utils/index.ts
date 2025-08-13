@@ -2,6 +2,9 @@ import { PaymentSellNumbersModalProps } from "../components/indexView/PaymentSel
 import { InfoRaffleType } from "../components/indexView/ViewRaffleNumberData";
 import jsPDF from 'jspdf';
 export const azul = '#1446A0'
+import { saveAs } from 'file-saver';
+import dayjs from "dayjs";
+
 
 export function translateRaffleStatus(status: "available" | "sold" | "pending"): string {
     const translations: Record<typeof status, string> = {
@@ -109,19 +112,21 @@ export const redirectToWhatsApp = ({
     numbers,
     payments,
     statusRaffleNumber,
-    pdfData,
-    awards
-}: redirectToWhatsAppType & { pdfData: PaymentSellNumbersModalProps["pdfData"] , awards : PaymentSellNumbersModalProps['awards']}): string => {
+}: redirectToWhatsAppType): string => {
     if (!phone) return "";
 
     const rafflePrice = +infoRaffle.amountRaffle;
     let deuda = 0;
 
-    const abonosValidos = payments?.filter(p => p.isValid).reduce((acc, p) => acc + Number(p.amount), 0) ?? 0;
-
     if (statusRaffleNumber === "pending" && payments) {
+        const abonosValidos = payments
+            .filter(p => p.isValid)
+            .reduce((acc, p) => acc + Number(p.amount), 0);
         deuda = Math.max((rafflePrice * numbers.length) - abonosValidos, 0);
     } else if (payments && payments.length > 0) {
+        const abonosValidos = payments
+            .filter(p => p.isValid)
+            .reduce((acc, p) => acc + Number(p.amount), 0);
         const totalAbonado = abonosValidos + amount;
         deuda = Math.max((rafflePrice * numbers.length) - totalAbonado, 0);
     } else {
@@ -129,7 +134,10 @@ export const redirectToWhatsApp = ({
     }
 
     let paymentTypeMessage = "";
-    if (payments && statusRaffleNumber === "pending" && payments.length > 0) {
+    if (payments && statusRaffleNumber === "pending" && payments?.length > 0) {
+        const abonosValidos = payments
+            .filter(p => p.isValid)
+            .reduce((acc, p) => acc + Number(p.amount), 0);
         paymentTypeMessage = `Has realizado abonos por un total de *${formatCurrencyCOP(abonosValidos)}* para la rifa *“${infoRaffle.name}”* 💸`;
     } else if (amount === 0) {
         paymentTypeMessage = `Has apartado el/los número(s) en la rifa *“${infoRaffle.name.trim()}”* 🎟`;
@@ -145,42 +153,6 @@ export const redirectToWhatsApp = ({
         .map(n => formatWithLeadingZeros(n.number, totalNumbers))
         .join(", ");
 
-    // 🧾 Detalles extendidos del ticket
-    const ticketDetails = pdfData.map((entry, ) => {
-        const nombreCompleto = `${entry.firstName ?? ""} ${entry.lastName ?? ""}`.trim();
-        const id = `${entry.identificationType ?? ""} ${entry.identificationNumber ?? ""}`.trim();
-        const abonado = entry.payments?.filter(p => p.isValid).reduce((sum, p) => sum + parseFloat(p.amount), 0) ?? 0;
-        const pagos = entry.payments?.filter(p => p.isValid).map(p => `• ${formatCurrencyCOP(+p.amount)} - ${p.user.firstName}`).join("\n") || "Sin pagos registrados";
-
-        const premios = awards.length
-            ? awards.map(a => `• ${a.name} (${formatDateTimeLarge(a.playDate)})`).join("\n")
-            : "Sin premios registrados";
-
-        return `
-📄 *Ticket #${entry.number}*
-👤 Nombre: *${nombreCompleto}*
-🆔 ID: *${id}*
-📞 Teléfono: *${entry.phone ?? "No registrado"}*
-🏠 Dirección: *${entry.address || "No registrada"}*
-
-🎯 *Detalles de la Rifa*
-📅 Fecha Juego: *${formatDateTimeLarge(infoRaffle.playDate)}*
-💵 Valor por número: *${formatCurrencyCOP(+infoRaffle.amountRaffle)}*
-🎁 Premios:
-${premios}
-
-💰 *Resumen de Pago*
-Valor: *${formatCurrencyCOP(+entry.paymentAmount)}*
-Abonado: *${formatCurrencyCOP(abonado)}*
-Deuda: *${formatCurrencyCOP(+entry.paymentDue)}*
-
-📄 *Pagos Realizados*
-${pagos}
-
-🕒 Reservado: *${formatDateTimeLarge(entry.reservedDate ?? "")}*
-`.trim();
-    }).join("\n\n");
-
     const message = `
 ✨ Hola *${name.trim()}*
 
@@ -189,10 +161,9 @@ ${paymentTypeMessage}
 📌 Detalles:
 🔢 Números: *${numbersList}*
 💬 Descripción: *${infoRaffle.description.trim()}*
+💵 Valor por número: *${formatCurrencyCOP(rafflePrice)}*
 📉 Deuda actual: *${formatCurrencyCOP(deuda)}*
 🗓 Sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*
-
-${ticketDetails}
 
 Si tienes alguna pregunta, estamos aquí para ayudarte 🤝
 
@@ -204,16 +175,24 @@ Saludos,
     return `https://wa.me/${phone}?text=${encodedMessage}`;
 };
 
-export const handleDownloadPDF = ({
+
+
+export const handleDownloadPDF = async ({
     raffle,
     awards,
     pdfData,
-    }: Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "pdfData">) => {
+    userName,
+    userLastName,
+}: Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "pdfData"> & {
+    userName?: string;
+    userLastName?: string;
+}) => {
     const doc = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: [80, 150],
     });
+
     const LINE_SPACING = 4;
     const SECTION_SPACING = 6;
 
@@ -299,23 +278,23 @@ export const handleDownloadPDF = ({
 
         // 🏆 Premios
         if (awards.length > 0) {
-        doc.setFont("courier", "bold");
-        doc.text("Premios", 40, y, { align: "center" });
-        y += LINE_SPACING - 1;
-        doc.line(5, y, 75, y);
-        y += LINE_SPACING;
+            doc.setFont("courier", "bold");
+            doc.text("Premios", 40, y, { align: "center" });
+            y += LINE_SPACING - 1;
+            doc.line(5, y, 75, y);
+            y += LINE_SPACING;
 
-        awards.forEach((award) => {
-            doc.setFont("courier", "normal");
-            doc.text(`• ${award.name}`, 5, y);
-            doc.setFont("courier", "italic");
-            doc.text(`${formatDateTimeLarge(award.playDate)}`, 10, y + 3);
-            y += SECTION_SPACING;
-        });
+            awards.forEach((award) => {
+                doc.setFont("courier", "normal");
+                doc.text(`• ${award.name}`, 5, y);
+                doc.setFont("courier", "italic");
+                doc.text(`${formatDateTimeLarge(award.playDate)}`, 10, y + 3);
+                y += SECTION_SPACING;
+            });
         } else {
-        doc.setFont("courier", "italic");
-        doc.text("Sin premios registrados", 40, y, { align: "center" });
-        y += SECTION_SPACING;
+            doc.setFont("courier", "italic");
+            doc.text("Sin premios registrados", 40, y, { align: "center" });
+            y += SECTION_SPACING;
         }
 
         // 💰 Resumen de pago
@@ -332,8 +311,8 @@ export const handleDownloadPDF = ({
         y += LINE_SPACING;
 
         const abonado = entry.payments
-        .filter((p) => p.isValid)
-        .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+            .filter((p) => p.isValid)
+            .reduce((sum, p) => sum + parseFloat(p.amount), 0);
 
         doc.setFont("courier", "normal");
         doc.text("Abonado:", 5, y);
@@ -349,23 +328,23 @@ export const handleDownloadPDF = ({
 
         // 📄 Pagos realizados
         if (entry.payments.length > 0) {
-        doc.setFont("courier", "bold");
-        doc.text("Pagos", 40, y, { align: "center" });
-        y += LINE_SPACING - 1;
-        doc.line(5, y, 75, y);
-        y += LINE_SPACING;
-
-        doc.setFont("courier", "normal");
-        entry.payments
-            .filter((p) => p.isValid)
-            .forEach((p) => {
-            doc.text(`${formatCurrencyCOP(+p.amount)} - ${p.user.firstName}`, 5, y);
+            doc.setFont("courier", "bold");
+            doc.text("Pagos", 40, y, { align: "center" });
+            y += LINE_SPACING - 1;
+            doc.line(5, y, 75, y);
             y += LINE_SPACING;
-            });
+
+            doc.setFont("courier", "normal");
+            entry.payments
+                .filter((p) => p.isValid)
+                .forEach((p) => {
+                    doc.text(`${formatCurrencyCOP(+p.amount)} - ${p.user.firstName}`, 5, y);
+                    y += LINE_SPACING;
+                });
         } else {
-        doc.setFont("courier", "italic");
-        doc.text("Sin pagos registrados", 40, y, { align: "center" });
-        y += LINE_SPACING;
+            doc.setFont("courier", "italic");
+            doc.text("Sin pagos registrados", 40, y, { align: "center" });
+            y += LINE_SPACING;
         }
 
         // 🙏 Pie de página
@@ -376,18 +355,14 @@ export const handleDownloadPDF = ({
         doc.setFont("courier", "bold");
         doc.text("¡Gracias por su compra!", 40, y, { align: "center" });
 
-        // 📄 Número de página (opcional)
+        // 📄 Número de página
         doc.setFontSize(8);
         doc.text(`Página ${index + 1}`, 75, 145, { align: "right" });
     });
 
+    // 📥 Descargar PDF directamente
+    const todayDate = dayjs().format('DDMMYYYY');
+    const filename = `Resumen_Rifa_${userLastName || 'responsable'}_${userName || ''}_${todayDate}.pdf`;
     const pdfBlob = doc.output('blob');
-    const url = URL.createObjectURL(pdfBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `tickets_rifa_${raffle.id}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    };
+    saveAs(pdfBlob, filename);
+};
