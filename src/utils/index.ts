@@ -109,21 +109,19 @@ export const redirectToWhatsApp = ({
     numbers,
     payments,
     statusRaffleNumber,
-}: redirectToWhatsAppType): string => {
+    pdfData,
+    awards
+}: redirectToWhatsAppType & { pdfData: PaymentSellNumbersModalProps["pdfData"] , awards : PaymentSellNumbersModalProps['awards']}): string => {
     if (!phone) return "";
 
     const rafflePrice = +infoRaffle.amountRaffle;
     let deuda = 0;
 
+    const abonosValidos = payments?.filter(p => p.isValid).reduce((acc, p) => acc + Number(p.amount), 0) ?? 0;
+
     if (statusRaffleNumber === "pending" && payments) {
-        const abonosValidos = payments
-            .filter(p => p.isValid)
-            .reduce((acc, p) => acc + Number(p.amount), 0);
         deuda = Math.max((rafflePrice * numbers.length) - abonosValidos, 0);
     } else if (payments && payments.length > 0) {
-        const abonosValidos = payments
-            .filter(p => p.isValid)
-            .reduce((acc, p) => acc + Number(p.amount), 0);
         const totalAbonado = abonosValidos + amount;
         deuda = Math.max((rafflePrice * numbers.length) - totalAbonado, 0);
     } else {
@@ -131,10 +129,7 @@ export const redirectToWhatsApp = ({
     }
 
     let paymentTypeMessage = "";
-    if (payments && statusRaffleNumber === "pending" && payments?.length > 0) {
-        const abonosValidos = payments
-            .filter(p => p.isValid)
-            .reduce((acc, p) => acc + Number(p.amount), 0);
+    if (payments && statusRaffleNumber === "pending" && payments.length > 0) {
         paymentTypeMessage = `Has realizado abonos por un total de *${formatCurrencyCOP(abonosValidos)}* para la rifa *“${infoRaffle.name}”* 💸`;
     } else if (amount === 0) {
         paymentTypeMessage = `Has apartado el/los número(s) en la rifa *“${infoRaffle.name.trim()}”* 🎟`;
@@ -150,6 +145,42 @@ export const redirectToWhatsApp = ({
         .map(n => formatWithLeadingZeros(n.number, totalNumbers))
         .join(", ");
 
+    // 🧾 Detalles extendidos del ticket
+    const ticketDetails = pdfData.map((entry, ) => {
+        const nombreCompleto = `${entry.firstName ?? ""} ${entry.lastName ?? ""}`.trim();
+        const id = `${entry.identificationType ?? ""} ${entry.identificationNumber ?? ""}`.trim();
+        const abonado = entry.payments?.filter(p => p.isValid).reduce((sum, p) => sum + parseFloat(p.amount), 0) ?? 0;
+        const pagos = entry.payments?.filter(p => p.isValid).map(p => `• ${formatCurrencyCOP(+p.amount)} - ${p.user.firstName}`).join("\n") || "Sin pagos registrados";
+
+        const premios = awards.length
+            ? awards.map(a => `• ${a.name} (${formatDateTimeLarge(a.playDate)})`).join("\n")
+            : "Sin premios registrados";
+
+        return `
+📄 *Ticket #${entry.number}*
+👤 Nombre: *${nombreCompleto}*
+🆔 ID: *${id}*
+📞 Teléfono: *${entry.phone ?? "No registrado"}*
+🏠 Dirección: *${entry.address || "No registrada"}*
+
+🎯 *Detalles de la Rifa*
+📅 Fecha Juego: *${formatDateTimeLarge(infoRaffle.playDate)}*
+💵 Valor por número: *${formatCurrencyCOP(+infoRaffle.amountRaffle)}*
+🎁 Premios:
+${premios}
+
+💰 *Resumen de Pago*
+Valor: *${formatCurrencyCOP(+entry.paymentAmount)}*
+Abonado: *${formatCurrencyCOP(abonado)}*
+Deuda: *${formatCurrencyCOP(+entry.paymentDue)}*
+
+📄 *Pagos Realizados*
+${pagos}
+
+🕒 Reservado: *${formatDateTimeLarge(entry.reservedDate ?? "")}*
+`.trim();
+    }).join("\n\n");
+
     const message = `
 ✨ Hola *${name.trim()}*
 
@@ -158,9 +189,10 @@ ${paymentTypeMessage}
 📌 Detalles:
 🔢 Números: *${numbersList}*
 💬 Descripción: *${infoRaffle.description.trim()}*
-💵 Valor por número: *${formatCurrencyCOP(rafflePrice)}*
 📉 Deuda actual: *${formatCurrencyCOP(deuda)}*
 🗓 Sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*
+
+${ticketDetails}
 
 Si tienes alguna pregunta, estamos aquí para ayudarte 🤝
 
@@ -182,7 +214,6 @@ export const handleDownloadPDF = ({
         unit: "mm",
         format: [80, 150],
     });
-
     const LINE_SPACING = 4;
     const SECTION_SPACING = 6;
 
@@ -350,5 +381,13 @@ export const handleDownloadPDF = ({
         doc.text(`Página ${index + 1}`, 75, 145, { align: "right" });
     });
 
-    doc.save(`tickets_rifa_${raffle.id}.pdf`);
+    const pdfBlob = doc.output('blob');
+    const url = URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tickets_rifa_${raffle.id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
     };

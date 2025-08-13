@@ -407,7 +407,9 @@ function RaffleNumbersView() {
             </div>
         {raffle && <ViewUsersOfRaffleModal raffleId={raffle.id}/>}
         {raffle && <UpdateRaffleModal raffle={raffle} />}
-        {raffle && raffleNumbers && <PayNumbersModal 
+        {raffle && raffleNumbers && pdfData && awards && <PayNumbersModal 
+            awards={awards}
+            pdfData={pdfData}
             totalNumbers={raffleNumbers.total}
             infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description, responsable: raffle.nameResponsable}}
             numbersSeleted={numbersSeleted} 
@@ -418,10 +420,10 @@ function RaffleNumbersView() {
             setPdfData={setPdfData}
             setUrlWasap={setUrlWasap}
         />}
-        {raffle && raffleNumbers && pdfData && <PaymentSellNumbersModal
+        {raffle && raffleNumbers && pdfData && awards && <PaymentSellNumbersModal
             totalNumbers={raffleNumbers.total}
             raffle={raffle}
-            awards={awards!}
+            awards={awards}
             setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
             setPdfData={setPdfData}
             paymentsSellNumbersModal={paymentsSellNumbersModal}
