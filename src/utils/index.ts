@@ -4,6 +4,7 @@ import jsPDF from 'jspdf';
 export const azul = '#1446A0'
 import { saveAs } from 'file-saver';
 import dayjs from "dayjs";
+import { AwardType } from "../types";
 
 
 export function translateRaffleStatus(status: "available" | "sold" | "pending"): string {
@@ -100,6 +101,8 @@ type redirectToWhatsAppType = {
         amount: string;
         isValid: boolean
     }[]
+    awards: AwardType[]
+    reservedDate: string | null
     statusRaffleNumber?: "sold" | "pending"
 }
 
@@ -112,6 +115,8 @@ export const redirectToWhatsApp = ({
     numbers,
     payments,
     statusRaffleNumber,
+    awards,
+    reservedDate,
 }: redirectToWhatsAppType): string => {
     if (!phone) return "";
 
@@ -152,6 +157,11 @@ export const redirectToWhatsApp = ({
     const numbersList = numbers
         .map(n => formatWithLeadingZeros(n.number, totalNumbers))
         .join(", ");
+    
+    const premios = awards?.length
+        ? awards.map(a => `• ${a.name} (${formatDateTimeLarge(a.playDate)})`).join("\n")
+        : "Sin premios registrados";
+
 
     const message = `
 ✨ Hola *${name.trim()}*
@@ -165,6 +175,14 @@ ${paymentTypeMessage}
 📉 Deuda actual: *${formatCurrencyCOP(deuda)}*
 🗓 Sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*
 
+🎯 *Detalles de la Rifa*
+📅 Fecha Juego: *${formatDateTimeLarge(infoRaffle.playDate)}*
+💵 Valor por número: *${formatCurrencyCOP(+infoRaffle.amountRaffle)}*
+🎁 Premios:
+${premios}
+
+🕒 Reservado: *${formatDateTimeLarge(reservedDate ?? "")}*
+
 Si tienes alguna pregunta, estamos aquí para ayudarte 🤝
 
 Saludos,  
@@ -174,8 +192,6 @@ Saludos,
     const encodedMessage = encodeURIComponent(message);
     return `https://wa.me/${phone}?text=${encodedMessage}`;
 };
-
-
 
 export const handleDownloadPDF = async ({
     raffle,
@@ -363,6 +379,23 @@ export const handleDownloadPDF = async ({
     // 📥 Descargar PDF directamente
     const todayDate = dayjs().format('DDMMYYYY');
     const filename = `Resumen_Rifa_${userLastName || 'responsable'}_${userName || ''}_${todayDate}.pdf`;
+
+    // ✅ Generar blob y descargar
     const pdfBlob = doc.output('blob');
-    saveAs(pdfBlob, filename);
+
+    // 🧠 Compatibilidad móvil: usar saveAs si está disponible
+    try {
+        saveAs(pdfBlob, filename);
+    } catch (error) {
+        console.log(error);
+        
+        // Fallback para navegadores que no soportan saveAs (muy raro)
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(pdfBlob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
 };

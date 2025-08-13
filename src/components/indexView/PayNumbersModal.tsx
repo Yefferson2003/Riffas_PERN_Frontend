@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { sellNumbers } from "../../api/raffleNumbersApi";
-import { PayNumbersForm, RaffleNumbersPayments } from "../../types";
+import { AwardType, PayNumbersForm, RaffleNumbersPayments } from "../../types";
 import { formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from "../../utils";
 import ButtonCloseModal from "../ButtonCloseModal";
 import PhoneNumberInput from "../PhoneNumberInput";
@@ -27,6 +27,8 @@ const style = {
 };
 
 type PayNumbersModalProps = {
+    awards: AwardType[]
+    pdfData: RaffleNumbersPayments
     totalNumbers: number
     infoRaffle: InfoRaffleType,
     numbersSeleted: {
@@ -44,7 +46,7 @@ type PayNumbersModalProps = {
     setUrlWasap: React.Dispatch<React.SetStateAction<string>>
 }
 
-function PayNumbersModal({ totalNumbers,infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap} : PayNumbersModalProps) {
+function PayNumbersModal({ awards, pdfData, totalNumbers,infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap} : PayNumbersModalProps) {
 
     const queryClient = useQueryClient()
     
@@ -114,7 +116,9 @@ function PayNumbersModal({ totalNumbers,infoRaffle, numbersSeleted, raffleId, ra
                             phone: formData.phone,
                             name: formData.firstName,
                             amount: actionMode === 'buy' ? +rafflePrice : 0,
-                            infoRaffle
+                            infoRaffle,
+                            awards, 
+                            reservedDate: pdfData[0].reservedDate
                         })
                     )
                     
