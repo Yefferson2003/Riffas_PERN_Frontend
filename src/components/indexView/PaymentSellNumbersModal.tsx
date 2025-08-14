@@ -217,11 +217,14 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
             <Box sx={style}>
             <div className="flex justify-between w-full">
                 <IconButton
-                    href=''
-                    onClick={() => handleDownloadPDF({awards, pdfData, raffle})}
+                    component="button"
+                    onClick={(e) => {
+                        e.preventDefault(); // evita navegación
+                        handleDownloadPDF({ awards, pdfData, raffle });
+                    }}
                 >
                     <Tooltip title='Descargar PDF'>
-                        <PictureAsPdfIcon color="error"/>
+                        <PictureAsPdfIcon color="error" />
                     </Tooltip>
                 </IconButton>
                 <a

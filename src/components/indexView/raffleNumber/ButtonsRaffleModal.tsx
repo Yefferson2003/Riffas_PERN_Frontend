@@ -64,13 +64,17 @@ function ButtonsRaffleModal({ awards, pdfData, raffle, raffleStatus, raffleId, r
             {raffleStatus != 'available' &&
                 <div>
                     <IconButton
-                        href=''
-                        onClick={() => handleDownloadPDF({awards, pdfData, raffle})}
+                        component="button"
+                        onClick={(e) => {
+                            e.preventDefault(); // evita navegación
+                            handleDownloadPDF({ awards, pdfData, raffle });
+                        }}
                     >
                         <Tooltip title='Descargar PDF'>
-                            <PictureAsPdfIcon color="error"/>
+                            <PictureAsPdfIcon color="error" />
                         </Tooltip>
                     </IconButton>
+
                 </div>
             }
 
