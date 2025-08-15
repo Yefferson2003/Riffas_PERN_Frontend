@@ -193,9 +193,18 @@ function RaffleNumbersView() {
         };
     }, [raffleId, refetch]);
 
-    if (isLoadingRaffle || isLoadingRaffleNumbers && !raffle && !raffleNumbers) return <LoaderView/>;
-    if (isErrorRaffle || isErrorRaffleNumbers) return <Navigate to={'/404'}/>;
-    if (raffle && user.rol.name !== 'admin' && raffle.userRiffle  && !raffle.userRiffle.some(user => user.userId === user.userId) ) return <Navigate to={'/404'}/>;
+    if (isLoadingRaffle || isLoadingRaffleNumbers) return <LoaderView />;
+    if (isErrorRaffle || isErrorRaffleNumbers) return <Navigate to={'/404'} />;
+
+    if (
+        raffle &&
+        !isLoadingRaffle &&
+        user.rol.name !== 'admin' &&
+        raffle.userRiffle &&
+        !raffle.userRiffle.some(r => r.userId === user.id)
+    ) {
+    return <Navigate to={'/404'} />;
+}
     
     return (
         <section className="flex flex-col-reverse w-full pb-10 text-center lg:flex-col *:bg-white *:p-2 gap-5 *:rounded-xl">
@@ -442,15 +451,20 @@ function RaffleNumbersView() {
         />}
         {/* {raffle && raffleNumbers && <ViewNumbersSoldModal/>} */}
 
-
-        <ViewAdminExpensesModal
-            expensesTotal={expenseTotal}
-            isLoadingExpenseTotal={isLoadingExpenseTotal}
-        />
-        <ViewExpensesByUserModal
-            refechtExpenseTotal={refechtExpenseTotal}
-            refechtExpenseTotalByUser={refechtExpenseTotalByUser}
-        />
+        
+        {raffle &&
+            <>
+            <ViewAdminExpensesModal
+                expensesTotal={expenseTotal}
+                isLoadingExpenseTotal={isLoadingExpenseTotal}
+            />
+            <ViewExpensesByUserModal
+                refechtExpenseTotal={refechtExpenseTotal}
+                refechtExpenseTotalByUser={refechtExpenseTotalByUser}
+            />
+            </>
+            
+        }
 
         </section>
     )

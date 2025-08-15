@@ -14,14 +14,14 @@ import ListItemText from '@mui/material/ListItemText';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import useScrollTrigger from '@mui/material/useScrollTrigger';
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
+import { ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '../hooks/useAuth';
 import { azul } from '../utils';
 import LoaderView from '../views/LoaderView';
-import { useQueryClient } from '@tanstack/react-query';
-import { ToastContainer } from "react-toastify"
-import 'react-toastify/dist/ReactToastify.css';
 
 interface Props {
     /**
@@ -121,6 +121,7 @@ export default function IndexLayout(props: Props) {
     }
 
     if (user) return (
+        <main>
         <Box sx={{ display: 'flex', width: '100%',}}>
         <CssBaseline />
         <HideOnScroll {...props}>
@@ -196,5 +197,6 @@ export default function IndexLayout(props: Props) {
                     theme="colored"
                 />
         </Box>
+        </main>
     );
 }
