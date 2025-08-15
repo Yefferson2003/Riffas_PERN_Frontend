@@ -411,6 +411,8 @@ export const responseExpensesWithUserSchema = ResponsePaginationSchema.pick({
 export const responseExpensesTotal = z.object({
     total: z.number()
 })
+
+
 export type ExpenseFormType = z.infer<typeof expenseFormSchema>
 export type ExpensesType = z.infer<typeof expensesSchema>
 export type ExpensesWithUserType = z.infer<typeof expensesWithUserSchema>

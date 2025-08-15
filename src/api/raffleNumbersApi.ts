@@ -66,22 +66,29 @@ export async function getRaffleNumberById({raffleId, raffleNumberId} : {raffleId
     
 }
 
-export async function sellNumbers({formData, raffleId, params}:{formData : PayNumbersForm, raffleId: number, params : object}) {
+export async function sellNumbers({formData, raffleId, params}: {
+    formData: PayNumbersForm,
+    raffleId: number,
+    params: object
+}) {
     try {
-        const {data} = await api.post(`/raffles-numbers/${raffleId}/sell-numbers`, formData, {params})
-        const response = RafflePayResponseSchema.safeParse(data)
-        console.log(response.error);
-        
+        const {data} = await api.post(`/raffles-numbers/${raffleId}/sell-numbers`, formData, {params});
+        const response = RafflePayResponseSchema.safeParse(data);
+
         if (response.success) {
-            return response.data
+            return response.data;
+        } else {
+            throw new Error('Respuesta del servidor no válida');
         }
     } catch (error) {
         if (isAxiosError(error) && error.response) {
             console.log(error);
             throw new Error(error.response.data.error);
         }
+        throw error; // Asegura que cualquier otro error también se propague
     }
 }
+
 
 export async function amountNumber({formData, raffleId, raffleNumberId, params}:{formData : PayNumberForm, raffleId: number, raffleNumberId: number, params: object}) {
     try {

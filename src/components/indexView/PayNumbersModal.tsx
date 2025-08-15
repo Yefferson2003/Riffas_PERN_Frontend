@@ -28,7 +28,6 @@ const style = {
 
 type PayNumbersModalProps = {
     awards: AwardType[]
-    pdfData: RaffleNumbersPayments
     totalNumbers: number
     infoRaffle: InfoRaffleType,
     numbersSeleted: {
@@ -46,7 +45,7 @@ type PayNumbersModalProps = {
     setUrlWasap: React.Dispatch<React.SetStateAction<string>>
 }
 
-function PayNumbersModal({ awards, pdfData, totalNumbers,infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap} : PayNumbersModalProps) {
+function PayNumbersModal({ awards, totalNumbers,infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap} : PayNumbersModalProps) {
 
     const queryClient = useQueryClient()
     
@@ -59,11 +58,13 @@ function PayNumbersModal({ awards, pdfData, totalNumbers,infoRaffle, numbersSele
 
     // Estado para gestionar el modo de acción (comprar o separar) 
     const [actionMode, setActionMode] = useState<string>('buy')
+    const [reservedDate, setReservedDate] = useState<string | null>('')
+        
 
     const handleOnChange = ( e: SelectChangeEvent<string>) => {
         setActionMode(e.target.value)
     }
-
+    
     const initialValues: PayNumbersForm   = {
         raffleNumbersIds: [],
         firstName: '',
@@ -82,6 +83,8 @@ function PayNumbersModal({ awards, pdfData, totalNumbers,infoRaffle, numbersSele
     const {mutate, isPending} = useMutation({
         mutationFn: sellNumbers,
         onError(error) {
+            console.log(error.message);
+            
             toast.error(error.message)
         },
         onSuccess(data) {
@@ -91,9 +94,10 @@ function PayNumbersModal({ awards, pdfData, totalNumbers,infoRaffle, numbersSele
             toast.success('Rifas Compradas')
             reset()
             setNumbersSeleted([])
-            navigate(location.pathname, {replace: true})
+            navigate(location.pathname, {replace: true})    
             setPaymentsSellNumbersModal(true)
             setPdfData(data)
+            setReservedDate(data[0].reservedDate)
         },
     }) 
     const handleFormSubmit = (Data : PayNumbersForm) => { 
@@ -118,7 +122,7 @@ function PayNumbersModal({ awards, pdfData, totalNumbers,infoRaffle, numbersSele
                             amount: actionMode === 'buy' ? +rafflePrice : 0,
                             infoRaffle,
                             awards, 
-                            reservedDate: pdfData[0].reservedDate
+                            reservedDate
                         })
                     )
                     
@@ -126,6 +130,8 @@ function PayNumbersModal({ awards, pdfData, totalNumbers,infoRaffle, numbersSele
             }
         })
     }
+
+    
     
     return (
         <Modal

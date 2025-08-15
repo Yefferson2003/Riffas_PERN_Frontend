@@ -409,7 +409,6 @@ function RaffleNumbersView() {
         {raffle && <UpdateRaffleModal raffle={raffle} />}
         {raffle && raffleNumbers && awards && <PayNumbersModal 
             awards={awards}
-            pdfData={pdfData!}
             totalNumbers={raffleNumbers.total}
             infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description, responsable: raffle.nameResponsable}}
             numbersSeleted={numbersSeleted} 
