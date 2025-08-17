@@ -187,6 +187,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                 
             <ButtonsRaffleModal
                 awards={awards}
+                totalNumbers={totalNumbers}
                 pdfData={pdfData}
                 raffle={raffle}
                 raffleStatus={raffleNumber.status}
@@ -196,9 +197,6 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                 raffleNumberStatus={raffleNumber.status}
                 handleToWasap={handleToWasap}
             />
-
-            
-
             
             <h2 className="mb-5 text-2xl font-bold text-center uppercase text-azul">{'# ' +formatWithLeadingZeros(raffleNumber.number, totalNumbers)}</h2>
 

@@ -220,7 +220,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                     component="button"
                     onClick={(e) => {
                         e.preventDefault(); // evita navegación
-                        handleDownloadPDF({ awards, pdfData, raffle });
+                        handleDownloadPDF({ awards, pdfData, raffle, totalNumbers });
                     }}
                 >
                     <Tooltip title='Descargar PDF'>

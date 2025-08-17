@@ -13,6 +13,7 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 type ButtonsRaffleModalProps = {
     raffleStatus: "available" | "sold" | "pending"
+    totalNumbers: number
     pdfData: RaffleNumbersPayments
     raffle: Raffle
     awards: AwardType[]
@@ -23,7 +24,7 @@ type ButtonsRaffleModalProps = {
     handleToWasap: () => void
 }
 
-function ButtonsRaffleModal({ awards, pdfData, raffle, raffleStatus, raffleId, raffleNumberId, refect, handleToWasap, raffleNumberStatus} : ButtonsRaffleModalProps) {
+function ButtonsRaffleModal({ awards, totalNumbers ,pdfData, raffle, raffleStatus, raffleId, raffleNumberId, refect, handleToWasap, raffleNumberStatus} : ButtonsRaffleModalProps) {
     const navigate = useNavigate()
 
     const queryClient = useQueryClient()
@@ -67,7 +68,7 @@ function ButtonsRaffleModal({ awards, pdfData, raffle, raffleStatus, raffleId, r
                         component="button"
                         onClick={(e) => {
                             e.preventDefault(); // evita navegación
-                            handleDownloadPDF({ awards, pdfData, raffle });
+                            handleDownloadPDF({ awards, pdfData, raffle, totalNumbers});
                         }}
                     >
                         <Tooltip title='Descargar PDF'>

@@ -199,7 +199,8 @@ export const handleDownloadPDF = async ({
     pdfData,
     userName,
     userLastName,
-}: Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "pdfData"> & {
+    totalNumbers
+}: Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "pdfData" | 'totalNumbers'> & {
     userName?: string;
     userLastName?: string;
 }) => {
@@ -246,7 +247,7 @@ export const handleDownloadPDF = async ({
         doc.setFont("courier", "normal");
         doc.text("Boleto #:", 5, y);
         doc.setFont("courier", "bold");
-        doc.text(`${entry.number}`, 30, y);
+        doc.text(`${formatWithLeadingZeros(entry.number, totalNumbers)}`, 30, y);
         y += LINE_SPACING;
 
         doc.setFont("courier", "normal");
