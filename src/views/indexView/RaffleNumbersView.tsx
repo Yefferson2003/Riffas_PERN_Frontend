@@ -369,13 +369,14 @@ function RaffleNumbersView() {
                     numbersSeleted={numbersSeleted} 
                     setNumbersSeleted={setNumbersSeleted}
                     totalNumbers={raffleNumbers.total}
-                />}
+                    />
+                }
                 
                 <section className="grid grid-cols-5 cursor-pointer gap-x-1 gap-y-3 md:grid-cols-10 md:grid-rows-10">
                     
                     {isLoadingRaffleNumbers && <div className='col-span-full'><CircularProgress/></div>}
                     
-                    { raffleNumbers &&
+                    { raffleNumbers && raffle && raffleNumbers.total &&
                         raffleNumbers.raffleNumbers.length === 0 ? (
                             <p className='text-xl font-bold col-span-full text-azul'>No hay resultados...</p>
                         ) : (
