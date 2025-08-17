@@ -7,8 +7,9 @@ import { deleteNumberClient } from "../../../api/raffleNumbersApi";
 import { toast } from "react-toastify";
 import { AwardType, Raffle, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../../types";
 import ButtoToWasap from "./ButtoToWasap";
-import { handleDownloadPDF } from "../../../utils";
+import { handleDownloadPDF, handleViewAndDownloadPDF } from "../../../utils";
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import AdfScannerIcon from '@mui/icons-material/AdfScanner';
 
 
 type ButtonsRaffleModalProps = {
@@ -65,7 +66,6 @@ function ButtonsRaffleModal({ awards, totalNumbers ,pdfData, raffle, raffleStatu
             {raffleStatus != 'available' &&
                 <div>
                     <IconButton
-                        component="button"
                         onClick={(e) => {
                             e.preventDefault(); // evita navegación
                             handleDownloadPDF({ awards, pdfData, raffle, totalNumbers});
@@ -73,6 +73,22 @@ function ButtonsRaffleModal({ awards, totalNumbers ,pdfData, raffle, raffleStatu
                     >
                         <Tooltip title='Descargar PDF'>
                             <PictureAsPdfIcon color="error" />
+                        </Tooltip>
+                    </IconButton>
+
+                </div>
+            }
+            
+            {raffleStatus != 'available' &&
+                <div>
+                    <IconButton
+                        onClick={(e) => {
+                            e.preventDefault(); // evita navegación
+                            handleViewAndDownloadPDF({ awards, pdfData, raffle, totalNumbers});
+                        }}
+                    >
+                        <Tooltip title='Ver Ticket'>
+                            <AdfScannerIcon color="primary"/>
                         </Tooltip>
                     </IconButton>
 

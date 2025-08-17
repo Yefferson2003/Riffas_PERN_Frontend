@@ -1,10 +1,9 @@
+import dayjs from "dayjs";
+import jsPDF from 'jspdf';
 import { PaymentSellNumbersModalProps } from "../components/indexView/PaymentSellNumbersModal";
 import { InfoRaffleType } from "../components/indexView/ViewRaffleNumberData";
-import jsPDF from 'jspdf';
-export const azul = '#1446A0'
-import { saveAs } from 'file-saver';
-import dayjs from "dayjs";
 import { AwardType } from "../types";
+export const azul = '#1446A0'
 
 
 export function translateRaffleStatus(status: "available" | "sold" | "pending"): string {
@@ -192,6 +191,21 @@ Saludos,
     const encodedMessage = encodeURIComponent(message);
     return `https://wa.me/${phone}?text=${encodedMessage}`;
 };
+
+const downloadPDF = (blob: Blob, filename: string) => {
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+
+    // Para móviles: simula clic y limpia
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Limpieza de memoria
+    URL.revokeObjectURL(link.href);
+};
+
 
 export const handleDownloadPDF = async ({
     raffle,
@@ -385,18 +399,225 @@ export const handleDownloadPDF = async ({
     const pdfBlob = doc.output('blob');
 
     // 🧠 Compatibilidad móvil: usar saveAs si está disponible
-    try {
-        saveAs(pdfBlob, filename);
-    } catch (error) {
-        console.log(error);
+    downloadPDF(pdfBlob, filename);
+    // try {
+    //     saveAs(pdfBlob, filename);
+    // } catch (error) {
+    //     console.log(error);
         
-        // Fallback para navegadores que no soportan saveAs (muy raro)
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(pdfBlob);
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    //     // Fallback para navegadores que no soportan saveAs (muy raro)
+    //     const link = document.createElement('a');
+    //     link.href = URL.createObjectURL(pdfBlob);
+    //     link.download = filename;
+    //     document.body.appendChild(link);
+    //     link.click();
+    //     document.body.removeChild(link);
+    // }
+
+};
+
+export const handleViewAndDownloadPDF = async ({
+    raffle,
+    awards,
+    pdfData,
+    // userName,
+    // userLastName,
+    totalNumbers
+}: Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "pdfData" | 'totalNumbers'> & {
+    userName?: string;
+    userLastName?: string;
+}) => {
+    const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: [80, 150],
+    });
+
+    const LINE_SPACING = 4;
+    const SECTION_SPACING = 6;
+
+    pdfData.forEach((entry, index) => {
+        if (index > 0) doc.addPage([80, 150]);
+        let y = 10;
+
+        // 🧾 Encabezado
+        doc.setFont("courier", "bold");
+        doc.setFontSize(11);
+        doc.text(raffle.name, 40, y, { align: "center" });
+        y += LINE_SPACING + 1;
+
+        doc.setFontSize(9);
+        doc.text(`Responsable: ${raffle.nameResponsable}`, 40, y, { align: "center" });
+        y += LINE_SPACING;
+        doc.text(`NIT: ${raffle.nitResponsable}`, 40, y, { align: "center" });
+        y += LINE_SPACING;
+        doc.setFont("courier", "normal");
+        doc.text(`"${raffle.description}"`, 40, y, { align: "center" });
+        y += SECTION_SPACING;
+
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.2);
+        doc.line(5, y, 75, y);
+        y += LINE_SPACING;
+
+        // 👤 Detalles del comprador
+        doc.setFont("courier", "bold");
+        doc.text("Detalles del Comprador", 40, y, { align: "center" });
+        y += LINE_SPACING - 1;
+        doc.line(5, y, 75, y);
+        y += LINE_SPACING;
+
+        doc.setFont("courier", "normal");
+        doc.text("Boleto #:", 5, y);
+        doc.setFont("courier", "bold");
+        doc.text(`${formatWithLeadingZeros(entry.number, totalNumbers)}`, 30, y);
+        y += LINE_SPACING;
+
+        doc.setFont("courier", "normal");
+        doc.text("Nombre:", 5, y);
+        doc.setFont("courier", "bold");
+        doc.text(`${entry.firstName ?? ""} ${entry.lastName ?? ""}`, 30, y);
+        y += LINE_SPACING;
+
+        doc.setFont("courier", "normal");
+        doc.text("ID:", 5, y);
+        doc.setFont("courier", "bold");
+        doc.text(`${entry.identificationType ?? ""} ${entry.identificationNumber ?? ""}`, 30, y);
+        y += LINE_SPACING;
+
+        doc.setFont("courier", "normal");
+        doc.text("Teléfono:", 5, y);
+        doc.setFont("courier", "bold");
+        doc.text(`${entry.phone ?? ""}`, 30, y);
+        y += LINE_SPACING;
+
+        doc.setFont("courier", "normal");
+        doc.text("Dirección:", 5, y);
+        doc.setFont("courier", "bold");
+        doc.text(`${entry.address || "No registrada"}`, 30, y);
+        y += SECTION_SPACING;
+
+        // 🎯 Detalles de la rifa
+        doc.setFont("courier", "bold");
+        doc.text("Detalles de la Rifa", 40, y, { align: "center" });
+        y += LINE_SPACING - 1;
+        doc.line(5, y, 75, y);
+        y += LINE_SPACING;
+
+        doc.setFont("courier", "normal");
+        doc.text("Fecha Juego:", 5, y);
+        doc.setFont("courier", "bold");
+        doc.text(`${formatDateTimeLarge(raffle.playDate)}`, 30, y);
+        y += LINE_SPACING;
+
+        doc.setFont("courier", "normal");
+        doc.text("Valor Rifa:", 5, y);
+        doc.setFont("courier", "bold");
+        doc.text(`${formatCurrencyCOP(+raffle.price)}`, 30, y);
+        y += SECTION_SPACING;
+
+        // 🏆 Premios
+        if (awards.length > 0) {
+            doc.setFont("courier", "bold");
+            doc.text("Premios", 40, y, { align: "center" });
+            y += LINE_SPACING - 1;
+            doc.line(5, y, 75, y);
+            y += LINE_SPACING;
+
+            awards.forEach((award) => {
+                doc.setFont("courier", "normal");
+                doc.text(`• ${award.name}`, 5, y);
+                doc.setFont("courier", "italic");
+                doc.text(`${formatDateTimeLarge(award.playDate)}`, 10, y + 3);
+                y += SECTION_SPACING;
+            });
+        } else {
+            doc.setFont("courier", "italic");
+            doc.text("Sin premios registrados", 40, y, { align: "center" });
+            y += SECTION_SPACING;
+        }
+
+        // 💰 Resumen de pago
+        doc.setFont("courier", "bold");
+        doc.text("Resumen de Pago", 40, y, { align: "center" });
+        y += LINE_SPACING - 1;
+        doc.line(5, y, 75, y);
+        y += LINE_SPACING;
+
+        doc.setFont("courier", "normal");
+        doc.text("Valor:", 5, y);
+        doc.setFont("courier", "bold");
+        doc.text(`${formatCurrencyCOP(+entry.paymentAmount)}`, 30, y);
+        y += LINE_SPACING;
+
+        const abonado = entry.payments
+            .filter((p) => p.isValid)
+            .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+
+        doc.setFont("courier", "normal");
+        doc.text("Abonado:", 5, y);
+        doc.setFont("courier", "bold");
+        doc.text(`${formatCurrencyCOP(abonado)}`, 30, y);
+        y += LINE_SPACING;
+
+        doc.setFont("courier", "normal");
+        doc.text("Deuda:", 5, y);
+        doc.setFont("courier", "bold");
+        doc.text(`${formatCurrencyCOP(+entry.paymentDue)}`, 30, y);
+        y += SECTION_SPACING;
+
+        // 📄 Pagos realizados
+        if (entry.payments.length > 0) {
+            doc.setFont("courier", "bold");
+            doc.text("Pagos", 40, y, { align: "center" });
+            y += LINE_SPACING - 1;
+            doc.line(5, y, 75, y);
+            y += LINE_SPACING;
+
+            doc.setFont("courier", "normal");
+            entry.payments
+                .filter((p) => p.isValid)
+                .forEach((p) => {
+                    doc.text(`${formatCurrencyCOP(+p.amount)} - ${p.user.firstName}`, 5, y);
+                    y += LINE_SPACING;
+                });
+        } else {
+            doc.setFont("courier", "italic");
+            doc.text("Sin pagos registrados", 40, y, { align: "center" });
+            y += LINE_SPACING;
+        }
+
+        // 🙏 Pie de página
+        y += SECTION_SPACING;
+        doc.setFont("courier", "italic");
+        doc.text(`Reservado: ${formatDateTimeLarge(entry.reservedDate ?? "")}`, 5, y);
+        y += LINE_SPACING;
+        doc.setFont("courier", "bold");
+        doc.text("¡Gracias por su compra!", 40, y, { align: "center" });
+
+        // 📄 Número de página
+        doc.setFontSize(8);
+        doc.text(`Página ${index + 1}`, 75, 145, { align: "right" });
+    });
+
+    // 📥 Descargar PDF directamente
+    // const todayDate = dayjs().format('DDMMYYYY');
+    // const filename = `Resumen_Rifa_${userLastName || 'responsable'}_${userName || ''}_${todayDate}.pdf`;
+
+    // ✅ Generar blob y descargar
+    const pdfBlob = doc.output('blob');
+
+    const url = URL.createObjectURL(pdfBlob);
+
+    const newWindow = window.open(url);
+
+    if (newWindow) {
+        newWindow.onload = () => {
+            newWindow.print();
+        };
+        } else {
+        console.error("No se pudo abrir la ventana. Posiblemente el navegador bloqueó el popup.");
     }
+
 
 };
