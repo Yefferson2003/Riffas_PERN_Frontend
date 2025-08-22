@@ -129,7 +129,7 @@ function Row (props: { row: UserItem, filter: object, page: number, rowsPerPag: 
                         <EditIcon color="primary"/>
                     </Tooltip>
                 </IconButton>
-                {row.rol.name === "responsable" && (
+                { row.rol.name == "responsable" && (
                     <IconButton
                         onClick={() => handleBlockUser(row.id)} // función que tú defines
                         disabled={isPending}
@@ -152,7 +152,7 @@ function Row (props: { row: UserItem, filter: object, page: number, rowsPerPag: 
             </StyledTableCell>
         </StyledTableRow>
             <StyledTableRow>
-            <StyledTableCell style={{ paddingBottom: 0, paddingTop: 0 , background: '#f1f5f9'}} colSpan={3}>
+            <StyledTableCell style={{ paddingBottom: 0, paddingTop: 0 , background: '#f1f5f9'}} colSpan={4}>
                 <Collapse in={open} timeout="auto" unmountOnExit>
                 <div className="m-1 *:flex *:justify-between *:capitalize space-y-2">
                     <div>
@@ -181,6 +181,16 @@ function Row (props: { row: UserItem, filter: object, page: number, rowsPerPag: 
                                 <EditIcon color="primary"/>
                             </Tooltip>
                         </IconButton>
+                        {row.rol.name === "responsable"  && (
+                            <IconButton
+                                onClick={() => handleBlockUser(row.id)} // función que tú defines
+                                disabled={isPending}
+                            >
+                                <Tooltip title="Bloquear / Desactivar usuario">
+                                    <BlockIcon color="error" />
+                                </Tooltip>
+                            </IconButton>
+                        )}
                         <IconButton
                             onClick={() => handleNavigateEditPasswordUser(row.id)}
                         >
@@ -294,9 +304,10 @@ function UsersView() {
                                 Correo
                             </StyledTableCell>
                             <StyledTableCell sx={{MinWidth: {xs: 'auto', md: 300}}} >Rol</StyledTableCell>
-                            <StyledTableCell sx={{display: { xs: 'none', md: 'table-cell' }}}>
+                            <StyledTableCell sx={{ display: { xs: 'table-cell', md: 'table-cell' } }}>
                                 Actividad
                             </StyledTableCell>
+
                             <StyledTableCell align="center" sx={{display: { xs: 'none', md: 'table-cell' }}}>
                                 Acciones
                             </StyledTableCell>
