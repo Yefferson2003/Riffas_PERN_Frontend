@@ -30,6 +30,7 @@ export const AuthSchema = z.object({
     rolName: z.enum(rolNameEnum),
     createdAt: z.string(),
     updatedAt: z.string(),
+    isActive: z.boolean()
 }).extend({
     rol: Rol.pick({
         name: true
@@ -61,6 +62,7 @@ export const userItemForAdmin = AuthSchema.pick({
     email:true,
     rol:true,
     createdAt:true,
+    isActive: true
 })
 
 export const responseGetUsersForAdminSchema = ResponsePaginationSchema.pick({

@@ -15,7 +15,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import useScrollTrigger from '@mui/material/useScrollTrigger';
 import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
@@ -70,6 +70,7 @@ export default function IndexLayout(props: Props) {
     const navigate = useNavigate()
     const { user, isError, isLoading} = useAuth()
 
+
     const queryClient = useQueryClient()
     const logout = () => {
         localStorage.removeItem('AUTH_TOKEN')
@@ -88,7 +89,9 @@ export default function IndexLayout(props: Props) {
     };
 
     const getNavItems = () => {
-        return user?.rol.name === 'admin' ? navItemsAdmin : navItemsBase;
+        return (user?.rol.name === 'admin' || user?.rol.name === 'responsable')
+            ? navItemsAdmin
+            : navItemsBase;
     };
 
     const drawer = (
@@ -111,14 +114,16 @@ export default function IndexLayout(props: Props) {
         </Box>
     );
 
+    useEffect(() => {
+        if (isError) {
+            navigate('/auth-login');
+        }
+    }, [isError, navigate]);
+    
     const container = window !== undefined ? () => window().document.body : undefined;
     
     if (isLoading) return <LoaderView/>
-
-    if (isError ) {
-        navigate('/auth-login')
-        return null
-    }
+    if (isError) return null;
 
     if (user) return (
         <main>

@@ -7,12 +7,13 @@ import { toast } from "react-toastify"
 
 type SelectAsingUserProps = {
     raffleId: number
-    userRol: "admin" | "responsable"
+    userRol: "admin" | "responsable" | "vendedor"
     
 }
 
 function SelectAsingUser({raffleId, userRol} : SelectAsingUserProps) {
     const [userId, setUserId] = useState('')
+    
     const {data, isLoading} = useUsersSelect()
     
     const handleChange = (e : SelectChangeEvent) => {
@@ -54,7 +55,7 @@ function SelectAsingUser({raffleId, userRol} : SelectAsingUserProps) {
                     <Select sx={{width: {sx: 'auto',md: '100%',}}}
                         value={userId}
                         onChange={handleChange}
-                        disabled={userRol === 'responsable'}
+                        disabled={userRol === 'vendedor'}
                     >
                         {data.map(user => (
                             <MenuItem 

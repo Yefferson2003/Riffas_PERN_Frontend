@@ -4,10 +4,10 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import { Button, CircularProgress, Collapse, FormControl, IconButton, MenuItem, Paper, Select, SelectChangeEvent, Table, TableBody, TableCell, tableCellClasses, TableContainer, TableHead, TablePagination, TableRow, Tooltip } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { QueryObserverResult, RefetchOptions, useMutation, useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { Navigate, useNavigate, useOutletContext } from "react-router-dom";
-import { getUsers } from "../../api/userApi";
+import { getUsers, updateIsActiveUser } from "../../api/userApi";
 import { User, UserItem } from "../../types";
 import AddUserModal from "../../components/userView/AddUserModal";
 import PasswordIcon from '@mui/icons-material/Password';
@@ -15,6 +15,8 @@ import { azul } from "../../utils";
 import EditUserData from "../../components/userView/EditUserData";
 import EditPasswordUserModal from "../../components/userView/EditPasswordUserModal";
 import ButtonDeleteUser from "../../components/userView/ButtonDeleteUser";
+import BlockIcon from "@mui/icons-material/Block";
+import { toast } from "react-toastify";
 
 const StyledTableCell = styled(TableCell)(() => ({
     [`&.${tableCellClasses.head}`]: {
@@ -37,16 +39,50 @@ const StyledTableRow = styled(TableRow)(() => ({
 }));
 
 
-function Row (props: { row: UserItem, filter: object, page: number, rowsPerPag: number }) {
-    const { row, filter, page, rowsPerPag } = props;
+function Row (props: { row: UserItem, filter: object, page: number, rowsPerPag: number, refetch: (options?: RefetchOptions | undefined) => Promise<QueryObserverResult<{
+    total: number;
+    totalPages: number;
+    currentPage: number;
+    users: {
+        id: number;
+        firstName: string;
+        lastName: string;
+        email: string;
+        identificationType: string;
+        identificationNumber: string;
+        phone: string;
+        address: string;
+        createdAt: string;
+        isActive: boolean;
+        rol: {
+            name: "admin" | "vendedor" | "responsable";
+        };
+    }[];
+} | undefined, Error>> }) {
+    const { row, filter, page, rowsPerPag, refetch } = props;
     const [open, setOpen] = useState(false);
     const navigate = useNavigate()
+
+    const { mutate, isPending } = useMutation({
+        mutationFn: updateIsActiveUser,
+        onError(error) {
+            toast.error(error.message)
+        },
+        onSuccess(data) {
+            toast.success(data)
+            refetch()
+        },
+    })
 
     const handleNavigateEditUser = (id: number) => {
         navigate(`?editUser=${id}`)
     }
     const handleNavigateEditPasswordUser = (id: number) => {
         navigate(`?editPasswordUser=${id}`)
+    }
+
+    const handleBlockUser = (id: number) => {
+        mutate({userId: id})
     }
 
     return (
@@ -79,6 +115,12 @@ function Row (props: { row: UserItem, filter: object, page: number, rowsPerPag: 
             <StyledTableCell >
                 <p className="capitalize">{row.rol.name}</p>
             </StyledTableCell>
+            <StyledTableCell>
+                <p className={`capitalize font-bold ${row.isActive ? "text-verde" : "text-rojo"}`}>
+                    {row.isActive ? "Activo" : "Inactivo"}
+                </p>
+            </StyledTableCell>
+
             <StyledTableCell align="center" sx={{display: { xs: 'none', md: 'table-cell' }}}>
                 <IconButton
                     onClick={() => handleNavigateEditUser(row.id)}
@@ -87,6 +129,16 @@ function Row (props: { row: UserItem, filter: object, page: number, rowsPerPag: 
                         <EditIcon color="primary"/>
                     </Tooltip>
                 </IconButton>
+                {row.rol.name === "responsable" && (
+                    <IconButton
+                        onClick={() => handleBlockUser(row.id)} // función que tú defines
+                        disabled={isPending}
+                    >
+                        <Tooltip title="Bloquear / Desactivar usuario">
+                            <BlockIcon color="error" />
+                        </Tooltip>
+                    </IconButton>
+                )}
                 <IconButton
                     onClick={() => handleNavigateEditPasswordUser(row.id)}
                 >
@@ -167,7 +219,7 @@ function UsersView() {
         }
     };
 
-    const {data, isLoading, isError} = useQuery({
+    const {data, isLoading, isError, refetch} = useQuery({
         queryKey: ['userList', filter, page, rowsPerPage],
         queryFn: () => getUsers({...filter, page: page + 1, limit: rowsPerPage})
     })
@@ -186,7 +238,7 @@ function UsersView() {
     };
 
     if (user.rol.name !== 'admin' && isError) return <Navigate to={'/404'}/>
-    if (user.rol.name === 'admin') return (
+    if (user.rol.name === 'admin' || user.rol.name === 'responsable') return (
         <section className="w-full text-center">
             <div className="flex flex-col items-center justify-between mb-10 lg:flex-row gap-y-5 ">
                 <h2 className="text-3xl font-bold text-center underline uppercase lg:text-4xl lg:text-start text-azul  w-full max-w-[400px]">usuarios</h2> 
@@ -217,7 +269,11 @@ function UsersView() {
 
             {(isLoading && !data) && <CircularProgress/>}
 
-            {data &&
+            {data && data.users.length == 0 && 
+                <p className="text-xl font-semibold text-azul">No hay Resultados</p>
+            }
+
+            {data && data.users.length !== 0 &&
                 <div className="w-full md:w-[80%] mx-auto">
                 <TableContainer component={Paper} >
                     <Table aria-label="simple table" size="small" sx={{width: {sx: 'auto',md: '100%',}}}>
@@ -238,6 +294,9 @@ function UsersView() {
                                 Correo
                             </StyledTableCell>
                             <StyledTableCell sx={{MinWidth: {xs: 'auto', md: 300}}} >Rol</StyledTableCell>
+                            <StyledTableCell sx={{display: { xs: 'none', md: 'table-cell' }}}>
+                                Actividad
+                            </StyledTableCell>
                             <StyledTableCell align="center" sx={{display: { xs: 'none', md: 'table-cell' }}}>
                                 Acciones
                             </StyledTableCell>
@@ -246,7 +305,14 @@ function UsersView() {
                         <TableBody>
                         
                         {data.users.map((row) => (
-                            <Row key={row.id} row={row} filter={filter} page={page} rowsPerPag={rowsPerPage} />
+                            <Row 
+                                key={row.id} 
+                                row={row} 
+                                filter={filter} 
+                                page={page} 
+                                rowsPerPag={rowsPerPage} 
+                                refetch={refetch}
+                            />
                         ))}
                         
                         </TableBody>

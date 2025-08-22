@@ -7,6 +7,9 @@ export async function getUsers(params= {}) {
         const {data} = await api.get('/users', {params})
         const response = responseGetUsersForAdminSchema.safeParse(data)
         
+        console.log(response.error);
+        
+        
         if (response.success) {
             return response.data
         }
@@ -64,6 +67,17 @@ export async function createUser(formData: UserForm) {
 export async function editUser({formData, userId} : {formData : UserEditForm, userId: number}) {
     try {
         const {data} = await api.put<string>(`/users/${userId}`, formData)
+        return data
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+export async function updateIsActiveUser({userId} : { userId: number}) {
+    try {
+        const {data} = await api.put<string>(`/users/${userId}/update-isActive`)
         return data
     } catch (error) {
         if (isAxiosError(error) && error.response) {

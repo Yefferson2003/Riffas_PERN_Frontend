@@ -153,7 +153,7 @@ function RaffleNumbersView() {
     });
 
     const { data: raffleNumbers, isLoading : isLoadingRaffleNumbers, isError : isErrorRaffleNumbers, refetch } = raffleNumbersData
-    const { data: raffle, isLoading :isLoadingRaffle , isError: isErrorRaffle} = raffleData
+    const { data: raffle, isLoading :isLoadingRaffle , isError: isErrorRaffle, refetch: refechtRaffle} = raffleData
     const { data: awards, refetch: refechtAwards} = awardsData
     const { data: expenseTotal, refetch: refechtExpenseTotal, isLoading: isLoadingExpenseTotal} = expensesTotalData
     const { data: expenseTotalByUser, refetch: refechtExpenseTotalByUser,} = expensesTotalByUserData
@@ -416,7 +416,10 @@ function RaffleNumbersView() {
                 </div>
             </div>
         {raffle && <ViewUsersOfRaffleModal raffleId={raffle.id}/>}
-        {raffle && <UpdateRaffleModal raffle={raffle} />}
+        {raffle && <UpdateRaffleModal 
+            raffle={raffle} 
+            refechtRaffle={refechtRaffle}
+        />}
         {raffle && raffleNumbers && awards && <PayNumbersModal 
             awards={awards}
             totalNumbers={raffleNumbers.total}

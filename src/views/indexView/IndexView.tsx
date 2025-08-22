@@ -61,6 +61,7 @@ function IndexView() {
             socket.off('deleteAssigUser', handleUpdateQueryDeleteRaffle);
         };
     }, [queryClient, user.id, page, rowsPerPage, search]);
+    
     return (
         <section className="w-full pb-10 text-center">
             <div className="flex flex-col items-center justify-between mb-10 lg:flex-row gap-y-5 ">
@@ -70,7 +71,7 @@ function IndexView() {
                     onChange={handleSeacrhChange}
                     sx={{width: '100%', maxWidth: 300}}
                 />
-                {user.rol.name === 'admin' &&
+                {user.rol.name === 'admin' || user.rol.name === 'responsable' &&
                     <Button variant="contained"
                         onClick={handleNavigateNewRaffle}
                         sx={{width: '100%', maxWidth: 300}}
@@ -146,7 +147,13 @@ function IndexView() {
             </section>
             }
 
-        <AddRaffleModal search={search} page={page} rowsPerPage={rowsPerPage}/>
+        <AddRaffleModal 
+            search={search} 
+            page={page} 
+            rowsPerPage={rowsPerPage}
+        />
+
+        
         </section>
     )
 }

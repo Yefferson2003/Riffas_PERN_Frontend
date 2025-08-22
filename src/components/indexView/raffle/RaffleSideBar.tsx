@@ -71,6 +71,36 @@ function RaffleSideBar( { raffleId, raffle, totalNumbers}: RaffleSideBarProps) {
                     </IconButton>
                 )}
 
+                { user.rol.name === 'responsable' && (
+                    <>
+                        
+                        <IconButton onClick={handleNavigateViewUsers}>
+                            <Tooltip title={"Colaboradores"}>
+                            <GroupIcon />
+                            </Tooltip>
+                        </IconButton>
+                        
+                        <IconButton onClick={handleNavigateUpdateRaffle}>
+                            <Tooltip title={"Editar Rifa"} placement="bottom-start">
+                            <EditIcon />
+                            </Tooltip>
+                        </IconButton>
+                        
+                        <IconButton
+                            onClick={() => {
+                            exportRaffleNumbers(raffleId, raffle?.nitResponsable, totalNumbers);
+                                toast.info("Descargando archivo...");
+                            }}
+                        >
+                            <Tooltip title={"Descargar informe"} placement="bottom-start">
+                            <DescriptionIcon color="success" />
+                            </Tooltip>
+                        </IconButton>
+                        
+                        <ButtonDeleteRaffle raffleId={raffle.id} />
+                    </>
+                )}
+                
                 {user.rol.name === "admin" && (
                     <>
                         
@@ -100,6 +130,7 @@ function RaffleSideBar( { raffleId, raffle, totalNumbers}: RaffleSideBarProps) {
                         <ButtonDeleteRaffle raffleId={raffle.id} />
                     </>
                 )}
+                
             </div>
         </div>
     );

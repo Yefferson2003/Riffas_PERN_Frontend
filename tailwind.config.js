@@ -12,6 +12,7 @@ export default {
       'azul': '#1446A0',
       'rojo': '#ff0000',
       'gris': '#e2e8f0',
+      'verde' : "#22C55E"
     },
     extend: {
       fontFamily: {

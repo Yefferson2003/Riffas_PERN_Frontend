@@ -7,7 +7,7 @@ import dayjs from "dayjs";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { uploadImageToCloudinary } from "../../api/cloudinary";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { QueryObserverResult, RefetchOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateRaffle } from "../../api/raffleApi";
 import { LocalizationProvider, MobileDateTimePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -31,8 +31,24 @@ const style = {
 
 type UpdateRaffleModalProps = {
     raffle: Raffle
+    refechtRaffle: (options?: RefetchOptions | undefined) => Promise<QueryObserverResult<{
+    id: number;
+    name: string;
+    nitResponsable: string;
+    nameResponsable: string;
+    description: string;
+    startDate: string;
+    playDate: string;
+    editDate: string;
+    price: string;
+    banerImgUrl: string;
+    banerMovileImgUrl: string;
+    userRiffle: {
+        userId: number;
+    }[] | null;
+} | undefined, Error>>
 }
-function UpdateRaffleModal({raffle} : UpdateRaffleModalProps) {
+function UpdateRaffleModal({raffle, refechtRaffle} : UpdateRaffleModalProps) {
     const user : User = useOutletContext();
     // MODAL //
     const navigate = useNavigate(); 
@@ -80,6 +96,7 @@ function UpdateRaffleModal({raffle} : UpdateRaffleModalProps) {
         },
         onSuccess(data) {
             queryClient.invalidateQueries({queryKey: ['raffles', raffle.id ]})
+            refechtRaffle()
             reset()
             toast.success(data)
             navigate(location.pathname, {replace: true})
@@ -147,7 +164,24 @@ function UpdateRaffleModal({raffle} : UpdateRaffleModalProps) {
         mutate(data)
     }
 
-    if (user.rol.name === 'admin') return (
+    useEffect(() => {
+        if (raffle) {
+            reset({
+                name: raffle.name,
+                nitResponsable: raffle.nitResponsable,
+                nameResponsable: raffle.nameResponsable,
+                description: raffle.description,
+                startDate: dayjs(raffle.startDate),
+                editDate: dayjs(raffle.editDate),
+                playDate: dayjs(raffle.playDate),
+                banerImgUrl: raffle.banerImgUrl,
+                banerMovileImgUrl: raffle.banerMovileImgUrl
+            })
+        }
+    }, [raffle, reset])
+    
+
+    if (user.rol.name === 'admin' || user.rol.name === 'responsable') return (
         <Modal
         open={show}
             onClose={() => {

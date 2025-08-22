@@ -13,7 +13,7 @@ export async function login(formData: UserLoginForm) {
     } catch (error) {
         if (isAxiosError(error) && error.response) {
             console.log(error);
-            throw new Error(error.response.data.errors);
+            throw new Error(error.response.data.error);
             // console.log(error.response.data.message);
             
             

@@ -1,6 +1,7 @@
 import { FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material"
 import { FieldErrors, UseFormRegister, UseFormWatch } from "react-hook-form"
 import { UserForm as UserFormulario } from "../../types"
+import { useAuth } from "../../hooks/useAuth"
 
 type UserFormProps = {
     register: UseFormRegister<UserFormulario>
@@ -9,6 +10,8 @@ type UserFormProps = {
 }
 
 function UserForm({register, errors, watch,} : UserFormProps) {
+
+    const { user } = useAuth()
 
     const {password, identificationType, rolName} = watch();
 
@@ -113,7 +116,9 @@ function UserForm({register, errors, watch,} : UserFormProps) {
                         {...register('rolName', {required: 'Seleccione un tipo'})}
                     >
                         <MenuItem value={'vendedor'}>Vendedor</MenuItem>
-                        <MenuItem value={'responsable'}>Responsable</MenuItem>
+                        { user?.rol.name === 'admin' && 
+                            <MenuItem value={'responsable'}>Responsable</MenuItem>
+                        }
                     </Select>
                 </FormControl>
                 

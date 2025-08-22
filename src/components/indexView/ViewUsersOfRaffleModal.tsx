@@ -137,7 +137,7 @@ function ViewUsersOfRaffleModal({raffleId} : ViewUsersOfRaffleModalProps) {
 
     const {data, isLoading} = useUsersRaffle(raffleId, show)
 
-    if (user.rol.name !== 'vendedor') return (
+    if (user.rol.name == 'admin' || user.rol.name == 'responsable') return (
         <Modal
         open={show}
             onClose={() => {

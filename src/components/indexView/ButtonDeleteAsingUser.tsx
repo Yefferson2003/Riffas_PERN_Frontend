@@ -35,7 +35,7 @@ function ButtonDeleteAsingUser({raffleId, userId} : ButtonDeleteAsingUserProps) 
     return (
         <IconButton
             color="error"
-            disabled={isPending || user.rol.name === 'responsable'}
+            disabled={isPending || user.rol.name === 'vendedor' || userId == user.id}
             onClick={handleDeleteAssing}
         >
             <Tooltip title='Eliminar Asignación'>
