@@ -71,7 +71,15 @@ function IndexView() {
                     onChange={handleSeacrhChange}
                     sx={{width: '100%', maxWidth: 300}}
                 />
-                {user.rol.name === 'admin' || user.rol.name === 'responsable' &&
+                {user.rol.name === 'admin' &&
+                    <Button variant="contained"
+                        onClick={handleNavigateNewRaffle}
+                        sx={{width: '100%', maxWidth: 300}}
+                    >
+                        Crear Rifa
+                    </Button>
+                }
+                {user.rol.name === 'responsable' &&
                     <Button variant="contained"
                         onClick={handleNavigateNewRaffle}
                         sx={{width: '100%', maxWidth: 300}}
