@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { useMediaQuery } from 'react-responsive';
 import { Navigate, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { toast } from 'react-toastify';
-import { getAwards } from '../../api/awardsApi';
 import { getExpensesTotal, getExpensesTotalByUser } from '../../api/expensesApi';
 import { getRaffleById } from '../../api/raffleApi';
 import { getRaffleNumers } from '../../api/raffleNumbersApi';
@@ -26,6 +25,8 @@ import { RaffleNumbersPayments, User } from "../../types";
 import { colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros } from "../../utils";
 import { exelRaffleNumbersFilter, exelRaffleNumbersFilterDetails } from '../../utils/exel';
 import LoaderView from "../LoaderView";
+import ShareURLRaffleModal from '../../components/indexView/modal/ShareURLRaffleModal';
+import { getAwards } from '../../api/awardsApi';
 
 
 const styleForm = {
@@ -181,7 +182,9 @@ function RaffleNumbersView() {
 
     useEffect(() => {
         const handleUpdateQuery = (data: { raffleId: number }) => {
-            if (raffleId && data.raffleId === +raffleId) refetch();
+            if (raffleId && data.raffleId === +raffleId) { 
+                refetch()
+            };
         };
 
         socket.on('sellNumbers', handleUpdateQuery);
@@ -192,6 +195,21 @@ function RaffleNumbersView() {
             socket.off('sellNumber', handleUpdateQuery);
         };
     }, [raffleId, refetch]);
+
+    // useEffect(() => {
+    //     socket.on("connect", () => {
+    //     console.log("Conectado con id:", socket.id);
+    //     });
+
+    //     socket.on("sellNumbers", (data) => {
+    //     console.log("Evento recibido:", data);
+    //     });
+
+    //     return () => {
+    //     socket.off("connect");
+    //     socket.off("sellNumbers");
+    //     };
+    // }, []);
 
     if (isLoadingRaffle || isLoadingRaffleNumbers) return <LoaderView />;
     if (isErrorRaffle || isErrorRaffleNumbers) return <Navigate to={'/404'} />;
@@ -466,6 +484,8 @@ function RaffleNumbersView() {
             <ViewExpensesByUserModal
                 refechtExpenseTotal={refechtExpenseTotal}
                 refechtExpenseTotalByUser={refechtExpenseTotalByUser}
+            />
+            <ShareURLRaffleModal
             />
             </>
             

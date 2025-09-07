@@ -1,14 +1,14 @@
 import { Button, CircularProgress, Pagination, TextField } from "@mui/material"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { ChangeEvent, useEffect, useState } from "react"
-import { getRaffles } from "../../api/raffleApi"
-import { formatCurrencyCOP, formatDateTimeLarge } from "../../utils"
+import { useMediaQuery } from 'react-responsive'
 import { useNavigate, useOutletContext } from "react-router-dom"
-import AddRaffleModal from "../../components/indexView/AddRaffleModal"
-import { useMediaQuery } from 'react-responsive';
-import { User } from "../../types"
-import socket from "../../socket"
 import { toast } from "react-toastify"
+import { getRaffles } from "../../api/raffleApi"
+import AddRaffleModal from "../../components/indexView/AddRaffleModal"
+import socket from "../../socket"
+import { User } from "../../types"
+import { formatCurrencyCOP, formatDateTimeLarge } from "../../utils"
 import { exelRafflesDetailsNumber } from "../../utils/exel"
 
 function IndexView() {
@@ -64,7 +64,7 @@ function IndexView() {
         };
     }, [queryClient, user.id, page, rowsPerPage, search]);
     
-    return (
+    if (user) return (
         <section className="w-full pb-10 text-center">
             <div className="flex flex-col items-center justify-between mb-10 lg:flex-row gap-y-5 ">
                 {/* <h2 className="text-3xl font-bold text-center underline lg:text-4xl lg:text-start text-azul w-full max-w-[400px]">INICIO</h2> */}

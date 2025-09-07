@@ -416,6 +416,169 @@ export const handleDownloadPDF = async ({
 
 };
 
+export const handleDownloadReservationPDF = async ({
+    raffle,
+    awards,
+    totalNumbers,
+    reservation, 
+}: Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "totalNumbers"> & {
+    reservation: {
+        number: number;
+        firstName?: string ;
+        lastName?: string ;
+        phone?: string ;
+        address?: string ;
+        reservedDate?: string;
+    };
+}) => {
+    const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: [80, 150],
+    });
+
+    const LINE_SPACING = 4;
+    const SECTION_SPACING = 6;
+
+    let y = 10;
+
+    // 🧾 Encabezado
+    doc.setFont("courier", "bold");
+    doc.setFontSize(11);
+    doc.text(raffle.name, 40, y, { align: "center" });
+    y += LINE_SPACING + 1;
+
+    doc.setFontSize(9);
+    doc.text(`Responsable: ${raffle.nameResponsable}`, 40, y, { align: "center" });
+    y += LINE_SPACING;
+    doc.text(`NIT: ${raffle.nitResponsable}`, 40, y, { align: "center" });
+    y += LINE_SPACING;
+    doc.setFont("courier", "normal");
+    doc.text(`"${raffle.description}"`, 40, y, { align: "center" });
+    y += SECTION_SPACING;
+
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.2);
+    doc.line(5, y, 75, y);
+    y += LINE_SPACING;
+
+    // 👤 Detalles del comprador
+    doc.setFont("courier", "bold");
+    doc.text("Detalles del Comprador", 40, y, { align: "center" });
+    y += LINE_SPACING - 1;
+    doc.line(5, y, 75, y);
+    y += LINE_SPACING;
+
+    doc.setFont("courier", "normal");
+    doc.text("Boleto #:", 5, y);
+    doc.setFont("courier", "bold");
+    doc.text(`${formatWithLeadingZeros(reservation.number, totalNumbers)}`, 30, y);
+    y += LINE_SPACING;
+
+    doc.setFont("courier", "normal");
+    doc.text("Nombre:", 5, y);
+    doc.setFont("courier", "bold");
+    doc.text(`${reservation.firstName ?? ""} ${reservation.lastName ?? ""}`, 30, y);
+    y += LINE_SPACING;
+
+    doc.setFont("courier", "normal");
+    doc.text("Teléfono:", 5, y);
+    doc.setFont("courier", "bold");
+    doc.text(`${reservation.phone ?? ""}`, 30, y);
+    y += LINE_SPACING;
+
+    doc.setFont("courier", "normal");
+    doc.text("Dirección:", 5, y);
+    doc.setFont("courier", "bold");
+    doc.text(`${reservation.address || "No registrada"}`, 30, y);
+    y += SECTION_SPACING;
+
+    // 🎯 Detalles de la rifa
+    doc.setFont("courier", "bold");
+    doc.text("Detalles de la Rifa", 40, y, { align: "center" });
+    y += LINE_SPACING - 1;
+    doc.line(5, y, 75, y);
+    y += LINE_SPACING;
+
+    doc.setFont("courier", "normal");
+    doc.text("Fecha Juego:", 5, y);
+    doc.setFont("courier", "bold");
+    doc.text(`${formatDateTimeLarge(raffle.playDate)}`, 30, y);
+    y += LINE_SPACING;
+
+    doc.setFont("courier", "normal");
+    doc.text("Valor Rifa:", 5, y);
+    doc.setFont("courier", "bold");
+    doc.text(`${formatCurrencyCOP(+raffle.price)}`, 30, y);
+    y += SECTION_SPACING;
+
+    // 🏆 Premios
+    if (awards.length > 0) {
+        doc.setFont("courier", "bold");
+        doc.text("Premios", 40, y, { align: "center" });
+        y += LINE_SPACING - 1;
+        doc.line(5, y, 75, y);
+        y += LINE_SPACING;
+
+        awards.forEach((award) => {
+        doc.setFont("courier", "normal");
+        doc.text(`• ${award.name}`, 5, y);
+        doc.setFont("courier", "italic");
+        doc.text(`${formatDateTimeLarge(award.playDate)}`, 10, y + 3);
+        y += SECTION_SPACING;
+        });
+    } else {
+        doc.setFont("courier", "italic");
+        doc.text("Sin premios registrados", 40, y, { align: "center" });
+        y += SECTION_SPACING;
+    }
+
+    // 💰 Resumen de pago (solo valor y deuda)
+    doc.setFont("courier", "bold");
+    doc.text("Resumen de Pago", 40, y, { align: "center" });
+    y += LINE_SPACING - 1;
+    doc.line(5, y, 75, y);
+    y += LINE_SPACING;
+
+    doc.setFont("courier", "normal");
+    doc.text("Valor:", 5, y);
+    doc.setFont("courier", "bold");
+    doc.text(`${formatCurrencyCOP(+raffle.price)}`, 30, y);
+    y += LINE_SPACING;
+
+    doc.setFont("courier", "normal");
+    doc.text("Deuda:", 5, y);
+    doc.setFont("courier", "bold");
+    doc.text(`${formatCurrencyCOP(+raffle.price)}`, 30, y);
+    y += SECTION_SPACING;
+
+    // 🙏 Pie de página
+    y += SECTION_SPACING;
+    doc.setFont("courier", "italic");
+    doc.text(`Reservado: ${formatDateTimeLarge(reservation.reservedDate ?? "")}`, 5, y);
+    y += LINE_SPACING;
+    doc.setFont("courier", "bold");
+    doc.text("¡Número apartado con éxito!", 40, y, { align: "center" });
+
+    // 📄 Número de página
+    doc.setFontSize(8);
+    doc.text(`Página 1`, 75, 145, { align: "right" });
+
+    // 📥 Descargar PDF
+    const todayDate = dayjs().format("DDMMYYYY");
+    const boletoNumber = formatWithLeadingZeros(reservation.number, totalNumbers);
+    const filename = `Apartado_Boleto_${boletoNumber}_${todayDate}.pdf`;
+
+    const pdfBlob = doc.output("blob");
+    downloadPDF(pdfBlob, filename);
+};
+
+
+
+
+
+
+
 export const handleViewAndDownloadPDF = async ({
     raffle,
     awards,

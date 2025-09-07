@@ -4,6 +4,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
+import AddLinkIcon from '@mui/icons-material/AddLink';
 import { IconButton, Tooltip } from '@mui/material';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Raffle, User } from '../../../types';
@@ -13,125 +14,92 @@ import { exportRaffleNumbers } from '../../../utils/exel';
 
 type RaffleSideBarProps = {
     raffleId: string;
-    raffle: Raffle
-    totalNumbers: number
-}
+    raffle: Raffle;
+    totalNumbers: number;
+};
 
-function RaffleSideBar( { raffleId, raffle, totalNumbers}: RaffleSideBarProps) {
+function RaffleSideBar({ raffleId, raffle, totalNumbers }: RaffleSideBarProps) {
+    const user: User = useOutletContext();
+    const navigate = useNavigate();
 
-    const user : User = useOutletContext();
-    const navigate = useNavigate()
+    const handleNavigateHome = () => navigate('/');
+    const handleNavigateUpdateRaffle = () => navigate('?updateRaffle=true');
+    const handleNavigateViewUsers = () => navigate('?viewUsers=true');
+    const handleNavigateExpensesByUser = () => navigate('?viewExpenses=true');
+    const handleNavigateExpensesByRaffle = () => navigate('?viewExpensesByRaffle=true');
+    const handleNavigateShareURLRaffle = () => navigate('?viewShareURLRaffle=true');
 
-    const handleNavigateHome = () => {
-        navigate('/')
-    }
+    const canManage = user.rol.name === 'responsable' || user.rol.name === 'admin';
+    const canCollaborate = user.rol.name === 'responsable' || user.rol.name === 'admin';
 
-    const handleNavigateUpdateRaffle = () => {
-        navigate('?updateRaffle=true')
-    }
-    
-    const handleNavigateViewUsers = () => {
-        navigate('?viewUsers=true')
-    }
-    
-    const handleNavigateExpensesByUser = () => {
-        navigate('?viewExpenses=true')
-    }
-
-    const handleNavigateExpensesByRaffle = () => {
-        navigate('?viewExpensesByRaffle=true')
-    }
-
-    
     return (
         <div className="flex justify-between order-1 lg:order-none">
-            <div>
-                <IconButton>
-                <Tooltip title="Regresar" onClick={handleNavigateHome}>
-                    <KeyboardReturnIcon />
+        {/* Botón regresar */}
+        <div>
+            <IconButton onClick={handleNavigateHome}>
+            <Tooltip title="Regresar">
+                <KeyboardReturnIcon />
+            </Tooltip>
+            </IconButton>
+        </div>
+
+        {/* Opciones */}
+        <div>
+            {/* Gastos personales siempre visibles */}
+            <IconButton 
+                color='primary'
+                onClick={handleNavigateShareURLRaffle}
+            >
+            <Tooltip title="Compartir rifa" placement="bottom-start">
+                <AddLinkIcon />
+            </Tooltip>
+            </IconButton>
+            
+            <IconButton onClick={handleNavigateExpensesByUser}>
+            <Tooltip title="Gastos personales" placement="bottom-start">
+                <AttachMoneyIcon />
+            </Tooltip>
+            </IconButton>
+
+            {/* Gastos de la rifa solo para responsables y admins */}
+            {canManage && (
+            <IconButton onClick={handleNavigateExpensesByRaffle}>
+                <Tooltip title="Gastos de la rifa" placement="bottom-start">
+                <RequestQuoteIcon />
+                </Tooltip>
+            </IconButton>
+            )}
+
+            {/* Opciones extra para responsables y admins */}
+            {canCollaborate && (
+            <>
+                <IconButton onClick={handleNavigateViewUsers}>
+                <Tooltip title="Colaboradores">
+                    <GroupIcon />
                 </Tooltip>
                 </IconButton>
-                
-                
-            </div>
 
-            <div>
-                
-                <IconButton onClick={handleNavigateExpensesByUser}>
-                    <Tooltip title={"Gastos personales"} placement="bottom-start">
-                    <AttachMoneyIcon />
-                    </Tooltip>
+                <IconButton onClick={handleNavigateUpdateRaffle}>
+                <Tooltip title="Editar Rifa" placement="bottom-start">
+                    <EditIcon />
+                </Tooltip>
                 </IconButton>
 
-                {(user.rol.name === "responsable" || user.rol.name === "admin") && (
-                    <IconButton onClick={handleNavigateExpensesByRaffle}>
-                        <Tooltip title={"Gastos de la rifa"} placement="bottom-start">
-                        <RequestQuoteIcon />
-                        </Tooltip>
-                    </IconButton>
-                )}
+                <IconButton
+                onClick={() => {
+                    exportRaffleNumbers(raffleId, raffle?.nitResponsable, totalNumbers);
+                    toast.info('Descargando archivo...');
+                }}
+                >
+                <Tooltip title="Descargar informe" placement="bottom-start">
+                    <DescriptionIcon color="success" />
+                </Tooltip>
+                </IconButton>
 
-                { user.rol.name === 'responsable' && (
-                    <>
-                        
-                        <IconButton onClick={handleNavigateViewUsers}>
-                            <Tooltip title={"Colaboradores"}>
-                            <GroupIcon />
-                            </Tooltip>
-                        </IconButton>
-                        
-                        <IconButton onClick={handleNavigateUpdateRaffle}>
-                            <Tooltip title={"Editar Rifa"} placement="bottom-start">
-                            <EditIcon />
-                            </Tooltip>
-                        </IconButton>
-                        
-                        <IconButton
-                            onClick={() => {
-                            exportRaffleNumbers(raffleId, raffle?.nitResponsable, totalNumbers);
-                                toast.info("Descargando archivo...");
-                            }}
-                        >
-                            <Tooltip title={"Descargar informe"} placement="bottom-start">
-                            <DescriptionIcon color="success" />
-                            </Tooltip>
-                        </IconButton>
-                        
-                        <ButtonDeleteRaffle raffleId={raffle.id} />
-                    </>
-                )}
-                
-                {user.rol.name === "admin" && (
-                    <>
-                        
-                        <IconButton onClick={handleNavigateViewUsers}>
-                            <Tooltip title={"Colaboradores"}>
-                            <GroupIcon />
-                            </Tooltip>
-                        </IconButton>
-                        
-                        <IconButton onClick={handleNavigateUpdateRaffle}>
-                            <Tooltip title={"Editar Rifa"} placement="bottom-start">
-                            <EditIcon />
-                            </Tooltip>
-                        </IconButton>
-                        
-                        <IconButton
-                            onClick={() => {
-                            exportRaffleNumbers(raffleId, raffle?.nitResponsable, totalNumbers);
-                                toast.info("Descargando archivo...");
-                            }}
-                        >
-                            <Tooltip title={"Descargar informe"} placement="bottom-start">
-                            <DescriptionIcon color="success" />
-                            </Tooltip>
-                        </IconButton>
-                        
-                        <ButtonDeleteRaffle raffleId={raffle.id} />
-                    </>
-                )}
-                
-            </div>
+                <ButtonDeleteRaffle raffleId={raffle.id} />
+            </>
+            )}
+        </div>
         </div>
     );
 }

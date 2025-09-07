@@ -6,6 +6,7 @@ import Error404View from "./views/Error404View"
 import LoginView from "./views/authView/LoginView"
 import UsersView from "./views/indexView/UsersView"
 import RaffleNumbersView from "./views/indexView/RaffleNumbersView"
+import RaffleSharedView from "./views/indexView/RaffleSharedView"
 
 
 function Router() {
@@ -13,6 +14,7 @@ function Router() {
         <>
         <BrowserRouter>
             <Routes>
+                <Route path="/raffle/shared/:token" element={<RaffleSharedView />} />
 
                 <Route path="*" element={<Error404View/>}/>
 
@@ -22,8 +24,8 @@ function Router() {
                     <Route path="/raffle/:raffleId" element={<RaffleNumbersView/>} index/>
                 </Route>
 
+
                 <Route element={<AuthLayout/>}>
-                
                     <Route path="/auth-login" element={<LoginView/>}/>
                 </Route>
             </Routes>

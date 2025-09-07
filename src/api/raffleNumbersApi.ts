@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { PayNumberForm, PayNumbersForm, RaffleNumberSchema, raffleNumbersExelFilterSchema, RaffleNumberUpdateForm, RafflePayResponseSchema, responseRaffleNumbersExelSchema, responseRaffleNumbersSchema } from "../types";
+import { PayNumberForm, PayNumbersForm, RaffleNumberSchema, raffleNumbersExelFilterSchema, raffleNumberSharedSchema, RaffleNumberUpdateForm, RafflePayResponseSchema, responseRaffleNumbersExelSchema, responseRaffleNumbersSchema } from "../types";
 
 export async function getRaffleNumers({params, raffleId} : {params : object, raffleId: string}) {
     try { 
@@ -16,6 +16,33 @@ export async function getRaffleNumers({params, raffleId} : {params : object, raf
         }
     }
 }
+
+export async function getRaffleNumersShared({ token, limit, page } : { token: string, page: number, limit: number}) {
+    try { 
+        const {data} = await api.get(`/raffles-numbers/shared`, { 
+            params: {
+                token,
+                limit,
+                page
+            }
+        });
+
+        const response = responseRaffleNumbersSchema.safeParse(data)
+        
+        
+        if (response.success) {
+            return response.data
+        }
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+
+
+
 export async function getRaffleNumersExelFilter({params, raffleId} : {params : object, raffleId: string}) {
     try { 
         const {data} = await api.get(`/raffles-numbers/${raffleId}/exel-filter`, { params });
@@ -53,6 +80,27 @@ export async function getRaffleNumberById({raffleId, raffleNumberId} : {raffleId
         const {data} = await api.get(`/raffles-numbers/${raffleId}/number/${raffleNumberId}`)
         const response = RaffleNumberSchema.safeParse(data)
         console.log(response.error);
+        
+        if (response.success) {
+            return response.data
+        }
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+    
+}
+
+export async function getRaffleNumberByIdShared({token, raffleNumberId} : {token: string, raffleNumberId: number}) {
+    try {
+        const {data} = await api.get(`/raffles-numbers/shared/number/${raffleNumberId}`, {
+            params: {
+                token
+            }
+        })
+        const response = raffleNumberSharedSchema.safeParse(data)
         
         if (response.success) {
             return response.data
@@ -104,6 +152,24 @@ export async function amountNumber({formData, raffleId, raffleNumberId, params}:
         }
     }
 }
+
+export async function amountNumberShared({formData, token, raffleNumberId}:{formData : PayNumberForm, token: string, raffleNumberId: number}) {
+    try {
+        const {data} = await api.post(`/raffles-numbers/shared/amount-number/${raffleNumberId}`, formData, { params:{
+            token
+        } })
+        const response = RafflePayResponseSchema.safeParse(data)
+        if (response.success) {
+            return response.data
+        }
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+
 export async function updateNumber({formData, raffleId, raffleNumberId}:{formData : RaffleNumberUpdateForm, raffleId: number, raffleNumberId: number}) {
     try {
         const {data} = await api.put<string>(`/raffles-numbers/${raffleId}/update-number/${raffleNumberId}`, formData)

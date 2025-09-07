@@ -25,6 +25,29 @@ export async function getAwards({ raffleId } : Pick<AwardsType, 'raffleId'>) {
         }
     }
 }
+
+export async function getAwardsShared({ token } : { token: string}) {
+    try {
+        const url = `/raffles/awards/shared`
+        const {data} = await api.get(url,  {
+            params: {
+                token
+            }
+        })
+
+        const response = responseAwards.safeParse(data)
+        if (response) {
+            return response.data
+        }
+
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+
 export async function getAwardById({ raffleId, awardId} : Pick<AwardsType, 'raffleId' | 'awardId'>) {
     try {
         const url = `/raffles/${raffleId}/awards/${awardId}`

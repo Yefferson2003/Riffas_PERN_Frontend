@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { CreateRaffleForm, raffleByIdSchema, responseGetRafflesSchema, responseGetUsersByRaffle, responseRafflesDetailsNumbers, totalByVendedorSchema, totalSchema, UpdateRaffleForm } from "../types";
+import { CreateRaffleForm, raffleByIdSchema, raffleSchema, responseGetRafflesSchema, responseGetUsersByRaffle, responseRafflesDetailsNumbers, totalByVendedorSchema, totalSchema, UpdateRaffleForm, URLSchema } from "../types";
 
 export async function getRaffles(params = {}) {
     try {
@@ -16,6 +16,45 @@ export async function getRaffles(params = {}) {
         }
     }
 }
+
+export async function getRaffleShared({ token } : { token: string}) {
+    try {
+        const {data} = await api.get('/raffles/shared', {
+            params: {
+                token
+            }
+        })
+        
+        const response = raffleSchema.safeParse(data)
+
+        
+
+        if (response.success) {
+            return response.data
+        }
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+
+export async function createURLRaffle({ raffleId } : {raffleId: string}) {
+    try {
+        const {data} = await api.post(`/raffles/${raffleId}/URL`, )
+        const response = URLSchema.safeParse(data)
+        if (response.success) {
+            return response.data
+        }
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+
 export async function getRafflesDetailsNumbers() {
     try {
         const {data} = await api.get('/raffles/details-numbers')

@@ -179,7 +179,13 @@ export const responseGetRafflesSchema = ResponsePaginationSchema.pick({
     raffles: z.array(raffleSchema)
 })
 
+export const responseRaffleSharedSchema = z.object({
+    raffle: raffleSchema
+})
 
+export const URLSchema = z.object({
+    url: z.string()
+})
 
 
 export type Raffle = z.infer<typeof raffleSchema>
@@ -226,6 +232,7 @@ const PaymentSchema = z.object({
     isValid: z.boolean(),
     user: userVendedor
 });
+
 export const RaffleNumberSchema = z.object({
     id: z.number(),
     number: z.number(),
@@ -244,6 +251,25 @@ export const RaffleNumberSchema = z.object({
     updatedAt: z.string(), 
     payments: z.array(PaymentSchema),
 });
+
+export const raffleNumberSharedSchema = RaffleNumberSchema.pick({
+    id: true,
+    number: true,
+    reservedDate: true, 
+    status: true,
+    // identificationType: z.enum(identificationTypeEnum).nullable(),
+    // identificationNumber: z.string().nullable(),
+    firstName: true,
+    lastName:  true,
+    phone: true,
+    address: true,
+    paymentAmount: true,
+    paymentDue: true,  
+    raffleId: true,
+    createdAt: true, 
+    updatedAt: true,
+});
+
 // export const RafflesPayResponseSchema = z.object({
 //     message: z.string(),
 //     raffleNumbers: z.array(RaffleNumberSchema),

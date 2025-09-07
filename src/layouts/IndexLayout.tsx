@@ -69,6 +69,8 @@ export default function IndexLayout(props: Props) {
     const [mobileOpen, setMobileOpen] = useState(false);
     const navigate = useNavigate()
     const { user, isError, isLoading} = useAuth()
+    const token = localStorage.getItem('AUTH_TOKEN');
+    
 
 
     const queryClient = useQueryClient()
@@ -118,15 +120,15 @@ export default function IndexLayout(props: Props) {
     );
     
     useEffect(() => {
-        if (isError) {
+        if (isError || (!user && !token)) {
             navigate('/auth-login', { replace: true });
         }
-    }, [isError, navigate]);
+    }, [isError, navigate, user, token]);
 
     const container = window !== undefined ? () => window().document.body : undefined;
     
     if (isLoading) return <LoaderView/>
-    
+
 
     if (user) return (
         <main>
