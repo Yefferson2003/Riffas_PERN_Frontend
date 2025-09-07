@@ -1,5 +1,5 @@
 import { Box, Button, FormControl, InputLabel, MenuItem, Modal, Select, SelectChangeEvent, TextField } from "@mui/material";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { QueryObserverResult, RefetchOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -27,6 +27,19 @@ const style = {
 };
 
 type PayNumbersModalProps = {
+    refetch: (options?: RefetchOptions | undefined) => Promise<QueryObserverResult<{
+        raffleNumbers: {
+            number: number;
+            status: "sold" | "available" | "pending";
+            id: number;
+            payments: {
+                userId: number;
+            }[];
+        }[];
+        total: number;
+        totalPages: number;
+        currentPage: number;
+    } | undefined, Error>>
     awards: AwardType[]
     totalNumbers: number
     infoRaffle: InfoRaffleType,
@@ -45,7 +58,7 @@ type PayNumbersModalProps = {
     setUrlWasap: React.Dispatch<React.SetStateAction<string>>
 }
 
-function PayNumbersModal({ awards, totalNumbers,infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap} : PayNumbersModalProps) {
+function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap} : PayNumbersModalProps) {
 
     const queryClient = useQueryClient()
     
@@ -88,6 +101,7 @@ function PayNumbersModal({ awards, totalNumbers,infoRaffle, numbersSeleted, raff
             toast.error(error.message)
         },
         onSuccess(data) {
+            refetch()
             // queryClient.invalidateQueries({queryKey: ['raffleNumbers', search, raffleId, filter, page, limit]})
             queryClient.invalidateQueries({queryKey: ['recaudo', raffleId]})
             queryClient.invalidateQueries({queryKey: ['recaudoByVendedor', raffleId]})

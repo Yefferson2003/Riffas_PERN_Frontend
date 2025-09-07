@@ -1,11 +1,25 @@
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { CreateRaffleForm, raffleByIdSchema, responseGetRafflesSchema, responseGetUsersByRaffle, totalByVendedorSchema, totalSchema, UpdateRaffleForm } from "../types";
+import { CreateRaffleForm, raffleByIdSchema, responseGetRafflesSchema, responseGetUsersByRaffle, responseRafflesDetailsNumbers, totalByVendedorSchema, totalSchema, UpdateRaffleForm } from "../types";
 
 export async function getRaffles(params = {}) {
     try {
         const {data} = await api.get('/raffles', {params})
         const response = responseGetRafflesSchema.safeParse(data)
+        if (response.success) {
+            return response.data
+        }
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+export async function getRafflesDetailsNumbers() {
+    try {
+        const {data} = await api.get('/raffles/details-numbers')
+        const response = responseRafflesDetailsNumbers.safeParse(data)
         if (response.success) {
             return response.data
         }

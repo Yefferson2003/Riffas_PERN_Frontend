@@ -8,6 +8,8 @@ import AddRaffleModal from "../../components/indexView/AddRaffleModal"
 import { useMediaQuery } from 'react-responsive';
 import { User } from "../../types"
 import socket from "../../socket"
+import { toast } from "react-toastify"
+import { exelRafflesDetailsNumber } from "../../utils/exel"
 
 function IndexView() {
     const navigate = useNavigate()
@@ -65,12 +67,23 @@ function IndexView() {
     return (
         <section className="w-full pb-10 text-center">
             <div className="flex flex-col items-center justify-between mb-10 lg:flex-row gap-y-5 ">
-                <h2 className="text-3xl font-bold text-center underline lg:text-4xl lg:text-start text-azul w-full max-w-[400px]">INICIO</h2>
+                {/* <h2 className="text-3xl font-bold text-center underline lg:text-4xl lg:text-start text-azul w-full max-w-[400px]">INICIO</h2> */}
                 <TextField id="search" label="Buscar..." variant="outlined"  size="small"
                     value={search}
                     onChange={handleSeacrhChange}
                     sx={{width: '100%', maxWidth: 300}}
                 />
+                {user.rol.name !== 'vendedor' &&
+                    <Button variant="contained" color="success"
+                        onClick={() => {
+                            toast.info('Descargando archivo...', { autoClose: 2000 });
+                            exelRafflesDetailsNumber()
+                        }}
+                        sx={{width: '100%', maxWidth: 300}}
+                    >
+                        Descargar Exel 
+                    </Button>
+                }
                 {user.rol.name === 'admin' &&
                     <Button variant="contained"
                         onClick={handleNavigateNewRaffle}

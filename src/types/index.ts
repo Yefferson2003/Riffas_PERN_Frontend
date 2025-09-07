@@ -180,6 +180,8 @@ export const responseGetRafflesSchema = ResponsePaginationSchema.pick({
 })
 
 
+
+
 export type Raffle = z.infer<typeof raffleSchema>
 export type CreateRaffleForm = z.infer<typeof createRaffleSchema>
 export type UpdateRaffleForm = z.infer<typeof updateRaffleSchema>
@@ -442,4 +444,15 @@ export const AwardFormSchema = awardsShema.pick({
 export type AwardFormType = z.infer<typeof AwardFormSchema>
 export type AwardsResponseType = z.infer<typeof responseAwards>
 export type AwardType = z.infer<typeof awardsShema>
+
+export const responseRafflesDetailsNumbers = z.array(raffleSchema.pick({
+    id: true,
+    name: true,
+}).extend({
+    raffleNumbers: z.array(raffleNumberSchema.pick({
+        id: true,
+        number: true, 
+        paymentAmount: true
+    }))
+}))
 

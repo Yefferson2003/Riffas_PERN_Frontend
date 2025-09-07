@@ -420,7 +420,8 @@ function RaffleNumbersView() {
             raffle={raffle} 
             refechtRaffle={refechtRaffle}
         />}
-        {raffle && raffleNumbers && awards && <PayNumbersModal 
+        {raffle && raffleNumbers && awards && <PayNumbersModal
+            refetch={refetch}
             awards={awards}
             totalNumbers={raffleNumbers.total}
             infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description, responsable: raffle.nameResponsable}}

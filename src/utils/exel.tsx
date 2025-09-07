@@ -3,6 +3,7 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { formatCurrencyCOP, formatDateTimeLargeIsNull, formatWithLeadingZeros, translateRaffleStatus } from '.';
 import { getRaffleNumersExel, getRaffleNumersExelFilter } from '../api/raffleNumbersApi';
+import { getRafflesDetailsNumbers } from '../api/raffleApi';
 
 
 export const fetchRaffleNumbers = async (raffleId: number) => {
@@ -177,6 +178,83 @@ export const exelRaffleNumbersFilter = async (raffleId: string, params: object, 
         console.error("Error al exportar los números de la rifa:", error);
     }
 }
+
+export const exelRafflesDetailsNumber = async () => {
+  try {
+    const data = await getRafflesDetailsNumbers();
+
+    if (!data) {
+      console.error("No se obtuvieron datos de la rifa");
+      return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Detalle Rifas");
+
+    // =========================
+    // Encabezados principales
+    // =========================
+    worksheet.mergeCells("A1:C1");
+    worksheet.getCell("A1").value = `Resumen de Rifas`;
+    worksheet.getCell("A1").font = { bold: true, size: 14 };
+
+    worksheet.addRow([]);
+    worksheet.addRow(["Número", "Monto Total"]);
+
+    worksheet.getRow(worksheet.lastRow!.number).font = {
+      bold: true,
+      size: 12,
+    };
+
+    // =========================
+    // Agrupar y sumar montos
+    // =========================
+    const montoPorNumero: Record<string, number> = {};
+
+    data.forEach((raffle) => {
+      raffle.raffleNumbers.forEach((num) => {
+        const numero = formatWithLeadingZeros(num.number, 3); // ej. "002"
+        const monto = parseFloat(num.paymentAmount) || 0;
+
+        if (!montoPorNumero[numero]) montoPorNumero[numero] = 0;
+        montoPorNumero[numero] += monto;
+      });
+    });
+
+    // =========================
+    // Ordenar números
+    // =========================
+    const numerosOrdenados = Object.keys(montoPorNumero)
+      .map((n) => parseInt(n, 10))
+      .sort((a, b) => a - b);
+
+    // =========================
+    // Agregar filas al Excel
+    // =========================
+    numerosOrdenados.forEach((num) => {
+      worksheet.addRow([
+        formatWithLeadingZeros(num, 3),
+        formatCurrencyCOP(montoPorNumero[num.toString()]),
+      ]);
+    });
+
+    worksheet.columns = [
+      { width: 10 }, // Número
+      { width: 20 }, // Monto Total
+    ];
+
+    // =========================
+    // Descargar archivo
+    // =========================
+    const todayDate = dayjs().format("DDMMYYYY");
+    const filename = `Detalle_Rifas_${todayDate}.xlsx`;
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), filename);
+  } catch (error) {
+    console.error("Error al exportar los números de la rifa:", error);
+  }
+};
+
 
 export const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable: string | undefined, totalNumbers: number) => {
     if (!raffleId) {
