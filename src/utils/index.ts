@@ -270,11 +270,11 @@ export const handleDownloadPDF = async ({
         doc.text(`${entry.firstName ?? ""} ${entry.lastName ?? ""}`, 30, y);
         y += LINE_SPACING;
 
-        doc.setFont("courier", "normal");
-        doc.text("ID:", 5, y);
-        doc.setFont("courier", "bold");
-        doc.text(`${entry.identificationType ?? ""} ${entry.identificationNumber ?? ""}`, 30, y);
-        y += LINE_SPACING;
+        // doc.setFont("courier", "normal");
+        // doc.text("ID:", 5, y);
+        // doc.setFont("courier", "bold");
+        // doc.text(`${entry.identificationType ?? ""} ${entry.identificationNumber ?? ""}`, 30, y);
+        // y += LINE_SPACING;
 
         doc.setFont("courier", "normal");
         doc.text("Teléfono:", 5, y);
@@ -479,11 +479,11 @@ export const handleViewAndDownloadPDF = async ({
         doc.text(`${entry.firstName ?? ""} ${entry.lastName ?? ""}`, 30, y);
         y += LINE_SPACING;
 
-        doc.setFont("courier", "normal");
-        doc.text("ID:", 5, y);
-        doc.setFont("courier", "bold");
-        doc.text(`${entry.identificationType ?? ""} ${entry.identificationNumber ?? ""}`, 30, y);
-        y += LINE_SPACING;
+        // doc.setFont("courier", "normal");
+        // doc.text("ID:", 5, y);
+        // doc.setFont("courier", "bold");
+        // doc.text(`${entry.identificationType ?? ""} ${entry.identificationNumber ?? ""}`, 30, y);
+        // y += LINE_SPACING;
 
         doc.setFont("courier", "normal");
         doc.text("Teléfono:", 5, y);

@@ -4,7 +4,7 @@ import {  z } from "zod";
 
 const rolNameEnum = ['admin', 'vendedor', 'responsable'] as const
 const statusRaffleNumbersEnum = ['available', 'sold', 'pending'] as const
-const identificationTypeEnum = ['CC', 'TI', 'CE'] as const
+// const identificationTypeEnum = ['CC', 'TI', 'CE'] as const
 
 const ResponsePaginationSchema = z.object({
     total: z.number(),
@@ -190,8 +190,8 @@ export type UpdateRaffleForm = z.infer<typeof updateRaffleSchema>
 
 export const payNumbersSchema = z.object({
     raffleNumbersIds: z.array(z.number()),
-    identificationType: z.enum(['CC', 'TI', 'CE']),
-    identificationNumber: z.string(),
+    // identificationType: z.enum(['CC', 'TI', 'CE']),
+    // identificationNumber: z.string(),
     firstName: z.string(),
     lastName: z.string(),
     phone: z.string(),
@@ -199,8 +199,8 @@ export const payNumbersSchema = z.object({
 })
 
 export const payNumberSchema = payNumbersSchema.pick({
-    identificationType: true,
-    identificationNumber: true,
+    // identificationType: true,
+    // identificationNumber: true,
     firstName: true,
     lastName: true,
     phone: true,
@@ -231,8 +231,8 @@ export const RaffleNumberSchema = z.object({
     number: z.number(),
     reservedDate: z.string().nullable(), 
     status: z.enum(statusRaffleNumbersEnum),
-    identificationType: z.enum(identificationTypeEnum).nullable(),
-    identificationNumber: z.string().nullable(),
+    // identificationType: z.enum(identificationTypeEnum).nullable(),
+    // identificationNumber: z.string().nullable(),
     firstName:  z.string().nullable(),
     lastName:  z.string().nullable(),
     phone: z.string().nullable(),
@@ -256,8 +256,8 @@ export const raffleNumberSchema  = z.object({
     number: z.number(),
     reservedDate: z.string().nullable(),
     status: z.enum(statusRaffleNumbersEnum),
-    identificationType: z.enum(identificationTypeEnum).nullable(),
-    identificationNumber: z.string().nullable(),
+    // identificationType: z.enum(identificationTypeEnum).nullable(),
+    // identificationNumber: z.string().nullable(),
     firstName:  z.string().nullable(),
     lastName:  z.string().nullable(),
     phone: z.string().nullable(),
@@ -305,8 +305,8 @@ export const raffleNumberExelSchema = raffleNumbersSchema.pick({
     status: true,
 }).extend({
     reservedDate: z.string().nullable(),
-    identificationType: z.enum(identificationTypeEnum).nullable(),
-    identificationNumber: z.string().nullable(),
+    // identificationType: z.enum(identificationTypeEnum).nullable(),
+    // identificationNumber: z.string().nullable(),
     firstName: z.string().nullable(),
     lastName: z.string().nullable(),
     phone: z.string().nullable(),

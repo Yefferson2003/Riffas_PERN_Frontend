@@ -82,8 +82,8 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
         raffleNumbersIds: [],
         firstName: '',
         lastName: '',
-        identificationType: 'CC',
-        identificationNumber: '',
+        // identificationType: 'CC',
+        // identificationNumber: '',
         address: '',
         phone: ''
     }
@@ -91,7 +91,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
     const {register, handleSubmit, watch, reset, formState: {errors}, setValue} = useForm({
         defaultValues : initialValues
     })
-    const { identificationType, phone} = watch();
+    const { phone} = watch();
     
     const {mutate, isPending} = useMutation({
         mutationFn: sellNumbers,
@@ -190,7 +190,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                         helperText={errors.lastName?.message}
                         {...register('lastName', {required: 'Apellidos Obligatorio'})}
                     />
-                    <FormControl>
+                    {/* <FormControl>
                         <InputLabel id="identificationTypelabel">Tipo de Indentificación</InputLabel>
                         <Select id="identificationType" label="Tipo de Identificación"          variant="outlined"
                             defaultValue={identificationType}
@@ -211,7 +211,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                                 message: 'Solo se permiten números',
                             },
                         })}
-                    />
+                    /> */}
                     <p className="text-sm text-black text-start">Número de teléfono</p>
                     <PhoneNumberInput
                         value={phone}

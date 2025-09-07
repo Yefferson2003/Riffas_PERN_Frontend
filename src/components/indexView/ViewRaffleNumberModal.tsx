@@ -1,4 +1,4 @@
-import { Alert, Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
+import { Alert, Box, Button, FormControl, FormControlLabel, Modal, Switch, TextField } from "@mui/material";
 import { QueryObserverResult, RefetchOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react"; // Importa el componente de entrada de teléfono
 import { useForm } from "react-hook-form";
@@ -62,15 +62,15 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
         amount: +raffleNumber.paymentDue,
         firstName: raffleNumber.firstName || '',
         lastName: raffleNumber.lastName || '',
-        identificationType: raffleNumber.identificationType || 'CC',
-        identificationNumber: raffleNumber.identificationNumber || '',
+        // identificationType: raffleNumber.identificationType || 'CC',
+        // identificationNumber: raffleNumber.identificationNumber || '',
         address: raffleNumber.address || '',
         phone: raffleNumber.phone || ''
     }
     const {register, handleSubmit, watch, reset, setValue, formState: {errors}} = useForm({
         defaultValues : initialValues
     })
-    const { identificationType, address, phone} = watch();
+    const { address, phone} = watch();
 
     const queryClient = useQueryClient()
     const {mutate, isPending} = useMutation({
@@ -254,7 +254,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                         helperText={errors.lastName?.message}
                         {...register('lastName', {required: 'Apellidos Obligatorio'})}
                     />
-                    <FormControl>
+                    {/* <FormControl>
                         <InputLabel id="identificationTypelabel">Tipo de Indentificación</InputLabel>
                         <Select id="identificationType" label="Tipo de Identificación" variant="outlined"
                             defaultValue={identificationType}
@@ -275,7 +275,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                                 message: 'Solo se permiten números',
                             },
                         })}
-                    />
+                    /> */}
                     <p className="text-sm text-black text-start">Número de teléfono</p>
                     <PhoneNumberInput
                         value={phone}
