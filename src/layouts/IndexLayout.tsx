@@ -73,13 +73,16 @@ export default function IndexLayout(props: Props) {
 
     const queryClient = useQueryClient()
     const logout = () => {
-        localStorage.removeItem('AUTH_TOKEN')
-        queryClient.invalidateQueries({queryKey: ['user']});
+        localStorage.removeItem('AUTH_TOKEN');
+        queryClient.removeQueries(); 
+        navigate('/auth-login', { replace: true });
     };
+
 
     const handleNavigation = (item : string) => {
         if (item === 'logout') {
             logout();
+            return
         }
         navigate(navItemsUrls[item]);
     };
@@ -113,17 +116,17 @@ export default function IndexLayout(props: Props) {
         </List>
         </Box>
     );
-
+    
     useEffect(() => {
         if (isError) {
-            navigate('/auth-login');
+            navigate('/auth-login', { replace: true });
         }
     }, [isError, navigate]);
-    
+
     const container = window !== undefined ? () => window().document.body : undefined;
     
     if (isLoading) return <LoaderView/>
-    if (isError) return null;
+    
 
     if (user) return (
         <main>

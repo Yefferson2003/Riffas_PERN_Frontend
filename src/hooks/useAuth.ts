@@ -4,12 +4,14 @@ import { getUser } from "../api/authApi"
 
 export const useAuth = () => {
 
-    const {data: user, isError, isLoading} = useQuery({
-        queryKey: ['user'],
-        queryFn: getUser,
-        retry: false,
-        refetchOnWindowFocus: false 
-    })
+    const token = localStorage.getItem('AUTH_TOKEN');
+
+    const { data: user, isError, isLoading} = useQuery({
+    queryKey: ['user'],
+    queryFn: getUser,
+    enabled: !!token,   
+    retry: false,      
+    });
 
     return {
         user,
