@@ -178,7 +178,7 @@ export const exelRaffleNumbersFilter = async (raffleId: string, params: object, 
         console.error("Error al exportar los números de la rifa:", error);
     }
 }
-
+// agrega el totalNumeros
 export const exelRafflesDetailsNumber = async () => {
   try {
     const data = await getRafflesDetailsNumbers();
@@ -191,20 +191,11 @@ export const exelRafflesDetailsNumber = async () => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Detalle Rifas");
 
-    // =========================
-    // Encabezados principales
-    // =========================
-    worksheet.mergeCells("A1:C1");
+    worksheet.mergeCells("A1:H1");
     worksheet.getCell("A1").value = `Resumen de Rifas`;
     worksheet.getCell("A1").font = { bold: true, size: 14 };
 
     worksheet.addRow([]);
-    worksheet.addRow(["Número", "Monto Total"]);
-
-    worksheet.getRow(worksheet.lastRow!.number).font = {
-      bold: true,
-      size: 12,
-    };
 
     // =========================
     // Agrupar y sumar montos
@@ -213,7 +204,7 @@ export const exelRafflesDetailsNumber = async () => {
 
     data.forEach((raffle) => {
       raffle.raffleNumbers.forEach((num) => {
-        const numero = formatWithLeadingZeros(num.number, 3); // ej. "002"
+        const numero = formatWithLeadingZeros(num.number, 3);
         const monto = parseFloat(num.paymentAmount) || 0;
 
         if (!montoPorNumero[numero]) montoPorNumero[numero] = 0;
@@ -222,38 +213,103 @@ export const exelRafflesDetailsNumber = async () => {
     });
 
     // =========================
-    // Ordenar números
+    // Armar grupos por centenas
     // =========================
-    const numerosOrdenados = Object.keys(montoPorNumero)
-      .map((n) => parseInt(n, 10))
-      .sort((a, b) => a - b);
-
-    // =========================
-    // Agregar filas al Excel
-    // =========================
-    numerosOrdenados.forEach((num) => {
-      worksheet.addRow([
-        formatWithLeadingZeros(num, 3),
-        formatCurrencyCOP(montoPorNumero[num.toString()]),
-      ]);
+    const grupos: Record<string, { numero: string; monto: number }[]> = {};
+    Object.entries(montoPorNumero).forEach(([numero, monto]) => {
+      const n = parseInt(numero, 10);
+      const inicio = Math.floor(n / 100) * 100;
+      const fin = inicio + 99;
+      const key = `${formatWithLeadingZeros(inicio, 3)}-${formatWithLeadingZeros(
+        fin,
+        3
+      )}`;
+      if (!grupos[key]) grupos[key] = [];
+      grupos[key].push({ numero, monto });
     });
 
-    worksheet.columns = [
-      { width: 10 }, // Número
-      { width: 20 }, // Monto Total
-    ];
+    // =========================
+    // Ordenar grupos y contenido
+    // =========================
+    const rangos = Object.keys(grupos).sort(
+      (a, b) => parseInt(a.split("-")[0]) - parseInt(b.split("-")[0])
+    );
+
+    rangos.forEach((rango) => {
+      grupos[rango].sort((a, b) => parseInt(a.numero) - parseInt(b.numero));
+    });
+
+    // =========================
+    // Construir cabeceras
+    // =========================
+    const header: string[] = [];
+    rangos.forEach((r) => {
+      header.push(r, "MONTO TOTAL");
+    });
+
+    worksheet.addRow(header);
+    worksheet.getRow(worksheet.lastRow!.number).font = { bold: true, size: 12 };
+
+    // =========================
+    // Determinar max filas
+    // =========================
+    const maxFilas = Math.max(...Object.values(grupos).map((arr) => arr.length));
+
+    // =========================
+    // Llenar datos fila por fila
+    // =========================
+    for (let i = 0; i < maxFilas; i++) {
+      const fila: (string | number)[] = [];
+
+      rangos.forEach((rango) => {
+        const item = grupos[rango][i];
+        if (item) {
+          fila.push(item.numero, formatCurrencyCOP(item.monto));
+        } else {
+          fila.push("", "");
+        }
+      });
+
+      worksheet.addRow(fila);
+    }
+
+    // =========================
+    // Totales por rango
+    // =========================
+    const filaTotales: (string | number)[] = [];
+    rangos.forEach((rango) => {
+      filaTotales.push(
+        "TOTAL",
+        formatCurrencyCOP(
+          grupos[rango].reduce((acc, it) => acc + it.monto, 0)
+        )
+      );
+    });
+
+    worksheet.addRow([]);
+    worksheet.addRow(filaTotales);
+    worksheet.getRow(worksheet.lastRow!.number).font = {
+      bold: true,
+      size: 12,
+    };
+
+    // =========================
+    // Ajustar ancho
+    // =========================
+    worksheet.columns = header.map(() => ({ width: 15 }));
 
     // =========================
     // Descargar archivo
     // =========================
     const todayDate = dayjs().format("DDMMYYYY");
-    const filename = `Detalle_Rifas_${todayDate}.xlsx`;
+    const filename = `Detalle_Rifas_Agrupado_${todayDate}.xlsx`;
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), filename);
   } catch (error) {
     console.error("Error al exportar los números de la rifa:", error);
   }
 };
+
 
 
 export const exportRaffleNumbers = async (raffleId: string | undefined, nitResponsable: string | undefined, totalNumbers: number) => {

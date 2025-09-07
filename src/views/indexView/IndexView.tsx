@@ -77,7 +77,7 @@ function IndexView() {
                     <Button variant="contained" color="success"
                         onClick={() => {
                             toast.info('Descargando archivo...', { autoClose: 2000 });
-                            exelRafflesDetailsNumber()
+                            exelRafflesDetailsNumber(   )
                         }}
                         sx={{width: '100%', maxWidth: 300}}
                     >
