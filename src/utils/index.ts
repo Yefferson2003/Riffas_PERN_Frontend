@@ -270,6 +270,22 @@ const downloadPDF = (blob: Blob, filename: string) => {
     URL.revokeObjectURL(link.href);
 };
 
+const addMultilineText = (
+    doc: jsPDF,
+    text: string,
+    x: number,
+    y: number,
+    maxWidth: number,
+    lineHeight: number
+) => {
+    const lines = doc.splitTextToSize(text, maxWidth);
+    lines.forEach((line: string) => {
+        doc.text(line, x, y);
+        y += lineHeight;
+    });
+    return y;
+};
+
 
 export const handleDownloadPDF = async ({
     raffle,
@@ -295,20 +311,34 @@ export const handleDownloadPDF = async ({
         if (index > 0) doc.addPage([80, 150]);
         let y = 10;
 
+    
         // 🧾 Encabezado
         doc.setFont("courier", "bold");
         doc.setFontSize(11);
         doc.text(raffle.name, 40, y, { align: "center" });
         y += LINE_SPACING + 1;
 
+        // Responsable (como título)
+        doc.setFont("courier", "normal");
+        doc.text("Responsable", 40, y, { align: "center" });
+        y += LINE_SPACING - 1;
+        doc.line(5, y, 75, y); // línea separadora
+        y += LINE_SPACING;
+
+        // Nombre y NIT debajo
+        doc.setFont("courier", "normal");
         doc.setFontSize(9);
-        doc.text(`Responsable: ${raffle.nameResponsable}`, 40, y, { align: "center" });
+        doc.text(`${raffle.nameResponsable}`, 40, y, { align: "center" });
         y += LINE_SPACING;
         doc.text(`NIT: ${raffle.nitResponsable}`, 40, y, { align: "center" });
-        y += LINE_SPACING;
-        doc.setFont("courier", "normal");
-        doc.text(`"${raffle.description}"`, 40, y, { align: "center" });
         y += SECTION_SPACING;
+
+        // Descripción multilínea (centrada y ajustada)
+        doc.setFont("courier", "italic");
+        doc.setFontSize(9);
+        y = addMultilineText(doc, `"${raffle.description}"`, 40, y, 70, LINE_SPACING);
+        y += SECTION_SPACING;
+
 
         doc.setDrawColor(0);
         doc.setLineWidth(0.2);
@@ -381,12 +411,13 @@ export const handleDownloadPDF = async ({
 
             awards.forEach((award) => {
                 doc.setFont("courier", "normal");
-                doc.text(`• ${award.name}`, 5, y);
+                y = addMultilineText(doc, `• ${award.name}`, 5, y, 70, LINE_SPACING);
+
                 doc.setFont("courier", "italic");
-                doc.text(`${formatDateTimeLarge(award.playDate)}`, 10, y + 3);
+                y = addMultilineText(doc, `${formatDateTimeLarge(award.playDate)}`, 10, y, 65, LINE_SPACING);
                 y += SECTION_SPACING;
             });
-        } else {
+        }else {
             doc.setFont("courier", "italic");
             doc.text("Sin premios registrados", 40, y, { align: "center" });
             y += SECTION_SPACING;
@@ -512,14 +543,27 @@ export const handleDownloadReservationPDF = async ({
     doc.text(raffle.name, 40, y, { align: "center" });
     y += LINE_SPACING + 1;
 
+    // Responsable (como título)
+    doc.setFont("courier", "normal");
+    doc.text("Responsable", 40, y, { align: "center" });
+    y += LINE_SPACING - 1;
+    doc.line(5, y, 75, y); // línea separadora
+    y += LINE_SPACING;
+
+    // Nombre y NIT debajo
+    doc.setFont("courier", "normal");
     doc.setFontSize(9);
-    doc.text(`Responsable: ${raffle.nameResponsable}`, 40, y, { align: "center" });
+    doc.text(`${raffle.nameResponsable}`, 40, y, { align: "center" });
     y += LINE_SPACING;
     doc.text(`NIT: ${raffle.nitResponsable}`, 40, y, { align: "center" });
-    y += LINE_SPACING;
-    doc.setFont("courier", "normal");
-    doc.text(`"${raffle.description}"`, 40, y, { align: "center" });
     y += SECTION_SPACING;
+
+    // Descripción multilínea (centrada y ajustada)
+    doc.setFont("courier", "italic");
+    doc.setFontSize(9);
+    y = addMultilineText(doc, `"${raffle.description}"`, 40, y, 70, LINE_SPACING);
+    y += SECTION_SPACING;
+
 
     doc.setDrawColor(0);
     doc.setLineWidth(0.2);
@@ -576,7 +620,7 @@ export const handleDownloadReservationPDF = async ({
     doc.text(`${formatCurrencyCOP(+raffle.price)}`, 30, y);
     y += SECTION_SPACING;
 
-    // 🏆 Premios
+    //Premios
     if (awards.length > 0) {
         doc.setFont("courier", "bold");
         doc.text("Premios", 40, y, { align: "center" });
@@ -585,13 +629,14 @@ export const handleDownloadReservationPDF = async ({
         y += LINE_SPACING;
 
         awards.forEach((award) => {
-        doc.setFont("courier", "normal");
-        doc.text(`• ${award.name}`, 5, y);
-        doc.setFont("courier", "italic");
-        doc.text(`${formatDateTimeLarge(award.playDate)}`, 10, y + 3);
-        y += SECTION_SPACING;
+            doc.setFont("courier", "normal");
+            y = addMultilineText(doc, `• ${award.name}`, 5, y, 70, LINE_SPACING);
+
+            doc.setFont("courier", "italic");
+            y = addMultilineText(doc, `${formatDateTimeLarge(award.playDate)}`, 10, y, 65, LINE_SPACING);
+            y += SECTION_SPACING;
         });
-    } else {
+    }else {
         doc.setFont("courier", "italic");
         doc.text("Sin premios registrados", 40, y, { align: "center" });
         y += SECTION_SPACING;
@@ -637,18 +682,10 @@ export const handleDownloadReservationPDF = async ({
     downloadPDF(pdfBlob, filename);
 };
 
-
-
-
-
-
-
 export const handleViewAndDownloadPDF = async ({
     raffle,
     awards,
     pdfData,
-    // userName,
-    // userLastName,
     totalNumbers
 }: Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "pdfData" | 'totalNumbers'> & {
     userName?: string;
@@ -673,13 +710,19 @@ export const handleViewAndDownloadPDF = async ({
         doc.text(raffle.name, 40, y, { align: "center" });
         y += LINE_SPACING + 1;
 
+        // Responsable (como título)
+        doc.setFont("courier", "normal");
+        doc.text("Responsable", 40, y, { align: "center" });
+        y += LINE_SPACING - 1;
+        doc.line(5, y, 75, y); // línea separadora
+        y += LINE_SPACING;
+
+        // Nombre y NIT debajo
+        doc.setFont("courier", "normal");
         doc.setFontSize(9);
-        doc.text(`Responsable: ${raffle.nameResponsable}`, 40, y, { align: "center" });
+        doc.text(`${raffle.nameResponsable}`, 40, y, { align: "center" });
         y += LINE_SPACING;
         doc.text(`NIT: ${raffle.nitResponsable}`, 40, y, { align: "center" });
-        y += LINE_SPACING;
-        doc.setFont("courier", "normal");
-        doc.text(`"${raffle.description}"`, 40, y, { align: "center" });
         y += SECTION_SPACING;
 
         doc.setDrawColor(0);
@@ -753,12 +796,13 @@ export const handleViewAndDownloadPDF = async ({
 
             awards.forEach((award) => {
                 doc.setFont("courier", "normal");
-                doc.text(`• ${award.name}`, 5, y);
+                y = addMultilineText(doc, `• ${award.name}`, 5, y, 70, LINE_SPACING);
+
                 doc.setFont("courier", "italic");
-                doc.text(`${formatDateTimeLarge(award.playDate)}`, 10, y + 3);
+                y = addMultilineText(doc, `${formatDateTimeLarge(award.playDate)}`, 10, y, 65, LINE_SPACING);
                 y += SECTION_SPACING;
             });
-        } else {
+        }else {
             doc.setFont("courier", "italic");
             doc.text("Sin premios registrados", 40, y, { align: "center" });
             y += SECTION_SPACING;
