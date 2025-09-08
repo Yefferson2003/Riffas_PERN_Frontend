@@ -139,29 +139,26 @@ export const handleMessageToWhatsAppAviso = ({
     telefono: string;
     name: string;
 }) => {
-
     const formattedNumber = formatWithLeadingZeros(number, totalNumbers);
     
+    const message = `📢 ¡Hola *${name}*! 👋
 
-    const message = `¡¡¡HOLA!!! Sr@ 
-    *${name}*
+🎯 Tenemos noticias emocionantes para ti ✨
 
-    Falta poco para iniciar nuestro nuevo proyecto, y queremos darte prioridad como cliente especial ✨
+Estamos a punto de lanzar nuestro nuevo proyecto y queremos darte prioridad como cliente VIP 🌟
 
-    ¿Deseas conservar el mismo número que llevabas en la rifa anterior *${formattedNumber}* o te gustaría cambiarlo?
+❓ ¿Te gustaría conservar tu número anterior *${formattedNumber}* 🎲 o prefieres cambiarlo?
 
-    _Quedamos atentas a tu respuesta.._
+📞 _Esperamos tu respuesta pronto.._
 
-    ✨ *Gracias por confiar y formar parte de nuestros proyectos* ✨
+🙏 *Gracias por ser parte de la familia* 💚
 
-    `;
+`;
 
     const encodedMessage = encodeURIComponent(message);
     
-
     const whatsappUrl = `https://wa.me/${telefono}?text=${encodedMessage}`;
     
-
     window.open(whatsappUrl, '_blank');
 };
 
