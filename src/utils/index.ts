@@ -276,11 +276,17 @@ const addMultilineText = (
     x: number,
     y: number,
     maxWidth: number,
-    lineHeight: number
+    lineHeight: number,
+    alignCenter: 'center' | undefined
 ) => {
+
+
     const lines = doc.splitTextToSize(text, maxWidth);
     lines.forEach((line: string) => {
-        doc.text(line, x, y);
+        doc.text(line, x, y, alignCenter ? 
+            { align: 'center'}
+            : { align: undefined}
+        );
         y += lineHeight;
     });
     return y;
@@ -332,11 +338,13 @@ export const handleDownloadPDF = async ({
         y += LINE_SPACING;
         doc.text(`NIT: ${raffle.nitResponsable}`, 40, y, { align: "center" });
         y += SECTION_SPACING;
-
+        
+        
+        const cleanDescription = raffle.description.trim();
         // Descripción multilínea (centrada y ajustada)
         doc.setFont("courier", "italic");
         doc.setFontSize(9);
-        y = addMultilineText(doc, `"${raffle.description}"`, 40, y, 70, LINE_SPACING);
+        y = addMultilineText(doc, `"${cleanDescription}"`, 40, y, 70, LINE_SPACING, "center");
         y += SECTION_SPACING;
 
 
@@ -411,10 +419,10 @@ export const handleDownloadPDF = async ({
 
             awards.forEach((award) => {
                 doc.setFont("courier", "normal");
-                y = addMultilineText(doc, `• ${award.name}`, 5, y, 70, LINE_SPACING);
+                y = addMultilineText(doc, `• ${award.name}`, 5, y, 70, LINE_SPACING, undefined);
 
                 doc.setFont("courier", "italic");
-                y = addMultilineText(doc, `${formatDateTimeLarge(award.playDate)}`, 10, y, 65, LINE_SPACING);
+                y = addMultilineText(doc, `${formatDateTimeLarge(award.playDate)}`, 10, y, 65, LINE_SPACING, undefined);
                 y += SECTION_SPACING;
             });
         }else {
@@ -558,10 +566,11 @@ export const handleDownloadReservationPDF = async ({
     doc.text(`NIT: ${raffle.nitResponsable}`, 40, y, { align: "center" });
     y += SECTION_SPACING;
 
+    const cleanDescription = raffle.description.trim();
     // Descripción multilínea (centrada y ajustada)
     doc.setFont("courier", "italic");
     doc.setFontSize(9);
-    y = addMultilineText(doc, `"${raffle.description}"`, 40, y, 70, LINE_SPACING);
+    y = addMultilineText(doc, `"${cleanDescription}"`, 40, y, 70, LINE_SPACING, 'center');
     y += SECTION_SPACING;
 
 
@@ -630,10 +639,10 @@ export const handleDownloadReservationPDF = async ({
 
         awards.forEach((award) => {
             doc.setFont("courier", "normal");
-            y = addMultilineText(doc, `• ${award.name}`, 5, y, 70, LINE_SPACING);
+            y = addMultilineText(doc, `• ${award.name}`, 5, y, 70, LINE_SPACING, undefined);
 
             doc.setFont("courier", "italic");
-            y = addMultilineText(doc, `${formatDateTimeLarge(award.playDate)}`, 10, y, 65, LINE_SPACING);
+            y = addMultilineText(doc, `${formatDateTimeLarge(award.playDate)}`, 10, y, 65, LINE_SPACING, undefined);
             y += SECTION_SPACING;
         });
     }else {
@@ -725,6 +734,13 @@ export const handleViewAndDownloadPDF = async ({
         doc.text(`NIT: ${raffle.nitResponsable}`, 40, y, { align: "center" });
         y += SECTION_SPACING;
 
+        const cleanDescription = raffle.description.trim();
+        // Descripción multilínea (centrada y ajustada)
+        doc.setFont("courier", "italic");
+        doc.setFontSize(9);
+        y = addMultilineText(doc, `"${cleanDescription}"`, 40, y, 70, LINE_SPACING, 'center');
+        y += SECTION_SPACING;
+
         doc.setDrawColor(0);
         doc.setLineWidth(0.2);
         doc.line(5, y, 75, y);
@@ -796,10 +812,10 @@ export const handleViewAndDownloadPDF = async ({
 
             awards.forEach((award) => {
                 doc.setFont("courier", "normal");
-                y = addMultilineText(doc, `• ${award.name}`, 5, y, 70, LINE_SPACING);
+                y = addMultilineText(doc, `• ${award.name}`, 5, y, 70, LINE_SPACING, undefined);
 
                 doc.setFont("courier", "italic");
-                y = addMultilineText(doc, `${formatDateTimeLarge(award.playDate)}`, 10, y, 65, LINE_SPACING);
+                y = addMultilineText(doc, `${formatDateTimeLarge(award.playDate)}`, 10, y, 65, LINE_SPACING, undefined);
                 y += SECTION_SPACING;
             });
         }else {
