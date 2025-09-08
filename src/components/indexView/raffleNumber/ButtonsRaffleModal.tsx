@@ -64,7 +64,7 @@ function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfD
             
             {raffleNumberStatus !== 'available' &&
                 <IconButton
-                    onClick={() => handleMessageToWhatsAppAviso({ telefono, number, totalNumbers, name })}
+                    onClick={() => handleMessageToWhatsAppAviso({ telefono, number, totalNumbers, name, raffleName: raffle.name })}
                 >
                     <Tooltip title='Eliminar Cliente de la Rifa'>
                         <CampaignIcon color='warning'/>

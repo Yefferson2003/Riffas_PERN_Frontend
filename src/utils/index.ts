@@ -132,12 +132,14 @@ export const handleMessageToWhatsAppAviso = ({
     totalNumbers, 
     number, 
     telefono, 
-    name
+    name,
+    raffleName
 }: {
     totalNumbers: number;
     number: number;
     telefono: string;
     name: string;
+    raffleName: string;
 }) => {
     const formattedNumber = formatWithLeadingZeros(number, totalNumbers);
     
@@ -145,14 +147,17 @@ export const handleMessageToWhatsAppAviso = ({
 
 🎯 Tenemos noticias emocionantes para ti ✨
 
-Estamos a punto de lanzar nuestro nuevo proyecto y queremos darte prioridad como cliente VIP 🌟
+Estamos a punto de lanzar nuestra nueva *rifa* 🎉  
+Y queremos darte prioridad como cliente VIP 🌟
 
 ❓ ¿Te gustaría conservar tu número anterior *${formattedNumber}* 🎲 o prefieres cambiarlo?
 
-📞 _Esperamos tu respuesta pronto.._
+📞 _Esperamos tu respuesta pronto..._
 
 🙏 *Gracias por ser parte de la familia* 💚
 
+Atentamente,  
+El equipo de *${raffleName}* 🎟️
 `;
 
     const encodedMessage = encodeURIComponent(message);
@@ -161,6 +166,7 @@ Estamos a punto de lanzar nuestro nuevo proyecto y queremos darte prioridad como
     
     window.open(whatsappUrl, '_blank');
 };
+
 
 
 export const redirectToWhatsApp = ({
