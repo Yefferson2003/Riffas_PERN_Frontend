@@ -30,7 +30,7 @@ type PayNumbersModalProps = {
     refetch: (options?: RefetchOptions | undefined) => Promise<QueryObserverResult<{
         raffleNumbers: {
             number: number;
-            status: "sold" | "available" | "pending";
+            status: "sold" | "available" | "pending" | "apartado";
             id: number;
             payments: {
                 userId: number;

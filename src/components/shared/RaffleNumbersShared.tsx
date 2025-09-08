@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { getRaffleNumersShared } from "../../api/raffleNumbersApi";
-import { colorStatusRaffleNumber, formatCurrencyCOP, formatWithLeadingZeros } from "../../utils";
+import { colorStatusRaffleNumber, formatCurrencyCOP, formatWithLeadingZeros, getChipStyles } from "../../utils";
 import ViewRaffleNumberSharedModal from './ViewRaffleNumberSharedModal';
 import { AwardType, Raffle } from '../../types';
 
@@ -62,7 +62,7 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                 ) : (
                     raffleNumbers && raffleNumbers.raffleNumbers.map(raffleNumber => (
                         <Chip
-                            sx={{ height: 35, fontWeight: 'bold' }}
+                            sx={getChipStyles(raffleNumber.status)}
                             key={raffleNumber.id} 
                             label={formatWithLeadingZeros(raffleNumber.number, raffleNumbers.total)} 
                             variant="filled" 

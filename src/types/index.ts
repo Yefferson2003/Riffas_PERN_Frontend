@@ -3,7 +3,7 @@ import {  z } from "zod";
 // AUTH & USERS & PAGINATION
 
 const rolNameEnum = ['admin', 'vendedor', 'responsable'] as const
-const statusRaffleNumbersEnum = ['available', 'sold', 'pending'] as const
+const statusRaffleNumbersEnum = ['available', 'sold', 'pending', 'apartado'] as const
 // const identificationTypeEnum = ['CC', 'TI', 'CE'] as const
 
 const ResponsePaginationSchema = z.object({

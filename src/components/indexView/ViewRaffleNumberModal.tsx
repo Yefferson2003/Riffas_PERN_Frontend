@@ -186,6 +186,9 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
             <Box sx={style}>
                 
             <ButtonsRaffleModal
+                name={raffleNumber.firstName || ''}
+                number={raffleNumber.number}
+                telefono={raffleNumber.phone || ''}
                 awards={awards}
                 totalNumbers={totalNumbers}
                 pdfData={pdfData}

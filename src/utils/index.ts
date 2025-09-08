@@ -6,22 +6,45 @@ import { AwardType } from "../types";
 export const azul = '#1446A0'
 
 
-export function translateRaffleStatus(status: "available" | "sold" | "pending"): string {
+export function translateRaffleStatus(status: "available" | "sold" | "pending" | "apartado"): string {
     const translations: Record<typeof status, string> = {
         available: "Disponible",
-        sold: "Vendido",
-        pending: "Pendiente"
+        sold: "Pagados",
+        pending: "Pendiente",
+        apartado: "Apartado"
     };
     return translations[status] || status;
 }
 
-export const rifflesNumbersStatusEnum = ['available', 'sold', 'pending'] as const;
+export const rifflesNumbersStatusEnum = ['available', 'sold', 'pending', 'apartado'] as const;
 
-export const colorStatusRaffleNumber : {[key: string] : "warning" | "default" | "success"  } = {
+export const colorStatusRaffleNumber : {[key: string] : "warning" | "default" | "success" | undefined } = {
     available: 'default',
     sold: 'success',
     pending: 'warning',
+    reserved: undefined, 
 }
+
+export const getChipStyles = (status: string) => {
+    const baseStyles = {
+        height: 35, 
+        fontWeight: 'bold'
+    };
+
+    if (status === 'apartado') {
+        return {
+            ...baseStyles,
+            backgroundColor: '#FFC107', 
+
+            color: '#fff',
+            '&:hover': {
+                backgroundColor: '#FFB300',
+            }
+        };
+    }
+
+    return baseStyles;
+};
 
 export function formatCurrencyCOP(amount: number) {
     return new Intl.NumberFormat('en-US', {
@@ -102,8 +125,46 @@ type redirectToWhatsAppType = {
     }[]
     awards: AwardType[]
     reservedDate: string | null
-    statusRaffleNumber?: "sold" | "pending"
+    statusRaffleNumber?: "sold" | "pending" | "apartado"
 }
+
+export const handleMessageToWhatsAppAviso = ({
+    totalNumbers, 
+    number, 
+    telefono, 
+    name
+}: {
+    totalNumbers: number;
+    number: number;
+    telefono: string;
+    name: string;
+}) => {
+
+    const formattedNumber = formatWithLeadingZeros(number, totalNumbers);
+    
+
+    const message = `¡¡¡HOLA!!! Sr@ 
+    *${name}*
+
+    Falta poco para iniciar nuestro nuevo proyecto, y queremos darte prioridad como cliente especial ✨
+
+    ¿Deseas conservar el mismo número que llevabas en la rifa anterior *${formattedNumber}* o te gustaría cambiarlo?
+
+    _Quedamos atentas a tu respuesta.._
+
+    ✨ *Gracias por confiar y formar parte de nuestros proyectos* ✨
+
+    `;
+
+    const encodedMessage = encodeURIComponent(message);
+    
+
+    const whatsappUrl = `https://wa.me/${telefono}?text=${encodedMessage}`;
+    
+
+    window.open(whatsappUrl, '_blank');
+};
+
 
 export const redirectToWhatsApp = ({
     totalNumbers,

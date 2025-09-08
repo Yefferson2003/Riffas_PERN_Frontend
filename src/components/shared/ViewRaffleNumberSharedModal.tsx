@@ -36,7 +36,7 @@ type ViewRaffleNumberSharedModalProps = {
         currentPage: number;
         raffleNumbers: {
             number: number;
-            status: "available" | "sold" | "pending";
+            status: "available" | "sold" | "pending" | "apartado";
             id: number;
             payments: {
                 userId: number;

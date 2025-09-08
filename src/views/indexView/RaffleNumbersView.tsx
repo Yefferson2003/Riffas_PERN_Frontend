@@ -1,10 +1,12 @@
 import LocalActivityIcon from '@mui/icons-material/LocalActivity';
-import { Chip, CircularProgress, FormControl, FormControlLabel, MenuItem, Pagination, Select, SelectChangeEvent, Switch, TextField } from "@mui/material";
+import { Chip, FormControl, FormControlLabel, MenuItem, Pagination, Select, SelectChangeEvent, Skeleton, Switch, TextField } from "@mui/material";
 import { useQueries } from '@tanstack/react-query';
-import { useEffect, useState } from "react";
+import debounce from 'lodash.debounce';
+import { useCallback, useEffect, useState } from "react";
 import { useMediaQuery } from 'react-responsive';
 import { Navigate, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { toast } from 'react-toastify';
+import { getAwards } from '../../api/awardsApi';
 import { getExpensesTotal, getExpensesTotalByUser } from '../../api/expensesApi';
 import { getRaffleById } from '../../api/raffleApi';
 import { getRaffleNumers } from '../../api/raffleNumbersApi';
@@ -18,15 +20,15 @@ import ViewRaffleNumberData from '../../components/indexView/ViewRaffleNumberDat
 import ViewUsersOfRaffleModal from '../../components/indexView/ViewUsersOfRaffleModal';
 import ViewAdminExpensesModal from '../../components/indexView/modal/Expenses/ViewAdminExpensesModal';
 import ViewExpensesByUserModal from '../../components/indexView/modal/Expenses/ViewExpensesByUserModal';
+import ShareURLRaffleModal from '../../components/indexView/modal/ShareURLRaffleModal';
 import Awards from '../../components/indexView/raffle/Awards';
 import RaffleSideBar from '../../components/indexView/raffle/RaffleSideBar';
 import socket from '../../socket';
 import { RaffleNumbersPayments, User } from "../../types";
-import { colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros } from "../../utils";
+import { colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros, getChipStyles } from "../../utils";
 import { exelRaffleNumbersFilter, exelRaffleNumbersFilterDetails } from '../../utils/exel';
 import LoaderView from "../LoaderView";
-import ShareURLRaffleModal from '../../components/indexView/modal/ShareURLRaffleModal';
-import { getAwards } from '../../api/awardsApi';
+
 
 
 const styleForm = {
@@ -53,6 +55,8 @@ function RaffleNumbersView() {
     const [rowsPerPage] = useState<number>(100);
     const [urlWasap, setUrlWasap] = useState<string>('')
 
+    
+
 
     const [paymentsSellNumbersModal, setPaymentsSellNumbersModal] = useState(false);
     const [pdfData, setPdfData] = useState<RaffleNumbersPayments | undefined>();
@@ -62,26 +66,45 @@ function RaffleNumbersView() {
     const [numbersSeleted, setNumbersSeleted] = useState<{numberId: number, number: number}[]>([])
 
     const [filter, setFilter] = useState<{ sold?: boolean; available?: boolean; pending?: boolean }>({});
+    const [inputValues, setInputValues] = useState({ 
+        search: '', 
+        searchAmount: '' 
+    });
     const [searchParams, setSearchParams] = useState({ 
         search: '', 
         searchAmount: '' 
     });
 
+    const updateSearchParams = useCallback(
+        debounce((values: { search: string; searchAmount: string }) => {
+            setSearchParams(values);
+        }, 2000),
+        []
+    );
+    
+    useEffect(() => {
+        return () => {
+            updateSearchParams.cancel();
+        };
+    }, [updateSearchParams]);
+
+
     const handleChangeSearchParams = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
 
-        // Validar solo si el campo es 'searchAmount'
+
         if (name === 'searchAmount' && value && !/^\d*$/.test(value)) {
             toast.error('Solo se permiten números en el campo de monto.', { autoClose: 2000 });
             return;
         }
 
-        setSearchParams(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
+        const newValues = { ...inputValues, [name]: value };
+        setInputValues(newValues);
 
+
+        updateSearchParams(newValues);
+    };
+    
     // const handleChangeSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     //     setSearchParams(prev => ({ ...prev, search: e.target.value }));
     // }
@@ -96,6 +119,7 @@ function RaffleNumbersView() {
             sold?: boolean;
             available?: boolean;
             pending?: boolean;
+            apartado?: boolean;
         }
 
         const filters: Record<string, FilterOptions> = {
@@ -103,12 +127,17 @@ function RaffleNumbersView() {
             sold: { sold: true },
             available: { available: true },
             pending: { pending: true },
+            apartado: { apartado: true },
         };
 
         // Actualizar el uso de setFilter
         setFilter(filters[e.target.value] || {});
 
         setSearchParams({ search: '', searchAmount: '' });
+        const empty = { search: '', searchAmount: '' };
+        setInputValues(empty);
+        setSearchParams(empty);
+        updateSearchParams.cancel();
     };
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, newPage: number)=> {
@@ -211,7 +240,7 @@ function RaffleNumbersView() {
     //     };
     // }, []);
 
-    if (isLoadingRaffle || isLoadingRaffleNumbers) return <LoaderView />;
+    if (isLoadingRaffle) return <LoaderView />;
     if (isErrorRaffle || isErrorRaffleNumbers) return <Navigate to={'/404'} />;
 
     if (
@@ -221,8 +250,8 @@ function RaffleNumbersView() {
         raffle.userRiffle &&
         !raffle.userRiffle.some(r => r.userId === user.id)
     ) {
-    return <Navigate to={'/404'} />;
-}
+        return <Navigate to={'/404'} />;
+    }
     
     return (
         <section className="flex flex-col-reverse w-full pb-10 text-center lg:flex-col *:bg-white *:p-2 gap-5 *:rounded-xl">
@@ -318,12 +347,13 @@ function RaffleNumbersView() {
                             <MenuItem value={'available'}>Disponibles</MenuItem>
                             <MenuItem value={'pending'}>Pendientes</MenuItem>
                             <MenuItem value={'sold'}>Vendidos</MenuItem>
+                            <MenuItem value={'apartado'}>Apartados</MenuItem>
                         </Select>
                         
-                        <TextField id='search' label="Buscar por C.C. o Número" size='small'
+                        <TextField id='search' label="Buscar Número" size='small'
                             variant='filled'
                             name='search'
-                            value={searchParams.search}
+                            value={inputValues.search}
                             onChange={handleChangeSearchParams}
                         />
                         
@@ -331,7 +361,7 @@ function RaffleNumbersView() {
                             <TextField id='searchAmount' label="Buscar por Monto" size='small'
                                 variant='filled'
                                 name='searchAmount'
-                                value={searchParams.searchAmount}
+                                value={inputValues.searchAmount}
                                 onChange={handleChangeSearchParams}
                             />
                         }
@@ -391,35 +421,48 @@ function RaffleNumbersView() {
                 }
                 
                 <section className="grid grid-cols-5 cursor-pointer gap-x-1 gap-y-3 md:grid-cols-10 md:grid-rows-10">
-                    
-                    {isLoadingRaffleNumbers && <div className='col-span-full'><CircularProgress/></div>}
-                    
-                    { raffleNumbers && raffle && raffleNumbers.total &&
-                        raffleNumbers.raffleNumbers.length === 0 ? (
-                            <p className='text-xl font-bold col-span-full text-azul'>No hay resultados...</p>
-                        ) : (
-                            raffleNumbers && raffleNumbers.raffleNumbers.map(raffleNumber => (
-                                <Chip 
-                                    sx={{height: 35, fontWeight: 'bold' }}
-                                    key={raffleNumber.id} 
-                                    label={formatWithLeadingZeros(raffleNumber.number, raffleNumbers.total)} 
-                                    variant="filled" 
-                                    size="small"
-                                    disabled={
-                                        user.rol.name === 'vendedor' &&
-                                        raffleNumber.payments.length > 0 &&
-                                        isVisibleRaffleNumbes(raffleNumber.payments) &&
-                                        raffleNumber.status !== 'available'
-                                    }
-                                    color={colorStatusRaffleNumber[raffleNumber.status]}
-                                    onClick={optionSeleted ? 
-                                        () => toggleSelectNumber(raffleNumber.id, raffleNumber.status, raffleNumber.number) : () => handleNavigateViewRaffleNumber(raffleNumber.id)
-                                    }
-                                />
-                            ))
-                        )
-                    }
+                {isLoadingRaffleNumbers && (
+                    <>
+                    {Array.from({ length: rowsPerPage }).map((_, i) => (
+                        <Skeleton 
+                        key={i} 
+                        variant="rectangular" 
+                        width="100%" 
+                        height={35} 
+                        sx={{ borderRadius: 2 }} 
+                        />
+                    ))}
+                    </>
+                )}
+
+                {!isLoadingRaffleNumbers && raffleNumbers && raffle && raffleNumbers.total &&
+                    raffleNumbers.raffleNumbers.length === 0 ? (
+                    <p className='text-xl font-bold col-span-full text-azul'>No hay resultados...</p>
+                    ) : (
+                    raffleNumbers?.raffleNumbers.map(raffleNumber => (
+                        <Chip 
+                            sx={getChipStyles(raffleNumber.status)}
+                            key={raffleNumber.id} 
+                            label={formatWithLeadingZeros(raffleNumber.number, raffleNumbers.total)} 
+                            variant="filled" 
+                            size="small"
+                            disabled={
+                                user.rol.name === 'vendedor' &&
+                                raffleNumber.payments.length > 0 &&
+                                isVisibleRaffleNumbes(raffleNumber.payments) &&
+                                raffleNumber.status !== 'available'
+                            }
+                            color={colorStatusRaffleNumber[raffleNumber.status]}
+                            onClick={optionSeleted ? 
+                                () => toggleSelectNumber(raffleNumber.id, raffleNumber.status, raffleNumber.number) 
+                                : () => handleNavigateViewRaffleNumber(raffleNumber.id)
+                            }
+                        />
+                    ))
+                    )
+                }
                 </section>
+
 
                 <div className='flex justify-center my-5'>   
                     <Pagination     

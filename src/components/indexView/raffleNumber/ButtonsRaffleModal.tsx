@@ -7,13 +7,17 @@ import { deleteNumberClient } from "../../../api/raffleNumbersApi";
 import { toast } from "react-toastify";
 import { AwardType, Raffle, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../../types";
 import ButtoToWasap from "./ButtoToWasap";
-import { handleDownloadPDF, handleViewAndDownloadPDF } from "../../../utils";
+import { handleDownloadPDF, handleMessageToWhatsAppAviso, handleViewAndDownloadPDF } from "../../../utils";
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import AdfScannerIcon from '@mui/icons-material/AdfScanner';
+import CampaignIcon from '@mui/icons-material/Campaign';
 
 
 type ButtonsRaffleModalProps = {
-    raffleStatus: "available" | "sold" | "pending"
+    name: string
+    telefono: string
+    number: number
+    raffleStatus: "available" | "sold" | "pending" | "apartado"
     totalNumbers: number
     pdfData: RaffleNumbersPayments
     raffle: Raffle
@@ -25,7 +29,7 @@ type ButtonsRaffleModalProps = {
     handleToWasap: () => void
 }
 
-function ButtonsRaffleModal({ awards, totalNumbers ,pdfData, raffle, raffleStatus, raffleId, raffleNumberId, refect, handleToWasap, raffleNumberStatus} : ButtonsRaffleModalProps) {
+function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfData, raffle, raffleStatus, raffleId, raffleNumberId, refect, handleToWasap, raffleNumberStatus} : ButtonsRaffleModalProps) {
     const navigate = useNavigate()
 
     const queryClient = useQueryClient()
@@ -48,6 +52,7 @@ function ButtonsRaffleModal({ awards, totalNumbers ,pdfData, raffle, raffleStatu
     
     return (
         <div className="flex justify-between w-full">
+            
             <IconButton
                 onClick={handleDeleteNumberClient}
                 disabled={isPending}
@@ -56,6 +61,16 @@ function ButtonsRaffleModal({ awards, totalNumbers ,pdfData, raffle, raffleStatu
                     <DeleteIcon color={isPending ? 'disabled' : 'error'}/>
                 </Tooltip>
             </IconButton>
+            
+            {raffleNumberStatus !== 'available' &&
+                <IconButton
+                    onClick={() => handleMessageToWhatsAppAviso({ telefono, number, totalNumbers, name })}
+                >
+                    <Tooltip title='Eliminar Cliente de la Rifa'>
+                        <CampaignIcon color='warning'/>
+                    </Tooltip>
+                </IconButton>
+            }
 
             { raffleNumberStatus !== 'available' && 
                 <ButtoToWasap
