@@ -44,8 +44,7 @@ function RaffleSharedView() {
         <Box component="main" sx={{ p: 3, width: "100%" }}>
             <section className="flex flex-col w-full pb-10 text-center lg:flex-col *:bg-white gap-5 *:rounded-xl">
             {/* INFO PRINCIPAL */}
-            <div className="space-y-4">
-
+            <div >
                 {/* BANNER */}
                 <div>
                 <img
