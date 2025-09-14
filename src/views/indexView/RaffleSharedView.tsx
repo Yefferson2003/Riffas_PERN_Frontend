@@ -42,7 +42,7 @@ function RaffleSharedView() {
     if (raffle)
         return (
         <Box component="main" sx={{ p: 3, width: "100%" }}>
-            <section className="flex flex-col w-full pb-10 text-center lg:flex-col *:bg-white gap-5 *:rounded-xl">
+            <section className="flex flex-col w-full pb-10 text-center lg:flex-col *:bg-white *:rounded-xl">
             {/* INFO PRINCIPAL */}
             <div >
                 {/* BANNER */}
@@ -58,7 +58,7 @@ function RaffleSharedView() {
                 />
                 </div>
                 
-                <div className="flex flex-col items-center p-4 lg:justify-between lg:flex-row">
+                <div className="flex flex-col items-center p-2 lg:justify-between lg:flex-row">
                 <div className="flex flex-col items-center lg:items-start">
                     <h2 className="text-2xl font-bold lg:text-3xl text-azul">
                     {raffle.name}
@@ -69,8 +69,8 @@ function RaffleSharedView() {
                 </div>
 
                 {/* DESCRIPCIÓN */}
-                <div className="p-4">
-                <p className="mb-2 text-xl font-bold text-azul">Descripción</p>
+                <div className="p-2">
+                <p className="mb-1 text-xl font-bold text-azul">Descripción</p>
                 <p className="text-justify text-gray-700">{raffle.description}</p>
                 </div>
 

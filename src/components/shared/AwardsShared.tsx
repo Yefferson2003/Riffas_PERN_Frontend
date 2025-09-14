@@ -11,7 +11,7 @@ function AwardsShared( {awards } : AwardsSharedProps) {
     
     if (awards) return (
         <div className="awards-container">
-            <h3 className="mb-4 text-xl font-bold">Premios</h3>
+            <h3 className="text-xl font-bold ">Premios</h3>
             
             {!awards || awards.length === 0 && <p className="text-center ">No hay premios secundarios disponibles.</p>}
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
