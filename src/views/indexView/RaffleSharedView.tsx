@@ -98,6 +98,23 @@ function RaffleSharedView() {
                 />
             )}
             </section>
+
+            <div className="flex justify-center gap-4 text-sm">
+                <a
+                    href="/terms-and-conditions"
+                    target="_blank"
+                    className="underline transition-colors hover:text-azul"
+                    >
+                    Términos y Condiciones
+                </a>
+                <a
+                    href="/privacy-policy"
+                    target="_blank"
+                    className="text-gray-600 underline transition-colors hover:text-azul"
+                >
+                    Política de Privacidad
+                </a>
+            </div>
         </Box>
     );
 }

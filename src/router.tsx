@@ -7,6 +7,8 @@ import LoginView from "./views/authView/LoginView"
 import UsersView from "./views/indexView/UsersView"
 import RaffleNumbersView from "./views/indexView/RaffleNumbersView"
 import RaffleSharedView from "./views/indexView/RaffleSharedView"
+import TermsAndConditionsView from "./views/TermsAndConditionsView"
+import PrivacyPolicyView from "./views/PrivacyPolicyView"
 
 
 function Router() {
@@ -15,6 +17,9 @@ function Router() {
         <BrowserRouter>
             <Routes>
                 <Route path="/raffle/shared/:token" element={<RaffleSharedView />} />
+                <Route path="/terms-and-conditions" element={<TermsAndConditionsView/>} />
+                <Route path="/privacy-policy" element={<PrivacyPolicyView/>} />
+
 
                 <Route path="*" element={<Error404View/>}/>
 
