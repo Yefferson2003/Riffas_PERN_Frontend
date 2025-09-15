@@ -6,7 +6,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { amountNumber, updateNumber } from "../../api/raffleNumbersApi";
 import { AwardType, PayNumberForm, Raffle, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types";
-import { formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from "../../utils";
+import { formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp, sendPaymentReminderWhatsApp } from "../../utils";
 import PhoneNumberInput from "../PhoneNumberInput";
 import ButtonsRaffleModal from "./raffleNumber/ButtonsRaffleModal";
 import RaflleNumberPaymentsHistory from "./RaflleNumberPaymentsHistory";
@@ -130,6 +130,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
             }
         });
     }
+    
     const handleToWasap = () => {
         const firstName = watch('firstName');
         const phone = watch('phone');
@@ -137,6 +138,36 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
 
         if (raffleNumber.status !== 'available') {
             const url = redirectToWhatsApp({
+                numbers: [{ numberId: 0, number: raffleNumber.number }],
+                phone,
+                name: firstName,
+                amount,
+                infoRaffle,
+                payments: raffleNumber.payments,
+                statusRaffleNumber: raffleNumber.status,
+                totalNumbers,
+                awards, 
+                reservedDate: pdfData[0].reservedDate
+            });
+            setUrlWasap(url);
+
+            // Detect if device is mobile
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile) {
+                window.location.href = url;
+            } else {
+                window.open(url, '_blank');
+            }
+        }
+    }
+    
+    const handleSendPaymentReminderWhatsApp = () => {
+        const firstName = watch('firstName');
+        const phone = watch('phone');
+        const amount = watch('amount');
+
+        if (raffleNumber.status !== 'available') {
+            const url = sendPaymentReminderWhatsApp({
                 numbers: [{ numberId: 0, number: raffleNumber.number }],
                 phone,
                 name: firstName,
@@ -193,12 +224,12 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                 totalNumbers={totalNumbers}
                 pdfData={pdfData}
                 raffle={raffle}
-                raffleStatus={raffleNumber.status}
                 raffleId={raffleId} 
                 raffleNumberId={raffleNumberId}
                 refect={refect}
                 raffleNumberStatus={raffleNumber.status}
                 handleToWasap={handleToWasap}
+                handleSendPaymentReminderWhatsApp={handleSendPaymentReminderWhatsApp}
             />
             
             <h2 className="mb-5 text-2xl font-bold text-center uppercase text-azul">{'# ' +formatWithLeadingZeros(raffleNumber.number, totalNumbers)}</h2>

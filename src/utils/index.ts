@@ -256,6 +256,63 @@ Saludos,
     return `https://wa.me/${phone}?text=${encodedMessage}`;
 };
 
+export const sendPaymentReminderWhatsApp = ({
+    totalNumbers,
+    numbers,
+    phone,
+    name,
+    infoRaffle,
+    reservedDate,
+    statusRaffleNumber,
+    payments,
+    amount,
+}: redirectToWhatsAppType): string => {
+    if (!phone) return "";
+
+    const rafflePrice = +infoRaffle.amountRaffle;
+    let deuda = 0;
+
+    if (statusRaffleNumber === "pending" && payments) {
+        const abonosValidos = payments
+            .filter(p => p.isValid)
+            .reduce((acc, p) => acc + Number(p.amount), 0);
+        deuda = Math.max((rafflePrice * numbers.length) - abonosValidos, 0);
+    } else if (payments && payments.length > 0) {
+        const abonosValidos = payments
+            .filter(p => p.isValid)
+            .reduce((acc, p) => acc + Number(p.amount), 0);
+        const totalAbonado = abonosValidos + amount;
+        deuda = Math.max((rafflePrice * numbers.length) - totalAbonado, 0);
+    } else {
+        deuda = Math.max((rafflePrice * numbers.length) - amount, 0);
+    }
+
+    const numbersList = numbers
+        .map(n => formatWithLeadingZeros(n.number, totalNumbers))
+        .join(", ");
+
+    const message = `
+✨ Hola *${name.trim()}*,
+
+Recuerda que apartaste el número(s) *${numbersList}* en la rifa *“${infoRaffle.name.trim()}”* 🎟
+
+📌 Detalles:
+💵 Valor pendiente: *${formatCurrencyCOP(deuda)}*
+🗓 Fecha de la reservación: *${formatDateTimeLarge(reservedDate)}*
+🗓 Fecha del sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*
+
+Por favor realiza tu abono o pago para asegurar tu participación ✅
+⏳ Los números no abonados podrán liberarse.
+
+🍀 ¡Mucha suerte!
+*${infoRaffle.name.trim()}*
+`.trim();
+
+    const encodedMessage = encodeURIComponent(message);
+    return `https://wa.me/${phone}?text=${encodedMessage}`;
+};
+
+
 const downloadPDF = (blob: Blob, filename: string) => {
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);

@@ -11,13 +11,13 @@ import { handleDownloadPDF, handleMessageToWhatsAppAviso, handleViewAndDownloadP
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import AdfScannerIcon from '@mui/icons-material/AdfScanner';
 import CampaignIcon from '@mui/icons-material/Campaign';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 
 
 type ButtonsRaffleModalProps = {
     name: string
     telefono: string
     number: number
-    raffleStatus: "available" | "sold" | "pending" | "apartado"
     totalNumbers: number
     pdfData: RaffleNumbersPayments
     raffle: Raffle
@@ -27,9 +27,10 @@ type ButtonsRaffleModalProps = {
     refect: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
     raffleNumberStatus: RaffleNumber['status']
     handleToWasap: () => void
+    handleSendPaymentReminderWhatsApp: () => void
 }
 
-function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfData, raffle, raffleStatus, raffleId, raffleNumberId, refect, handleToWasap, raffleNumberStatus} : ButtonsRaffleModalProps) {
+function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfData, raffle, raffleId, raffleNumberId, refect, handleToWasap, raffleNumberStatus, handleSendPaymentReminderWhatsApp} : ButtonsRaffleModalProps) {
     const navigate = useNavigate()
 
     const queryClient = useQueryClient()
@@ -73,12 +74,10 @@ function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfD
             }
 
             { raffleNumberStatus !== 'available' && 
+                <>
                 <ButtoToWasap
                     handleToWasap={handleToWasap}
                 />
-            }
-
-            {raffleStatus != 'available' &&
                 <div>
                     <IconButton
                         onClick={(e) => {
@@ -92,9 +91,6 @@ function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfD
                     </IconButton>
 
                 </div>
-            }
-            
-            {raffleStatus != 'available' &&
                 <div>
                     <IconButton
                         onClick={(e) => {
@@ -108,6 +104,25 @@ function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfD
                     </IconButton>
 
                 </div>
+                
+                </>
+            }
+
+            {(raffleNumberStatus == 'apartado') || (raffleNumberStatus == 'pending') &&
+                <>
+                <div>
+                    <IconButton
+                        onClick={(e) => {
+                            e.preventDefault(); // evita navegación
+                            handleSendPaymentReminderWhatsApp()
+                        }}
+                    >
+                        <Tooltip title='Recordar Pago'>
+                            <AttachMoneyIcon color="success"/>
+                        </Tooltip>
+                    </IconButton>
+                </div>
+                </>
             }
 
             
