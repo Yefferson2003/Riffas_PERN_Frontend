@@ -302,7 +302,7 @@ Recuerda que apartaste el número(s) *${numbersList}* en la rifa *“${infoRaffl
 🗓 Fecha del sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*
 
 Por favor realiza tu abono o pago para asegurar tu participación ✅
-⏳ Los números no abonados podrán liberarse.
+⏳ Los números no abonados no participan.
 
 🍀 ¡Mucha suerte!
 *${infoRaffle.name.trim()}*
