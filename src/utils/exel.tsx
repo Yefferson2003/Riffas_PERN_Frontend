@@ -4,6 +4,7 @@ import { saveAs } from 'file-saver';
 import { formatCurrencyCOP, formatDateTimeLargeIsNull, formatWithLeadingZeros, translateRaffleStatus } from '.';
 import { getRaffleNumersExel, getRaffleNumersExelFilter } from '../api/raffleNumbersApi';
 import { getRafflesDetailsNumbers } from '../api/raffleApi';
+import { PaymentMethodType } from '../types';
 
 
 export const fetchRaffleNumbers = async (raffleId: number) => {
@@ -20,8 +21,10 @@ export const fetchRaffleNumbers = async (raffleId: number) => {
     }
 };
 
+type paymentMethodFilterType = PaymentMethodType | '' 
 
-export const exelRaffleNumbersFilterDetails = async (raffleId: string, params: object, totalNumbers: number) => {
+
+export const exelRaffleNumbersFilterDetails = async (raffleId: string, params: object, totalNumbers: number, paymentMethodFilter: paymentMethodFilterType) => {
 
     try {
         const data = await getRaffleNumersExelFilter({ params, raffleId });
@@ -48,23 +51,35 @@ export const exelRaffleNumbersFilterDetails = async (raffleId: string, params: o
         worksheet.getCell('A2').value = `Precio de la Boleta: ${formatCurrencyCOP(+rafflePrice) || '---'}`;
         worksheet.getCell('A2').font = { bold: true, size: 12 };
 
+        // Agregar información del filtro de método de pago si existe
+        if (paymentMethodFilter) {
+            worksheet.mergeCells('A4:C4');
+            worksheet.getCell('A4').value = `Método de pago filtrado: ${paymentMethodFilter}`;
+            worksheet.getCell('A4').font = { bold: true, size: 12, color: { argb: 'FF0066CC' } };
+        }
+
         // Encabezados de columnas
         worksheet.addRow([]);
-        worksheet.addRow(['Número', 'Abonado', 'Deuda', ' Nombre',  'Apellido','Teléfono', 'Estado']);
-        worksheet.getRow(6).font = { bold: true, size: 14 };
+        const headers = ['Número', 'Abonado', 'Método de Pago', 'Deuda', ' Nombre',  'Apellido','Teléfono', 'Estado' ];
+        worksheet.addRow(headers);
+        const headerRowNumber = paymentMethodFilter ? 7 : 6;
+        worksheet.getRow(headerRowNumber).font = { bold: true, size: 14 };
 
 
         // Agregar los números de la rifa y su estado con color de fondo según el estado
         raffleNumbers.forEach((raffle) => {
-            const row = worksheet.addRow([
+            const rowData = [
                 formatWithLeadingZeros(raffle.number, totalNumbers),
                 formatCurrencyCOP(+raffle.paymentAmount) || 0,
+                paymentMethodFilter || '---', // Siempre agregar método de pago
                 formatCurrencyCOP(+raffle.paymentDue) || 0,
                 raffle.firstName || '---',
                 raffle.lastName || '---',
                 raffle.phone || '---',
                 translateRaffleStatus(raffle.status),
-            ]);
+            ];
+            
+            const row = worksheet.addRow(rowData);
 
             let fillColor;
             switch (raffle.status) {
@@ -92,8 +107,14 @@ export const exelRaffleNumbersFilterDetails = async (raffleId: string, params: o
 
         // Ajustar ancho de columnas
         worksheet.columns = [
-            { width: 15 },
-            { width: 20 },
+            { width: 15 }, // Número
+            { width: 15 }, // Abonado
+            { width: 20 }, // Método de Pago
+            { width: 15 }, // Deuda
+            { width: 15 }, // Nombre
+            { width: 15 }, // Apellido
+            { width: 15 }, // Teléfono
+            { width: 15 }, // Estado
         ];
 
         // Guardar el archivo

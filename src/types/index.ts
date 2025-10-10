@@ -211,6 +211,8 @@ export const paymentMethodEnum = z.enum([
     'Apartado',
 ]);
 
+export type PaymentMethodType = z.infer<typeof paymentMethodEnum>
+
 export const payNumbersSchema = z.object({
     raffleNumbersIds: z.array(z.number()),
     // identificationType: z.enum(['CC', 'TI', 'CE']),

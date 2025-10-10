@@ -24,7 +24,7 @@ import ShareURLRaffleModal from '../../components/indexView/modal/ShareURLRaffle
 import Awards from '../../components/indexView/raffle/Awards';
 import RaffleSideBar from '../../components/indexView/raffle/RaffleSideBar';
 import socket from '../../socket';
-import { RaffleNumbersPayments, User } from "../../types";
+import { paymentMethodEnum, PaymentMethodType, RaffleNumbersPayments, User } from "../../types";
 import { colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros, getChipStyles } from "../../utils";
 import { exelRaffleNumbersFilter, exelRaffleNumbersFilterDetails } from '../../utils/exel';
 import LoaderView from "../LoaderView";
@@ -33,10 +33,14 @@ import LoaderView from "../LoaderView";
 
 const styleForm = {
     width: '100%',
-    maxWidth: 600,
+    // maxWidth: 800,
     display: 'flex',
     gap: 1,
-    justifyContent: 'center',
+    alignItems: 'center',
+    justifyContent: {
+        xs: 'center',        // Centrado en pantallas pequeñas
+        sm: 'space-between', // Espaciado entre elementos en pantallas grandes
+    },
     flexDirection: {
         xs: 'column', // Para pantallas pequeñas
         sm: 'row',    // Para pantallas más grandes
@@ -47,6 +51,7 @@ function RaffleNumbersView() {
     const navigate = useNavigate()
 
     const isSmallDevice = useMediaQuery({ maxWidth: 768 });
+    const paymentMethods = paymentMethodEnum.options
     
     const { raffleId } = useParams<{ raffleId: string }>();
     // const parsedRaffleId = raffleId ? parseInt(raffleId, 10) : undefined;
@@ -66,6 +71,7 @@ function RaffleNumbersView() {
     const [numbersSeleted, setNumbersSeleted] = useState<{numberId: number, number: number}[]>([])
 
     const [filter, setFilter] = useState<{ sold?: boolean; available?: boolean; pending?: boolean }>({});
+    const [paymentMethodFilter, setPaymentMethodFilter] = useState<PaymentMethodType | ''>('');
     const [inputValues, setInputValues] = useState({ 
         search: '', 
         searchAmount: '' 
@@ -73,7 +79,7 @@ function RaffleNumbersView() {
     const [searchParams, setSearchParams] = useState({ 
         search: '', 
         searchAmount: '' 
-    });
+    }); 
 
     const updateSearchParams = useCallback(
         debounce((values: { search: string; searchAmount: string }) => {
@@ -133,11 +139,14 @@ function RaffleNumbersView() {
         // Actualizar el uso de setFilter
         setFilter(filters[e.target.value] || {});
 
+        // Reset all other filters
+        // setPaymentMethodFilter('');
         setSearchParams({ search: '', searchAmount: '' });
         const empty = { search: '', searchAmount: '' };
         setInputValues(empty);
         setSearchParams(empty);
         updateSearchParams.cancel();
+        setPage(1);
     };
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, newPage: number)=> {
@@ -148,6 +157,17 @@ function RaffleNumbersView() {
         setOptionSeleted(e.target.checked)
     }
 
+    const handlePaymentMethodFilterChange = (e: SelectChangeEvent<string>) => {
+        const value = e.target.value;
+        const parsed = paymentMethodEnum.safeParse(value);
+        if (parsed.success) {
+            setPaymentMethodFilter(parsed.data);
+        } else {
+            setPaymentMethodFilter('')
+        }
+        setPage(1); // Reset page when filter changes
+    }
+
     // const { data: raffleNumbers, isLoading : isLoadingRaffleNumbers, isError : isErrorRaffleNumbers, refetch} = useRaffleNumbers(parsedRaffleId!, {filter, page, limit: rowsPerPage, search});
 
     // const { data: raffle, isLoading :isLoadingRaffle , isError: isErrorRaffle } = useRaffleById(parsedRaffleId!);
@@ -155,8 +175,8 @@ function RaffleNumbersView() {
     const [raffleNumbersData, raffleData, awardsData, expensesTotalData, expensesTotalByUserData] = useQueries({
         queries: [
             {
-                queryKey: ['raffleNumbers', searchParams.search, raffleId, filter, page, rowsPerPage, searchParams.searchAmount],
-                queryFn: () => getRaffleNumers({ raffleId: raffleId!, params: { page, limit: rowsPerPage, search: searchParams.search, amount: searchParams.searchAmount, ...filter} }),
+                queryKey: ['raffleNumbers', searchParams.search, raffleId, filter, page, rowsPerPage, searchParams.searchAmount, paymentMethodFilter],
+                queryFn: () => getRaffleNumers({ raffleId: raffleId!, params: { page, limit: rowsPerPage, search: searchParams.search, amount: searchParams.searchAmount, ...(paymentMethodFilter && { paymentMethod: paymentMethodFilter }), ...filter} }),
                 enabled: !!raffleId,
             },
             {
@@ -329,87 +349,157 @@ function RaffleNumbersView() {
                     <h2>Comprar Boletas</h2>
                 </div>
                 
-                <div className='flex flex-col items-center justify-center gap-2 mb-5'>
-                    {raffle && <h3 className='text-xl font-bold '>{formatCurrencyCOP(+raffle.price)}</h3>}
-                    
-                    <FormControl size="small"
-                        variant='filled'
-                        sx={styleForm}
-                    >
-                        <Select
-                            labelId="demo-simple-select-label"
-                            id="demo-simple-select"
-                            
-                            value={Object.keys(filter)[0] || 'all'}
-                            onChange={handleFilterChange}
-                        >
-                            <MenuItem value={'all'}>Todos</MenuItem>
-                            <MenuItem value={'available'}>Disponibles</MenuItem>
-                            <MenuItem value={'pending'}>Pendientes</MenuItem>
-                            <MenuItem value={'sold'}>Vendidos</MenuItem>
-                            <MenuItem value={'apartado'}>Apartados</MenuItem>
-                        </Select>
-                        
-                        <TextField id='search' label="Buscar Número" size='small'
-                            variant='filled'
-                            name='search'
-                            value={inputValues.search}
-                            onChange={handleChangeSearchParams}
-                        />
-                        
-                        { filter.pending === true && 
-                            <TextField id='searchAmount' label="Buscar por Monto" size='small'
-                                variant='filled'
-                                name='searchAmount'
-                                value={inputValues.searchAmount}
-                                onChange={handleChangeSearchParams}
-                            />
-                        }
-
-                    </FormControl>
-                    
-                    {user.rol.name !== 'vendedor' &&
-                    (searchParams.search || searchParams.searchAmount || Object.keys(filter).length > 0) &&
-                    raffleNumbers && (
-                        <div className="flex flex-wrap gap-2 mt-4 sm:flex-nowrap sm:gap-4">
-                        <button
-                            className="w-full px-4 py-2 font-semibold text-white transition-all duration-200 rounded sm:w-auto bg-azul hover:scale-105 hover:shadow-md"
-                            onClick={() => {
-                            toast.info('Descargando archivo...', { autoClose: 2000 });
-                            exelRaffleNumbersFilterDetails(
-                                raffleId!,
-                                {
-                                search: searchParams.search,
-                                amount: searchParams.searchAmount,
-                                ...filter,
-                                },
-                                raffleNumbers?.total
-                            );
-                            }}
-                        >
-                            📄 Descargar Búsqueda Detallada
-                        </button>
-                        <button
-                            className="w-full px-4 py-2 font-semibold text-white transition-all duration-200 rounded sm:w-auto bg-azul hover:scale-105 hover:shadow-md"
-                            onClick={() => {
-                            toast.info('Descargando archivo...', { autoClose: 2000 });
-                            exelRaffleNumbersFilter(
-                                raffleId!,
-                                {
-                                search: searchParams.search,
-                                amount: searchParams.searchAmount,
-                                ...filter,
-                                },
-                                raffleNumbers.total
-                            );
-                            }}
-                        >
-                            📁 Descargar Búsqueda Simple
-                        </button>
+                <div className='flex flex-col items-center justify-center gap-3 p-4 mb-5 rounded-lg shadow-sm bg-gray-50'>
+                    {/* Precio de la rifa */}
+                    {raffle && (
+                        <div className="text-center">
+                            <h3 className='text-2xl font-bold text-azul sm:text-3xl'>
+                                {formatCurrencyCOP(+raffle.price)}
+                            </h3>
+                            <p className="text-sm text-gray-600 sm:text-base">Precio por boleta</p>
                         </div>
                     )}
                     
-                    <FormControlLabel control={<Switch value={optionSeleted} onChange={handleSwitchChange} />} label="Seleccionar Números" />
+                    {/* Controles de filtrado */}
+                    <div className="w-full max-w-6xl mx-auto ">
+                        <FormControl size="small"
+                            variant='filled'
+                            fullWidth
+                            sx={styleForm}
+                        >
+                            <Select
+                                labelId="demo-simple-select-label"
+                                id="demo-simple-select"
+                                value={Object.keys(filter)[0] || 'all'}
+                                onChange={handleFilterChange}
+                                fullWidth
+                            >
+                                <MenuItem value={'all'}>Todos</MenuItem>
+                                <MenuItem value={'available'}>Disponibles</MenuItem>
+                                <MenuItem value={'pending'}>Pendientes</MenuItem>
+                                <MenuItem value={'sold'}>Vendidos</MenuItem>
+                                <MenuItem value={'apartado'}>Apartados</MenuItem>
+                            </Select>
+                            
+                            <Select
+                                labelId="demo-simple-select-label-method"
+                                id="demo-simple-select-method"
+                                fullWidth
+                                value={paymentMethodFilter}
+                                onChange={handlePaymentMethodFilterChange}
+                                displayEmpty
+                                renderValue={(selected) => {
+                                    if (!selected) {
+                                        return <p>Método de pago</p>;
+                                    }
+                                    return selected;
+                                }}
+                            >
+                                <MenuItem value={''}>
+                                    <em>Todos los métodos</em>
+                                </MenuItem>
+                                {paymentMethods.map(method => (
+                                    <MenuItem key={method} value={method}>
+                                        {method}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                            
+                            <TextField 
+                                fullWidth
+                                id='search' 
+                                label="Buscar Número" 
+                                size='small'
+                                variant='filled'
+                                name='search'
+                                value={inputValues.search}
+                                onChange={handleChangeSearchParams}
+                                className="min-w-0"
+                            />
+                            
+                            {filter.pending === true && (
+                                <TextField 
+                                    id='searchAmount' 
+                                    label="Buscar por Monto" 
+                                    size='small'
+                                    fullWidth
+                                    variant='filled'
+                                    name='searchAmount'
+                                    value={inputValues.searchAmount}
+                                    onChange={handleChangeSearchParams}
+                                    className="min-w-0"
+                                />
+                            )}
+                        </FormControl>
+                    </div>
+                    
+                    {/* Botones de descarga */}
+                    {user.rol.name !== 'vendedor' &&
+                        (searchParams.search || searchParams.searchAmount || Object.keys(filter).length > 0) &&
+                        raffleNumbers && (
+                            <div className="flex flex-col w-full max-w-4xl gap-3 mt-4 sm:flex-row sm:justify-center sm:gap-4">
+                                <button
+                                    className="flex-1 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 rounded-lg sm:flex-none sm:px-6 bg-azul hover:bg-blue-600 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                    onClick={() => {
+                                        toast.info('Descargando archivo...', { autoClose: 2000 });
+                                        exelRaffleNumbersFilterDetails(
+                                            raffleId!,
+                                            {
+                                                search: searchParams.search,
+                                                amount: searchParams.searchAmount,
+                                                ...filter,
+                                                paymentMethod: paymentMethodFilter
+                                            },
+                                            raffleNumbers?.total,
+                                            paymentMethodFilter
+                                        );
+                                    }}
+                                >
+                                    <span className="flex items-center justify-center gap-2">
+                                        📄 <span className="hidden sm:inline">Descargar Búsqueda</span> Detallada
+                                    </span>
+                                </button>
+                                <button
+                                    className="flex-1 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 rounded-lg sm:flex-none sm:px-6 bg-azul hover:bg-blue-600 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                    onClick={() => {
+                                        toast.info('Descargando archivo...', { autoClose: 2000 });
+                                        exelRaffleNumbersFilter(
+                                            raffleId!,
+                                            {
+                                                search: searchParams.search,
+                                                amount: searchParams.searchAmount,
+                                                ...filter,
+                                            },
+                                            raffleNumbers.total
+                                        );
+                                    }}
+                                >
+                                    <span className="flex items-center justify-center gap-2">
+                                        📁 <span className="hidden sm:inline">Descargar Búsqueda</span> Simple
+                                    </span>
+                                </button>
+                            </div>
+                        )
+                    }
+                    
+                    {/* Switch de selección */}
+                    <div className="mt-2">
+                        <FormControlLabel 
+                            control={
+                                <Switch 
+                                    checked={optionSeleted} 
+                                    onChange={handleSwitchChange}
+                                    color="primary"
+                                />
+                            } 
+                            label={
+                                <span className="text-sm font-medium text-gray-700 sm:text-base">
+                                    Seleccionar Números
+                                </span>
+                            }
+                            className="select-none"
+                        />
+                    </div>
                 </div>
                 
                 {raffleNumbers &&
