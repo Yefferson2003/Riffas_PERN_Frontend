@@ -435,7 +435,7 @@ function RaffleNumbersView() {
                     
                     {/* Botones de descarga */}
                     {user.rol.name !== 'vendedor' &&
-                        (searchParams.search || searchParams.searchAmount || Object.keys(filter).length > 0) &&
+                        (searchParams.search || searchParams.searchAmount || Object.keys(filter).length > 0 || paymentMethodFilter) &&
                         raffleNumbers && (
                             <div className="flex flex-col w-full max-w-4xl gap-3 mt-4 sm:flex-row sm:justify-center sm:gap-4">
                                 <button
