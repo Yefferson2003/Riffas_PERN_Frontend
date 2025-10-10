@@ -193,6 +193,23 @@ export type CreateRaffleForm = z.infer<typeof createRaffleSchema>
 export type UpdateRaffleForm = z.infer<typeof updateRaffleSchema>
 
 // PAYMENTS
+export const paymentMethodEnum = z.enum([
+    'Efectivo', 
+    'Pago móvil',
+    'Transferencia VES', 
+    'Nequi',
+    'Bancolombia', 
+    'Bancolombia internacional', 
+    'Zelle',
+    'Transferencia EEUU',
+    'Panamá', 
+    'Pesos chilenos (Rut)',
+    'PayPal',
+    'Binance', 
+    'Western', 
+    'Otros',
+    'Apartado',
+]);
 
 export const payNumbersSchema = z.object({
     raffleNumbersIds: z.array(z.number()),
@@ -202,6 +219,7 @@ export const payNumbersSchema = z.object({
     lastName: z.string(),
     phone: z.string(),
     address: z.string(),
+    paymentMethod: paymentMethodEnum
 })
 
 export const payNumberSchema = payNumbersSchema.pick({
@@ -211,6 +229,7 @@ export const payNumberSchema = payNumbersSchema.pick({
     lastName: true,
     phone: true,
     address: true,
+    paymentMethod: true
 }).extend({
     amount: z.number()
 })
@@ -230,7 +249,8 @@ const PaymentSchema = z.object({
     createdAt: z.string(), 
     updatedAt: z.string(),
     isValid: z.boolean(),
-    user: userVendedor
+    user: userVendedor,
+    paymentMethod: paymentMethodEnum.nullish()
 });
 
 export const RaffleNumberSchema = z.object({
@@ -294,7 +314,17 @@ export const raffleNumberSchema  = z.object({
     // updatedAt: z.string(), 
     // raffleId: z.number(),
 }).extend({
-    payments: z.array(PaymentSchema),
+    payments: z.array(PaymentSchema.pick({
+            id: true,
+            amount: true, 
+            paidAt: true, 
+            riffleNumberId: true,
+            userId: true,
+            createdAt: true, 
+            updatedAt: true,
+            isValid: true,
+            user: true,
+    })),
 })
 
 export const updateRaffleNumberCustomer = payNumbersSchema.pick({

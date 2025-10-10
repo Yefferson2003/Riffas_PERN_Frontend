@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { sellNumbers } from "../../api/raffleNumbersApi";
-import { AwardType, PayNumbersForm, RaffleNumbersPayments } from "../../types";
+import { AwardType, paymentMethodEnum, PayNumbersForm, RaffleNumbersPayments } from "../../types";
 import { formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from "../../utils";
 import ButtonCloseModal from "../ButtonCloseModal";
 import PhoneNumberInput from "../PhoneNumberInput";
@@ -63,6 +63,7 @@ type ActionModeType = 'buy' | 'separate';
 function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap} : PayNumbersModalProps) {
 
     const queryClient = useQueryClient()
+    const paymentMethods = paymentMethodEnum.options
     
     // MODAL //
     const navigate = useNavigate(); 
@@ -78,7 +79,13 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
         
 
     const handleOnChange = ( e: SelectChangeEvent) => {
-        setActionMode(e.target.value as ActionModeType);
+        const selectedMode = e.target.value as ActionModeType;
+        setActionMode(selectedMode);
+        
+        // Si el modo es 'separate' (Apartar Números), cambiar método de pago a 'Apartado'
+        if (selectedMode === 'separate') {
+            setValue('paymentMethod', 'Apartado');
+        }
     }
 
     const handleChangePriceSpecial = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,13 +106,14 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
         // identificationNumber: '',
         address: '',
         phone: '',
-        amount: 0
+        amount: 0,
+        paymentMethod: 'Efectivo'
     }
 
     const {register, handleSubmit, watch, reset, formState: {errors}, setValue} = useForm({
         defaultValues : initialValues
     })
-    const { phone, amount} = watch();
+    const { phone, amount, paymentMethod} = watch();
     
     // Calcular el precio actual por rifa y el total
     const currentRafflePrice = priceEspecial && amount ? +amount : +rafflePrice;
@@ -125,6 +133,8 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
             queryClient.invalidateQueries({queryKey: ['recaudoByVendedor', raffleId]})
             toast.success('Rifas Compradas')
             reset()
+            setPriceEspecial(false)
+            setActionMode('buy')
             setNumbersSeleted([])
             navigate(location.pathname, {replace: true})    
             setPaymentsSellNumbersModal(true)
@@ -139,6 +149,11 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
 
         if (priceEspecial && (Data.amount === undefined || Data.amount < 1)) {
             toast.error('El monto no puede ser 0 si precio especial está activo')
+            return
+        }
+
+        if (!Data.paymentMethod) {
+            toast.error('Debe seleccionar un método de pago')
             return
         }
         
@@ -172,9 +187,10 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                             phone: formData.phone,
                             name: formData.firstName,
                             amount: priceForm,
-                            infoRaffle,
+                            infoRaffle: {...infoRaffle, amountRaffle: priceEspecial ? Data.amount?.toString() || 'NO HAY' : infoRaffle.amountRaffle},
                             awards, 
-                            reservedDate
+                            reservedDate,
+                            
                         })
                     )
                     
@@ -247,6 +263,26 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                             })}
                         />
                     )}
+                    
+                    <FormControl error={!!errors.paymentMethod}>
+                    <InputLabel id="paymentMethodLabel">Método de pago</InputLabel>
+                    <Select
+                        labelId="paymentMethodLabel"
+                        id="paymentMethod"
+                        label="Método de pago"
+                        value={paymentMethod || ''}
+                        onChange={(e) => setValue('paymentMethod', e.target.value as typeof paymentMethods[number])}
+                    >
+                        <MenuItem disabled value={''}>Seleccione un método de pago</MenuItem>
+                        {paymentMethods.map((method) => (
+                            <MenuItem key={method} value={method}>{method}</MenuItem>
+                        ))}
+                    </Select>
+                    {errors.paymentMethod && (
+                        <p className="mt-1 text-sm text-red-500">{errors.paymentMethod.message}</p>
+                    )}
+                    </FormControl>
+
                     <TextField id="firstName" label="Nombres" variant="outlined" 
                         error={!!errors.firstName}
                         helperText={errors.firstName?.message}
@@ -257,6 +293,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                         helperText={errors.lastName?.message}
                         {...register('lastName', {required: 'Apellidos Obligatorio'})}
                     />
+                    
                     {/* <FormControl>
                         <InputLabel id="identificationTypelabel">Tipo de Indentificación</InputLabel>
                         <Select id="identificationType" label="Tipo de Identificación"          variant="outlined"
@@ -279,6 +316,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                             },
                         })}
                     /> */}
+                    
                     <p className="text-sm text-black text-start">Número de teléfono</p>
                     <PhoneNumberInput
                         value={phone}
@@ -304,6 +342,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                         <MenuItem value={'separate'}>Apartar Números</MenuItem>
                     </Select>
                     </FormControl>
+                    
 
                     <Button
                         type="submit"

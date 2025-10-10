@@ -67,7 +67,8 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
         firstName: '',
         lastName: '',
         address: '',
-        phone: ''
+        phone: '',
+        paymentMethod: 'Apartado'
     }
     
     const {register, handleSubmit, watch, setValue, formState: {errors}, reset} = useForm({

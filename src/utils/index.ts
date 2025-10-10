@@ -198,7 +198,7 @@ export const redirectToWhatsApp = ({
         const totalAbonado = abonosValidos + amount;
         deuda = Math.max((rafflePrice * numbers.length) - totalAbonado, 0);
     } else {
-        deuda = Math.max((rafflePrice * numbers.length) - amount, 0);
+        deuda = amount === rafflePrice ? 0 : ( Math.max((rafflePrice * numbers.length) - amount, 0));
     }
 
     let paymentTypeMessage = "";

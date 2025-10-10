@@ -1,11 +1,11 @@
-import { Alert, Box, Button, FormControl, FormControlLabel, Modal, Switch, TextField } from "@mui/material";
+import { Alert, Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Modal, Select, Switch, TextField } from "@mui/material";
 import { QueryObserverResult, RefetchOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react"; // Importa el componente de entrada de teléfono
 import { useForm } from "react-hook-form";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { amountNumber, updateNumber } from "../../api/raffleNumbersApi";
-import { AwardType, PayNumberForm, Raffle, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types";
+import { AwardType, paymentMethodEnum, PayNumberForm, Raffle, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types";
 import { formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp, sendPaymentReminderWhatsApp } from "../../utils";
 import PhoneNumberInput from "../PhoneNumberInput";
 import ButtonsRaffleModal from "./raffleNumber/ButtonsRaffleModal";
@@ -47,6 +47,8 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
     const modalviewRaffleNumber = queryParams.get('viewRaffleNumber')
     const show = modalviewRaffleNumber ? true : false;
     const raffleNumberId = Number(modalviewRaffleNumber)
+
+    const paymentMethods = paymentMethodEnum.options
     
 
     const params = useParams()
@@ -58,19 +60,20 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
         setPriceEspecial(event.target.checked);
     };
 
-    const initialValues: PayNumberForm   = {
+    const initialValues: PayNumberForm  = {
         amount: +raffleNumber.paymentDue,
         firstName: raffleNumber.firstName || '',
         lastName: raffleNumber.lastName || '',
         // identificationType: raffleNumber.identificationType || 'CC',
         // identificationNumber: raffleNumber.identificationNumber || '',
         address: raffleNumber.address || '',
-        phone: raffleNumber.phone || ''
+        phone: raffleNumber.phone || '',
+        paymentMethod: 'Efectivo'
     }
     const {register, handleSubmit, watch, reset, setValue, formState: {errors}} = useForm({
         defaultValues : initialValues
     })
-    const { address, phone} = watch();
+    const { address, phone, paymentMethod} = watch();
 
     const queryClient = useQueryClient()
     const {mutate, isPending} = useMutation({
@@ -278,6 +281,35 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                         },
                         })}
                     />
+                    
+                    {raffleNumber.status != 'sold' &&
+                        <>
+                        <FormControl error={!!errors.paymentMethod}>
+                        <InputLabel id="paymentMethodLabel">Método de pago</InputLabel>
+                        <Select
+                            labelId="paymentMethodLabel"
+                            id="paymentMethod"
+                            label="Método de pago"
+                            value={paymentMethod || ''}
+                            onChange={(e) => setValue('paymentMethod', e.target.value as typeof paymentMethods[number])}
+                        >
+                            <MenuItem disabled value={''}>Seleccione un método de pago</MenuItem>
+                            {paymentMethods.map((method) => (
+                                <MenuItem key={method} value={method}>{method}</MenuItem>
+                            ))}
+                        </Select>
+                        {errors.paymentMethod && (
+                            <p className="mt-1 text-sm text-red-500">{errors.paymentMethod.message}</p>
+                        )}
+                        </FormControl>
+                        
+                        <Alert severity="info" sx={{ fontSize: '0.875rem', textAlign: 'justify' }}>
+                            <strong>Información:</strong> Si el monto es 0, el método de pago se establecerá automáticamente como "Apartado" para reservar el número.
+                        </Alert>
+                        </>
+                    }
+
+
                     <TextField id="firstName" label="Nombres" variant="outlined" 
                         error={!!errors.firstName}
                         helperText={errors.firstName?.message}

@@ -227,6 +227,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                         <PictureAsPdfIcon color="error" />
                     </Tooltip>
                 </IconButton>
+                
                 <a
                     href={urlWasap}
                     target="_blank"
@@ -243,6 +244,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                         />
                     </Tooltip>
                 </a>
+                
                 <IconButton
                     onClick={handleCloseModal}
                 >
@@ -320,7 +322,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                             <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
                                 Pagos realizados:
                             </Typography>
-                            {raffle.payments.map((payment) => (
+                            {raffle.payments.map((payment,) => (
                                 <Box
                                     key={payment.id}
                                     sx={{
@@ -334,6 +336,10 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                     <div className='flex gap-3'>
                                     <p>Monto:</p>
                                     <p className='font-bold capitalize text-azul'>{formatCurrencyCOP(+payment.amount)}</p>
+                                    </div>
+                                    <div className='flex gap-3'>
+                                    <p>Método de Pago:</p>
+                                    <p className='font-bold capitalize text-azul'>{payment.paymentMethod || 'No especificado'}</p>
                                     </div>
                                     {!payment.paidAt ? (
                                         <div className='flex gap-3'>

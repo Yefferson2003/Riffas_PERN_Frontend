@@ -34,6 +34,10 @@ function RaflleNumberPaymentsHistory({payments} : RaflleNumberPaymentsHistoryPro
                     <p>Monto:</p>
                     <p className='font-bold capitalize text-azul'>{formatCurrencyCOP(+payment.amount)}</p>
                     </div>
+                    <div className='flex gap-3'>
+                    <p>Metodo de Pago:</p>
+                    <p className='font-bold capitalize text-azul'>{payment.paymentMethod || 'No especificado'}</p>
+                    </div>
                     {!payment.paidAt ? (
                         <div className='flex gap-3'>
                         <p>Fecha:</p>
