@@ -1,4 +1,4 @@
-import { Box, Button, FormControl, InputLabel, MenuItem, Modal, Select, SelectChangeEvent, TextField } from "@mui/material";
+import { Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Modal, Select, SelectChangeEvent, Switch, TextField } from "@mui/material";
 import { QueryObserverResult, RefetchOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -58,6 +58,8 @@ type PayNumbersModalProps = {
     setUrlWasap: React.Dispatch<React.SetStateAction<string>>
 }
 
+type ActionModeType = 'buy' | 'separate';
+
 function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap} : PayNumbersModalProps) {
 
     const queryClient = useQueryClient()
@@ -68,15 +70,26 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
     const queryParams = new URLSearchParams(location.search);
     const modalSellNumbers = queryParams.get('sellNumbers')
     const show = modalSellNumbers ? true : false;
-
+    
     // Estado para gestionar el modo de acción (comprar o separar) 
-    const [actionMode, setActionMode] = useState<string>('buy')
+    const [priceEspecial, setPriceEspecial] = useState(false)
+    const [actionMode, setActionMode] = useState<ActionModeType>('buy')
     const [reservedDate, setReservedDate] = useState<string | null>('')
         
 
-    const handleOnChange = ( e: SelectChangeEvent<string>) => {
-        setActionMode(e.target.value)
+    const handleOnChange = ( e: SelectChangeEvent) => {
+        setActionMode(e.target.value as ActionModeType);
     }
+
+    const handleChangePriceSpecial = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const isChecked = event.target.checked;
+        setPriceEspecial(isChecked);
+        
+        // Si se desactiva el precio especial, resetear amount a 0
+        if (!isChecked) {
+            setValue('amount', 0);
+        }
+    };
     
     const initialValues: PayNumbersForm   = {
         raffleNumbersIds: [],
@@ -85,13 +98,18 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
         // identificationType: 'CC',
         // identificationNumber: '',
         address: '',
-        phone: ''
+        phone: '',
+        amount: 0
     }
 
     const {register, handleSubmit, watch, reset, formState: {errors}, setValue} = useForm({
         defaultValues : initialValues
     })
-    const { phone} = watch();
+    const { phone, amount} = watch();
+    
+    // Calcular el precio actual por rifa y el total
+    const currentRafflePrice = priceEspecial && amount ? +amount : +rafflePrice;
+    const totalToPay = numbersSeleted.length * currentRafflePrice;
     
     const {mutate, isPending} = useMutation({
         mutationFn: sellNumbers,
@@ -114,15 +132,35 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
             setReservedDate(data[0].reservedDate)
         },
     }) 
+
+    const priceForm = actionMode === 'buy' ? currentRafflePrice : 0
+
     const handleFormSubmit = (Data : PayNumbersForm) => { 
+
+        if (priceEspecial && (Data.amount === undefined || Data.amount < 1)) {
+            toast.error('El monto no puede ser 0 si precio especial está activo')
+            return
+        }
+        
         const formData = { 
-            ...Data, 
+            ...Data,
+            amount: currentRafflePrice,
             raffleNumbersIds: numbersSeleted.map((item) => item.numberId) 
         } 
+        let params = {}
+
+        if (actionMode === 'separate') {
+            params = { separar: true }
+        }
+
+        if (priceEspecial) {
+            params = { ...params, descuento: true }
+        }
+
         const data = { 
             formData, 
             raffleId, 
-            params: actionMode === 'separate' ? { separar: true } : {} 
+            params
         } 
         mutate(data, {
             onSuccess: () => {
@@ -133,7 +171,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                             numbers: numbersSeleted,
                             phone: formData.phone,
                             name: formData.firstName,
-                            amount: actionMode === 'buy' ? +rafflePrice : 0,
+                            amount: priceForm,
                             infoRaffle,
                             awards, 
                             reservedDate
@@ -145,8 +183,6 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
         })
     }
 
-    
-    
     return (
         <Modal
         open={show}
@@ -168,8 +204,22 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                     .join(" | ")}`
                 : "No hay números seleccionados."}
             </p>
-            <p className="mt-1 text-center">Total a pagar: <span className="font-bold text-azul">{formatCurrencyCOP(numbersSeleted.length * +rafflePrice)}</span></p>
 
+            <p className="text-center">Valor de la Rifa:<span className="font-bold text-azul"> {formatCurrencyCOP(currentRafflePrice)}</span></p>
+
+            <p className="my-5 text-center">Total a pagar: <span className="font-bold text-azul">{formatCurrencyCOP(totalToPay)}</span></p>
+
+
+            <div className="text-center ">
+                <FormControlLabel 
+                    labelPlacement="end" 
+                    control={
+                        <Switch checked={priceEspecial} onChange={handleChangePriceSpecial} />
+                    }
+                    label="Aplicar Precio Especial"
+                />
+            </div>
+        
             <form 
                 onSubmit={handleSubmit(handleFormSubmit)}
                 className='mt-10 space-y-3 text-center'
@@ -179,7 +229,24 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                 
                 <FormControl size="small" fullWidth
                     sx={{display: 'flex', gap: 2}}
-                >
+                >   
+                    {priceEspecial && (
+                        <TextField id="amount" label="Precio Nuevo" variant="outlined" 
+                            error={!!errors.amount}
+                            helperText={errors.amount?.message}
+                            {...register('amount', {
+                            required: 'Monto obligatorio',
+                            pattern: {
+                                value: /^[0-9]+(?:\.[0-9]{1,2})?$/, // Allows numbers with up to 2 decimal places
+                                message: 'El monto debe ser numérico (puede incluir decimales con hasta dos cifras, solo punto)',
+                            },
+                            validate: {
+                                maxValue: (value) =>
+                                Number(value) <= +rafflePrice || `El monto no puede superar los ${formatCurrencyCOP(+rafflePrice)}`, // Use formatCurrencyCOP here for consistency
+                            },
+                            })}
+                        />
+                    )}
                     <TextField id="firstName" label="Nombres" variant="outlined" 
                         error={!!errors.firstName}
                         helperText={errors.firstName?.message}

@@ -381,7 +381,7 @@ export type RaffleNumberPayments = z.infer<typeof PaymentSchema>
 export type RaffleNumberUpdateForm = z.infer<typeof updateRaffleNumberCustomer>
 export type RaffleNumber = z.infer<typeof RaffleNumberSchema> //
 export type RaffleNumbersPayments = z.infer<typeof RafflePayResponseSchema>
-export type PayNumbersForm = z.infer<typeof payNumbersSchema>
+export type PayNumbersForm = z.infer<typeof payNumbersSchema> & { amount?: number}
 export type PayNumberForm = z.infer<typeof payNumberSchema>
 
 export const totalSchema = z.object({
