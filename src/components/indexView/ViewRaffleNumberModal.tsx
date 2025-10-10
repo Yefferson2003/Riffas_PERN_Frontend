@@ -91,6 +91,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
             navigate(location.pathname, {replace: true})
             setPaymentsSellNumbersModal(true)
             setPdfData(data)
+            setPriceEspecial(false)
         },
     })
 
@@ -127,8 +128,17 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
         mutate(data, {
             onSuccess: () => {
                 if (formData.phone) {
-                    setUrlWasap(redirectToWhatsApp({ numbers: [{numberId: 0,number: raffleNumber.number}], phone: formData.phone, name: formData.firstName, amount: formData.amount, infoRaffle, payments: raffleNumber.payments, totalNumbers, awards, reservedDate: pdfData[0].reservedDate}))
-                    
+                    setUrlWasap(redirectToWhatsApp({ 
+                        numbers: [{numberId: 0,number: raffleNumber.number}], 
+                        phone: formData.phone, 
+                        name: formData.firstName, 
+                        amount: priceEspecial ? 0 : formData.amount, 
+                        infoRaffle: {...infoRaffle, amountRaffle: priceEspecial ? Data.amount?.toString() || 'NO HAY' : infoRaffle.amountRaffle}, 
+                        payments: raffleNumber.payments, 
+                        totalNumbers, 
+                        awards, 
+                        reservedDate: pdfData[0].reservedDate
+                    }))
                 }
             }
         });
