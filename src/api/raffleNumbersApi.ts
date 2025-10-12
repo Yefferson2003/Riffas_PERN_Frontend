@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { PayNumberForm, PayNumbersForm, RaffleNumberSchema, raffleNumbersExelFilterSchema, raffleNumberSharedSchema, RaffleNumberUpdateForm, RafflePayResponseSchema, responseRaffleNumbersExelSchema, responseRaffleNumbersSchema } from "../types";
+import { PayNumberForm, PayNumbersForm, RaffleNumberSchema, raffleNumbersExelFilterSchema, raffleNumberSharedSchema, RaffleNumberUpdateForm, RafflePayResponseSchema, responseRaffleNumbersExelSchema, responseRaffleNumbersSchema, responseRaffleNumbersSchemaShared } from "../types";
 
 export async function getRaffleNumers({params, raffleId} : {params : object, raffleId: string}) {
     try { 
@@ -27,7 +27,7 @@ export async function getRaffleNumersShared({ token, limit, page } : { token: st
             }
         });
 
-        const response = responseRaffleNumbersSchema.safeParse(data)
+        const response = responseRaffleNumbersSchemaShared.safeParse(data)
         
         
         if (response.success) {

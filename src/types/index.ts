@@ -339,10 +339,13 @@ export const responseGetNumbersByUser = ResponsePaginationSchema.extend({
 })
 
 
-export const raffleNumbersSchema = z.object({
-    id: z.number(),
-    number: z.number(),
-    status: z.enum(statusRaffleNumbersEnum),
+export const raffleNumbersSchema = RaffleNumberSchema.pick({
+    id: true,
+    number: true,
+    firstName: true,
+    lastName: true,
+    status: true,
+}).extend({
     payments: z.array(PaymentSchema.pick({
         userId: true
     }))
@@ -353,6 +356,24 @@ export const responseRaffleNumbersSchema = ResponsePaginationSchema.pick({
     totalPages: true,
 }).extend({
     raffleNumbers: z.array(raffleNumbersSchema)
+})
+
+export const raffleNumberSharedResponseSchema = RaffleNumberSchema.pick({
+    id: true,
+    number: true,
+    status: true,
+}).extend({
+    payments: z.array(PaymentSchema.pick({
+        userId: true
+    }))
+})
+
+export const responseRaffleNumbersSchemaShared = ResponsePaginationSchema.pick({
+    currentPage: true,
+    total: true,
+    totalPages: true,
+}).extend({
+    raffleNumbers: z.array(raffleNumberSharedResponseSchema)
 })
 
 export type RaffleNumbersResponseType = z.infer<typeof responseRaffleNumbersSchema>

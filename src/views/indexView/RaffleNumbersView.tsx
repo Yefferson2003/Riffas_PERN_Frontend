@@ -24,12 +24,18 @@ import ShareURLRaffleModal from '../../components/indexView/modal/ShareURLRaffle
 import Awards from '../../components/indexView/raffle/Awards';
 import RaffleSideBar from '../../components/indexView/raffle/RaffleSideBar';
 import socket from '../../socket';
-import { paymentMethodEnum, PaymentMethodType, RaffleNumbersPayments, User } from "../../types";
+import { paymentMethodEnum, PaymentMethodType, RaffleNumber, RaffleNumbersPayments, User } from "../../types";
 import { colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros, getChipStyles } from "../../utils";
 import { exelRaffleNumbersFilter, exelRaffleNumbersFilterDetails } from '../../utils/exel';
 import LoaderView from "../LoaderView";
 
-
+export type NumbersSelectedType = {
+    numberId: number, 
+    number: number, 
+    status: RaffleNumber['status']
+    firstName?: string | null
+    lastName?: string | null
+}
 
 const styleForm = {
     width: '100%',
@@ -68,7 +74,7 @@ function RaffleNumbersView() {
 
 
     const [optionSeleted, setOptionSeleted] = useState(false)
-    const [numbersSeleted, setNumbersSeleted] = useState<{numberId: number, number: number}[]>([])
+    const [numbersSeleted, setNumbersSeleted] = useState<NumbersSelectedType[]>([])
 
     const [filter, setFilter] = useState<{ sold?: boolean; available?: boolean; pending?: boolean }>({});
     const [paymentMethodFilter, setPaymentMethodFilter] = useState<PaymentMethodType | ''>('');
@@ -212,9 +218,18 @@ function RaffleNumbersView() {
         navigate(`?viewRaffleNumber=${raffleNumberId}`)
     }
 
-    const MAX_SELECTED_NUMBERS = 10; 
-    const toggleSelectNumber = (raffleNumberId: number, raffleNumberStatus: string, raffleNumber: number) => {
-        if (raffleNumberStatus !== 'available') return;
+    const MAX_SELECTED_NUMBERS = 20; 
+    const toggleSelectNumber = (raffleNumberId: number, raffleNumberStatus: RaffleNumber['status'], raffleNumber: number, firstName: string, lastName: string) => {
+        if (raffleNumberStatus !== 'available' && raffleNumberStatus !== 'pending') return;
+
+        let nameValidate = ''
+
+        if (numbersSeleted.length > 0 && numbersSeleted[0].status !== raffleNumberStatus) return;
+        if (numbersSeleted.length > 0 && numbersSeleted[0].firstName && numbersSeleted[0].lastName) {
+            nameValidate = `${numbersSeleted[0].firstName} ${numbersSeleted[0].lastName}`
+        }
+
+        if ((firstName || lastName) && nameValidate && nameValidate !== `${firstName} ${lastName}`) return;
 
         setNumbersSeleted((prevSelected) => {
             if (prevSelected.length >= MAX_SELECTED_NUMBERS) return prevSelected;
@@ -222,13 +237,17 @@ function RaffleNumbersView() {
             const isSelected = prevSelected.some((item) => item.numberId === raffleNumberId);
             return isSelected
                 ? prevSelected.filter((item) => item.numberId !== raffleNumberId)
-                : [...prevSelected, { numberId: raffleNumberId, number: raffleNumber }];
+                : [...prevSelected, { numberId: raffleNumberId, number: raffleNumber, status: raffleNumberStatus, firstName, lastName }];
         });
     };
 
     const isVisibleRaffleNumbes = (rafflePayments: { userId: number }[]) =>
         user.rol.name === 'vendedor' && !rafflePayments.some(payment => payment.userId === user.id);
 
+    const isOptionSelectedNumber= (raffleNumberStatus: RaffleNumber['status']) => {
+        return optionSeleted && (raffleNumberStatus === 'available' || raffleNumberStatus === 'pending');
+    }
+    
     useEffect(() => {
         const handleUpdateQuery = (data: { raffleId: number }) => {
             if (raffleId && data.raffleId === +raffleId) { 
@@ -515,11 +534,11 @@ function RaffleNumbersView() {
                     <>
                     {Array.from({ length: rowsPerPage }).map((_, i) => (
                         <Skeleton 
-                        key={i} 
-                        variant="rectangular" 
-                        width="100%" 
-                        height={35} 
-                        sx={{ borderRadius: 2 }} 
+                            key={i} 
+                            variant="rectangular" 
+                            width="100%" 
+                            height={35} 
+                            sx={{ borderRadius: 2 }} 
                         />
                     ))}
                     </>
@@ -540,11 +559,11 @@ function RaffleNumbersView() {
                                 user.rol.name === 'vendedor' &&
                                 raffleNumber.payments.length > 0 &&
                                 isVisibleRaffleNumbes(raffleNumber.payments) &&
-                                raffleNumber.status !== 'available'
+                                !isOptionSelectedNumber(raffleNumber.status)
                             }
                             color={colorStatusRaffleNumber[raffleNumber.status]}
                             onClick={optionSeleted ? 
-                                () => toggleSelectNumber(raffleNumber.id, raffleNumber.status, raffleNumber.number) 
+                                () => toggleSelectNumber(raffleNumber.id, raffleNumber.status, raffleNumber.number, raffleNumber.firstName || '', raffleNumber.lastName || '') 
                                 : () => handleNavigateViewRaffleNumber(raffleNumber.id)
                             }
                         />

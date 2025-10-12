@@ -10,6 +10,7 @@ import { formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from ".
 import ButtonCloseModal from "../ButtonCloseModal";
 import PhoneNumberInput from "../PhoneNumberInput";
 import { InfoRaffleType } from "./ViewRaffleNumberData";
+import { NumbersSelectedType } from "../../views/indexView/RaffleNumbersView";
 
 const style = {
     position: 'absolute',
@@ -43,16 +44,10 @@ type PayNumbersModalProps = {
     awards: AwardType[]
     totalNumbers: number
     infoRaffle: InfoRaffleType,
-    numbersSeleted: {
-        numberId: number;
-        number: number;
-    }[]
+    numbersSeleted: NumbersSelectedType[]
     raffleId: number
     rafflePrice: string
-    setNumbersSeleted: React.Dispatch<React.SetStateAction<{
-        numberId: number;
-        number: number;
-    }[]>>
+    setNumbersSeleted: React.Dispatch<React.SetStateAction<NumbersSelectedType[]>>
     setPaymentsSellNumbersModal: React.Dispatch<React.SetStateAction<boolean>>
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
     setUrlWasap: React.Dispatch<React.SetStateAction<string>>
@@ -76,6 +71,13 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
     const [priceEspecial, setPriceEspecial] = useState(false)
     const [actionMode, setActionMode] = useState<ActionModeType>('buy')
     const [reservedDate, setReservedDate] = useState<string | null>('')
+
+    // const numbersIds = numbersSeleted.map(num => num.numberId);
+
+    // const { } = useQuery({
+    //     queryKey: ['raffleNumbersPending', numbersIds],
+    //     enabled: numbersIds.length > 0 && numbersSeleted[0].status === 'pending',
+    // })
         
 
     const handleOnChange = ( e: SelectChangeEvent) => {

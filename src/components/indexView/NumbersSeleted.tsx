@@ -1,17 +1,12 @@
 import { Button, Chip } from "@mui/material";
 import { formatWithLeadingZeros } from "../../utils";
 import { useNavigate } from "react-router-dom";
+import { NumbersSelectedType } from "../../views/indexView/RaffleNumbersView";
 
 type NumbersSeletedProps = {
     totalNumbers: number
-    numbersSeleted: {
-        numberId: number;
-        number: number;
-    }[]
-    setNumbersSeleted: React.Dispatch<React.SetStateAction<{
-        numberId: number;
-        number: number;
-    }[]>>
+    numbersSeleted: NumbersSelectedType[]
+    setNumbersSeleted: React.Dispatch<React.SetStateAction<NumbersSelectedType[]>>
 }
 
 function NumbersSeleted({totalNumbers, numbersSeleted, setNumbersSeleted} : NumbersSeletedProps) {
