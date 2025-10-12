@@ -111,6 +111,7 @@ return num.toString().padStart(totalDigits, '0');
 
 type redirectToWhatsAppType = {
     totalNumbers: number,
+    abonosPendientes?: number,
     numbers: {
         numberId: number;
         number: number;
@@ -172,6 +173,7 @@ El equipo de *${raffleName}* 🎟️
 export const redirectToWhatsApp = ({
     totalNumbers,
     amount,
+    abonosPendientes,
     infoRaffle,
     name,
     phone,
@@ -187,18 +189,22 @@ export const redirectToWhatsApp = ({
     let deuda = 0;
 
     if (statusRaffleNumber === "pending" && payments) {
+        // console.log('----entro 1');
+        
         const abonosValidos = payments
             .filter(p => p.isValid)
             .reduce((acc, p) => acc + Number(p.amount), 0);
         deuda = Math.max((rafflePrice * numbers.length) - abonosValidos, 0);
     } else if (payments && payments.length > 0) {
+        // console.log('----entro 2');
         const abonosValidos = payments
             .filter(p => p.isValid)
             .reduce((acc, p) => acc + Number(p.amount), 0);
         const totalAbonado = abonosValidos + amount;
         deuda = Math.max((rafflePrice * numbers.length) - totalAbonado, 0);
     } else {
-        deuda = amount === rafflePrice ? 0 : ( Math.max((rafflePrice * numbers.length) - amount, 0));
+        // console.log('----entro 3');
+        deuda = amount === rafflePrice ? 0 : ( Math.max((rafflePrice * numbers.length) - (amount + (abonosPendientes || 0) ), 0));
     }
 
     let paymentTypeMessage = "";

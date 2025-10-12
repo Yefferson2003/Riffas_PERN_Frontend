@@ -1,10 +1,10 @@
 import { Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Modal, Select, SelectChangeEvent, Switch, TextField } from "@mui/material";
-import { QueryObserverResult, RefetchOptions, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { QueryObserverResult, RefetchOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { sellNumbers } from "../../api/raffleNumbersApi";
+import { getRaffleNumbersPending, sellNumbers } from "../../api/raffleNumbersApi";
 import { AwardType, paymentMethodEnum, PayNumbersForm, RaffleNumbersPayments } from "../../types";
 import { formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from "../../utils";
 import ButtonCloseModal from "../ButtonCloseModal";
@@ -72,13 +72,16 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
     const [actionMode, setActionMode] = useState<ActionModeType>('buy')
     const [reservedDate, setReservedDate] = useState<string | null>('')
 
-    // const numbersIds = numbersSeleted.map(num => num.numberId);
+    const numbersIds = numbersSeleted.map(num => num.numberId);
 
-    // const { } = useQuery({
-    //     queryKey: ['raffleNumbersPending', numbersIds],
-    //     enabled: numbersIds.length > 0 && numbersSeleted[0].status === 'pending',
-    // })
-        
+    const shouldQueryPending = show && numbersIds.length > 0 && numbersSeleted.length > 0 && numbersSeleted[0].status === 'pending'
+    
+    const { data: pendingNumbers, isLoading: isLoadingPending } = useQuery({
+        queryKey: ['raffleNumbersPending', numbersIds],
+        queryFn: () => getRaffleNumbersPending({ raffleId: raffleId.toString(), raffleNumbersIds: numbersIds }),
+        enabled: shouldQueryPending,
+        retry: false
+    })
 
     const handleOnChange = ( e: SelectChangeEvent) => {
         const selectedMode = e.target.value as ActionModeType;
@@ -99,6 +102,11 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
             setValue('amount', 0);
         }
     };
+
+    // const handleChangePaymentMethod = (event: SelectChangeEvent<PaymentMethodType>) => {
+    //     const value = event.target.value as PaymentMethodType;
+    //     setValue('paymentMethod', value);
+    // }
     
     const initialValues: PayNumbersForm   = {
         raffleNumbersIds: [],
@@ -112,14 +120,74 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
         paymentMethod: 'Efectivo'
     }
 
-    const {register, handleSubmit, watch, reset, formState: {errors}, setValue} = useForm({
+    const {register, handleSubmit, watch, reset, formState: {errors}, setValue, control} = useForm({
         defaultValues : initialValues
     })
-    const { phone, amount, paymentMethod} = watch();
+    const { phone, amount} = watch();
+    
+    // Llenar datos automáticamente cuando hay números pendientes
+    const isReadOnlyMode = pendingNumbers && pendingNumbers.length > 0;
+    const totalDebtToPay = pendingNumbers
+        ? pendingNumbers.reduce((total, number) => {
+            const due = Number(number.paymentDue) || 0;
+            return total + due;
+        }, 0)
+        : 0;
+    const totalAbonado = pendingNumbers
+        ? pendingNumbers.reduce((total, number) => {
+            const due = Number(number.paymentAmount) || 0;
+            return total + due;
+        }, 0)
+        : 0;
+    
+    // Efecto para llenar datos del primer elemento
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    // Crear una clave única para detectar cambios en números seleccionados
+    const numbersKey = numbersIds.join(',');
+
+    // Resetear isInitialized cuando cambian los números seleccionados
+    React.useEffect(() => {
+        setIsInitialized(false);
+    }, [numbersKey]);
+
+    React.useEffect(() => {
+        if (isReadOnlyMode && pendingNumbers && pendingNumbers.length > 0 && !isInitialized) {
+            const firstNumber = pendingNumbers[0];
+            reset({
+                raffleNumbersIds: numbersIds,
+                firstName: firstNumber.firstName || '',
+                lastName: firstNumber.lastName || '',
+                address: firstNumber.address || '',
+                amount: totalDebtToPay,
+                paymentMethod: 'Efectivo',
+                phone: firstNumber.phone || '',
+            });
+            setIsInitialized(true);
+        }
+    }, [isReadOnlyMode, pendingNumbers, totalDebtToPay, reset, numbersIds, isInitialized]);
+
+    
+    React.useEffect(() => {
+        reset({
+            raffleNumbersIds: [],
+            firstName: '',
+            lastName: '',
+            address: '',
+            phone: '',
+            amount: 0,
+            paymentMethod: 'Efectivo'
+        })
+        setIsInitialized(false); // También resetear cuando se abre/cierra el modal
+    }, [show, reset]);
     
     // Calcular el precio actual por rifa y el total
     const currentRafflePrice = priceEspecial && amount ? +amount : +rafflePrice;
-    const totalToPay = numbersSeleted.length * currentRafflePrice;
+    const totalToPay = isReadOnlyMode ? totalDebtToPay : numbersSeleted.length * currentRafflePrice;
+    // Calcular precio original cuando hay números pendientes
+    const originalPrice = pendingNumbers && pendingNumbers.length > 0 
+        ? (Number(pendingNumbers[0].paymentAmount) || 0) + (Number(pendingNumbers[0].paymentDue) || 0)
+        : Number(rafflePrice);
     
     const {mutate, isPending} = useMutation({
         mutationFn: sellNumbers,
@@ -149,6 +217,8 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
 
     const handleFormSubmit = (Data : PayNumbersForm) => { 
 
+        const abonoForm = isReadOnlyMode ? (Data.amount ? +Data.amount : 0) : 0;
+
         if (priceEspecial && (Data.amount === undefined || Data.amount < 1)) {
             toast.error('El monto no puede ser 0 si precio especial está activo')
             return
@@ -161,7 +231,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
         
         const formData = { 
             ...Data,
-            amount: currentRafflePrice,
+            amount: isReadOnlyMode ? (Data.amount ? +Data.amount : 0) : currentRafflePrice,
             raffleNumbersIds: numbersSeleted.map((item) => item.numberId) 
         } 
         let params = {}
@@ -179,6 +249,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
             raffleId, 
             params
         } 
+        // toast.info(Data.amount, { autoClose: 5000, toastId: 'processingToast' });
         mutate(data, {
             onSuccess: () => {
                 if (formData.phone) {
@@ -188,11 +259,11 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                             numbers: numbersSeleted,
                             phone: formData.phone,
                             name: formData.firstName,
-                            amount: priceForm,
-                            infoRaffle: {...infoRaffle, amountRaffle: priceEspecial ? Data.amount?.toString() || 'NO HAY' : infoRaffle.amountRaffle},
+                            amount: isReadOnlyMode ? abonoForm : priceForm,
+                            infoRaffle: {...infoRaffle, amountRaffle: isReadOnlyMode ? String(originalPrice) : (priceEspecial ? Data.amount?.toString() || 'NO HAY' : infoRaffle.amountRaffle)},
                             awards, 
                             reservedDate,
-                            
+                            abonosPendientes: (isReadOnlyMode && totalAbonado > 0) ? totalAbonado : undefined
                         })
                     )
                     
@@ -212,6 +283,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
         >
             <Box sx={style}>
             <ButtonCloseModal/>
+            
             <h2 className="mb-5 text-2xl font-bold text-center text-azul">Comprar Numeros</h2>
             <p className="mb-5 text-xl font-bold text-center">LLena este formulario para comprar los numeros seleccionados</p>
             <p className="text-center">Números seleccionados</p>
@@ -223,7 +295,9 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                 : "No hay números seleccionados."}
             </p>
 
-            <p className="text-center">Valor de la Rifa:<span className="font-bold text-azul"> {formatCurrencyCOP(currentRafflePrice)}</span></p>
+            {!isReadOnlyMode ? <p className="text-center">Valor de la Rifa:<span className="font-bold text-azul"> {formatCurrencyCOP(currentRafflePrice)}</span></p> : null}
+
+            {isReadOnlyMode &&   <p className="text-center">Valor abonado:<span className="font-bold text-azul"> {formatCurrencyCOP(totalAbonado)}</span></p>}
 
             <p className="my-5 text-center">Total a pagar: <span className="font-bold text-azul">{formatCurrencyCOP(totalToPay)}</span></p>
 
@@ -232,7 +306,11 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                 <FormControlLabel 
                     labelPlacement="end" 
                     control={
-                        <Switch checked={priceEspecial} onChange={handleChangePriceSpecial} />
+                        <Switch 
+                            checked={priceEspecial} 
+                            onChange={handleChangePriceSpecial}
+                            disabled={isReadOnlyMode}
+                        />
                     }
                     label="Aplicar Precio Especial"
                 />
@@ -248,8 +326,10 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                 <FormControl size="small" fullWidth
                     sx={{display: 'flex', gap: 2}}
                 >   
-                    {priceEspecial && (
-                        <TextField id="amount" label="Precio Nuevo" variant="outlined" 
+                    {(priceEspecial || isReadOnlyMode) && (
+                        <TextField id="amount" 
+                            label={ !isReadOnlyMode ? "Precio Nuevo" : "Monto"}
+                            variant="outlined" 
                             error={!!errors.amount}
                             helperText={errors.amount?.message}
                             {...register('amount', {
@@ -259,42 +339,125 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                                 message: 'El monto debe ser numérico (puede incluir decimales con hasta dos cifras, solo punto)',
                             },
                             validate: {
-                                maxValue: (value) =>
-                                Number(value) <= +rafflePrice || `El monto no puede superar los ${formatCurrencyCOP(+rafflePrice)}`, // Use formatCurrencyCOP here for consistency
+                                maxValue: (value) => {
+                                    if (isReadOnlyMode) {
+                                        return Number(value) <= totalDebtToPay || `El monto no puede superar la deuda total de ${formatCurrencyCOP(totalDebtToPay)}`;
+                                    }
+                                    return Number(value) <= +rafflePrice || `El monto no puede superar los ${formatCurrencyCOP(+rafflePrice)}`;
+                                }
                             },
                             })}
                         />
                     )}
                     
-                    <FormControl error={!!errors.paymentMethod}>
-                    <InputLabel id="paymentMethodLabel">Método de pago</InputLabel>
-                    <Select
-                        labelId="paymentMethodLabel"
-                        id="paymentMethod"
-                        label="Método de pago"
-                        value={paymentMethod || ''}
-                        onChange={(e) => setValue('paymentMethod', e.target.value as typeof paymentMethods[number])}
-                    >
-                        <MenuItem disabled value={''}>Seleccione un método de pago</MenuItem>
-                        {paymentMethods.map((method) => (
-                            <MenuItem key={method} value={method}>{method}</MenuItem>
-                        ))}
-                    </Select>
-                    {errors.paymentMethod && (
-                        <p className="mt-1 text-sm text-red-500">{errors.paymentMethod.message}</p>
-                    )}
-                    </FormControl>
 
-                    <TextField id="firstName" label="Nombres" variant="outlined" 
-                        error={!!errors.firstName}
-                        helperText={errors.firstName?.message}
-                        {...register('firstName', {required: 'Nombres Obligatorio'})}
+                    <Controller
+                    name="paymentMethod"
+                    control={control}
+                    rules={{ required: 'Seleccione un método de pago' }}
+                    render={({ field }) => (
+                        <FormControl fullWidth error={!!errors.paymentMethod}>
+                        <InputLabel id="paymentMethodLabel">Método de pago</InputLabel>
+                        <Select
+                            {...field}
+                            labelId="paymentMethodLabel"
+                            label="Método de pago"
+                        >
+                            <MenuItem disabled value="">
+                            Seleccione un método de pago
+                            </MenuItem>
+                            {paymentMethods.map((method) => (
+                            <MenuItem key={method} value={method}>
+                                {method}
+                            </MenuItem>
+                            ))}
+                        </Select>
+                        {errors.paymentMethod && (
+                            <p className="mt-1 text-sm text-red-500">{errors.paymentMethod.message}</p>
+                        )}
+                        </FormControl>
+                    )}
                     />
-                    <TextField id="lastName" label="Apellidos" variant="outlined" 
-                        error={!!errors.lastName}
-                        helperText={errors.lastName?.message}
-                        {...register('lastName', {required: 'Apellidos Obligatorio'})}
-                    />
+
+                    
+
+                    {
+                        isReadOnlyMode && pendingNumbers && pendingNumbers.length > 0 ? (
+                            <>
+                                <div className="p-2 space-y-4 bg-white border-2 border-gray-300 rounded-lg">
+                                    <h3 className="mb-2 text-lg font-bold text-center text-azul">Datos del Cliente</h3>
+                                    
+                                    <div className="grid grid-cols-1 gap-2">
+                                        <div className="p-3 border rounded-md bg-gray-50">
+                                            <p className="mb-1 text-sm font-semibold text-azul">Nombres</p>
+                                            <p className="text-base font-medium text-gray-900">{pendingNumbers[0].firstName || '—'}</p>
+                                        </div>
+
+                                        <div className="p-3 border rounded-md bg-gray-50">
+                                            <p className="mb-1 text-sm font-semibold text-azul">Apellidos</p>
+                                            <p className="text-base font-medium text-gray-900">{pendingNumbers[0].lastName || '—'}</p>
+                                        </div>
+
+                                        <div className="p-3 border rounded-md bg-gray-50">
+                                            <p className="mb-1 text-sm font-semibold text-azul">Teléfono</p>
+                                            <p className="text-base font-medium text-gray-900">{pendingNumbers[0].phone || '—'}</p>
+                                        </div>
+
+                                        <div className="p-3 border rounded-md bg-gray-50">
+                                            <p className="mb-1 text-sm font-semibold text-azul">Dirección</p>
+                                            <p className="text-base font-medium text-gray-900">{pendingNumbers[0].address || '—'}</p>
+                                        </div>
+
+                                        <div className="p-3 border-2 border-blue-200 rounded-md bg-blue-50">
+                                            <p className="mb-1 text-sm font-semibold text-azul">Monto adeudado (total)</p>
+                                            <p className="text-xl font-bold text-azul">{formatCurrencyCOP(totalDebtToPay)}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <React.Fragment>
+                            <TextField id="firstName" label="Nombres" variant="outlined" 
+                                error={!!errors.firstName}
+                                helperText={errors.firstName?.message}
+                                {...register('firstName', {required: 'Nombres Obligatorio'})}
+                            />
+                            <TextField id="lastName" label="Apellidos" variant="outlined" 
+                                error={!!errors.lastName}
+                                helperText={errors.lastName?.message}
+                                {...register('lastName', {required: 'Apellidos Obligatorio'})}
+                            />
+                            <p className="text-sm text-black text-start">Número de teléfono</p>
+                            <PhoneNumberInput
+                                
+                                value={phone}
+                                onChange={(value) => {
+                                    if (!isReadOnlyMode) {
+                                        setValue('phone', value);
+                                    }
+                                }}
+                            />
+                            <TextField id="address" label="Dirección" variant="outlined" 
+                                error={!!errors.address}
+                                helperText={errors.address?.message}
+                                {...register('address', {required: 'Dirección Obligatoria'})}
+                            />
+                            <FormControl>
+                            <InputLabel id="actionModeTypelabel">Tipo de reserva</InputLabel>
+                            <Select
+                                id="actionModeTypelabel"
+                                label="Tipo de reserva"
+                                value={actionMode}
+                                onChange={handleOnChange}
+                                disabled={isReadOnlyMode}
+                            >
+                                <MenuItem value={'buy'}>Comprar Números</MenuItem>
+                                <MenuItem value={'separate'}>Apartar Números</MenuItem>
+                            </Select>
+                            </FormControl>
+                            </React.Fragment>
+                            )
+                        }
                     
                     {/* <FormControl>
                         <InputLabel id="identificationTypelabel">Tipo de Indentificación</InputLabel>
@@ -318,40 +481,13 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                             },
                         })}
                     /> */}
-                    
-                    <p className="text-sm text-black text-start">Número de teléfono</p>
-                    <PhoneNumberInput
-                        value={phone}
-                        onChange={(value) => {
-                            setValue('phone', value);
-                        }}
-                    />
-                    <TextField id="address" label="Dirección" variant="outlined" 
-                        error={!!errors.address}
-                        helperText={errors.address?.message}
-                        {...register('address', {required: 'Dirección Obligatoria'})}
-                    />
-
-                    <FormControl>
-                    <InputLabel id="actionModeTypelabel">Tipo de reserva</InputLabel>
-                    <Select
-                        id="actionModeTypelabel"
-                        label="Tipo de reserva"
-                        value={actionMode}
-                        onChange={handleOnChange}
-                    >
-                        <MenuItem value={'buy'}>Comprar Números</MenuItem>
-                        <MenuItem value={'separate'}>Apartar Números</MenuItem>
-                    </Select>
-                    </FormControl>
-                    
 
                     <Button
                         type="submit"
                         variant="contained"
-                        disabled={isPending}
+                        disabled={isPending || isLoadingPending}
                     >
-                        Reservar Boletas
+                        {isReadOnlyMode ? 'Abonar Boletas' : actionMode === 'buy' ? 'Comprar Boletas' : 'Apartar Boletas'}
                     </Button>
                 </FormControl>
                 

@@ -358,6 +358,20 @@ export const responseRaffleNumbersSchema = ResponsePaginationSchema.pick({
     raffleNumbers: z.array(raffleNumbersSchema)
 })
 
+export const raffleNumberPendingSchema = RaffleNumberSchema.pick({
+    id: true,
+    number: true,
+    paymentDue: true,
+    paymentAmount: true,
+    phone: true,
+    address: true,
+    firstName: true,
+    lastName: true,
+    status: true,
+})
+
+export const responseRaffleNumbersPendingSchema = z.array(raffleNumberPendingSchema)
+
 export const raffleNumberSharedResponseSchema = RaffleNumberSchema.pick({
     id: true,
     number: true,
