@@ -1,5 +1,9 @@
 import LocalActivityIcon from '@mui/icons-material/LocalActivity';
 import { Chip, FormControl, FormControlLabel, MenuItem, Select, SelectChangeEvent, Skeleton, Switch, TextField } from "@mui/material";
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import  { Dayjs } from 'dayjs';
 import { useQueries } from '@tanstack/react-query';
 import debounce from 'lodash.debounce';
 import { useCallback, useEffect, useState } from "react";
@@ -42,17 +46,13 @@ export type NumbersSelectedType = {
 
 const styleForm = {
     width: '100%',
-    // maxWidth: 800,
-    display: 'flex',
+    display: 'grid',
     gap: 1,
     alignItems: 'center',
-    justifyContent: {
-        xs: 'center',        // Centrado en pantallas pequeñas
-        sm: 'space-between', // Espaciado entre elementos en pantallas grandes
-    },
-    flexDirection: {
-        xs: 'column', // Para pantallas pequeñas
-        sm: 'row',    // Para pantallas más grandes
+    gridTemplateColumns: {
+        xs: '1fr',                    // Una columna en pantallas pequeñas
+        sm: 'repeat(2, 1fr)',         // Dos columnas en pantallas medianas
+        md: 'repeat(3, 1fr)',         // Cuatro columnas en pantallas grandes
     },
 }
 
@@ -86,6 +86,8 @@ function RaffleNumbersView() {
         search: '', 
         searchAmount: '' 
     }); 
+    const [startDate, setStartDate] = useState<Dayjs | null>(null);
+    const [endDate, setEndDate] = useState<Dayjs | null>(null);
 
     // Debounced search params con mejor manejo de errores
     const updateSearchParams = useCallback(
@@ -190,10 +192,37 @@ function RaffleNumbersView() {
         if (parsed.success) {
             setPaymentMethodFilter(parsed.data);
         } else {
-            setPaymentMethodFilter('')
+            setPaymentMethodFilter('');
+            // Resetear fechas cuando se deselecciona el método de pago
+            setStartDate(null);
+            setEndDate(null);
         }
         setPage(1); // Reset page when filter changes
     }
+
+    const handleStartDateChange = (newDate: Dayjs | null) => {
+        setStartDate(newDate);
+        setPage(1); // Reset page when date changes
+    };
+
+    const handleEndDateChange = (newDate: Dayjs | null) => {
+        setEndDate(newDate);
+        setPage(1); // Reset page when date changes
+    };
+
+    const handleResetFilters = () => {
+        // Resetear todos los filtros
+        setFilter({});
+        setPaymentMethodFilter('');
+        setInputValues({ search: '', searchAmount: '' });
+        setSearchParams({ search: '', searchAmount: '' });
+        setStartDate(null);
+        setEndDate(null);
+        updateSearchParams.cancel();
+        setPage(1);
+        
+        toast.success('Filtros reiniciados', { autoClose: 1500 });
+    };
 
     // const { data: raffleNumbers, isLoading : isLoadingRaffleNumbers, isError : isErrorRaffleNumbers, refetch} = useRaffleNumbers(parsedRaffleId!, {filter, page, limit: rowsPerPage, search});
 
@@ -202,9 +231,22 @@ function RaffleNumbersView() {
     const [raffleNumbersData, raffleData, awardsData, expensesTotalData, expensesTotalByUserData] = useQueries({
         queries: [
             {
-                queryKey: ['raffleNumbers', searchParams.search, raffleId, filter, page, rowsPerPage, searchParams.searchAmount, paymentMethodFilter],
-                queryFn: () => getRaffleNumers({ raffleId: raffleId!, params: { page, limit: rowsPerPage, search: searchParams.search, amount: searchParams.searchAmount, ...(paymentMethodFilter && { paymentMethod: paymentMethodFilter }), ...filter} }),
-                enabled: !!raffleId,
+                queryKey: ['raffleNumbers', searchParams.search, raffleId, filter, page, rowsPerPage, searchParams.searchAmount, paymentMethodFilter, startDate?.format('YYYY-MM-DD'), endDate?.format('YYYY-MM-DD')],
+                queryFn: () => getRaffleNumers({ 
+                    raffleId: raffleId!, 
+                    params: { 
+                        page, 
+                        limit: rowsPerPage, 
+                        search: searchParams.search, 
+                        amount: searchParams.searchAmount, 
+                        ...(paymentMethodFilter && { paymentMethod: paymentMethodFilter }),
+                        ...(startDate && endDate && {
+                            startDate: startDate.format('YYYY-MM-DD'),
+                            endDate: endDate.format('YYYY-MM-DD')
+                        }),
+                        ...filter
+                    } 
+                }),
             },
             {
                 queryKey: ['raffles', raffleId],
@@ -502,6 +544,61 @@ function RaffleNumbersView() {
                                     className="min-w-0"
                                 />
                             )}
+
+                            {/* Filtros de fecha - Solo visible cuando hay método de pago seleccionado */}
+                            {paymentMethodFilter && (
+                                <div className="flex flex-col w-full gap-2 md:col-span-3 sm:flex-row sm:gap-4">
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                        <DatePicker
+                                            label="Fecha Inicial"
+                                            value={startDate}
+                                            onChange={handleStartDateChange}
+                                            slotProps={{
+                                                textField: {
+                                                    size: 'small',
+                                                    variant: 'filled',
+                                                    fullWidth: true,
+                                                    className: "min-w-0"
+                                                }
+                                            }}
+                                        />
+                                        <DatePicker
+                                            label="Fecha Final"
+                                            value={endDate}
+                                            onChange={handleEndDateChange}
+                                            minDate={startDate || undefined}
+                                            disabled={!startDate}
+                                            slotProps={{
+                                                textField: {
+                                                    size: 'small',
+                                                    variant: 'filled',
+                                                    fullWidth: true,
+                                                    className: "min-w-0"
+                                                }
+                                            }}
+                                        />
+                                </LocalizationProvider>
+                                </div>
+                            )}
+
+                            {/* Botón de reiniciar filtros */}
+                            <div className="flex justify-center md:col-span-3">
+                                <button
+                                    type="button"
+                                    onClick={handleResetFilters}
+                                    className="px-4 py-2 text-sm font-medium transition-all duration-200 bg-gray-500 rounded-lg text-azul hover:bg-gray-600 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={
+                                        Object.keys(filter).length === 0 && 
+                                        !paymentMethodFilter && 
+                                        !inputValues.search && 
+                                        !inputValues.searchAmount && 
+                                        !startDate && 
+                                        !endDate
+                                    }
+                                >
+                                    Reiniciar Filtros
+                                </button>
+                            </div>
                         </FormControl>
                     </div>
                     
@@ -520,10 +617,12 @@ function RaffleNumbersView() {
                                                 search: searchParams.search,
                                                 amount: searchParams.searchAmount,
                                                 ...filter,
-                                                paymentMethod: paymentMethodFilter
+                                                paymentMethod: paymentMethodFilter,
+                                                startDate: startDate ? startDate.format('YYYY-MM-DD') : undefined,
+                                                endDate: endDate ? endDate.format('YYYY-MM-DD') : undefined
                                             },
                                             raffle?.totalNumbers || 0,
-                                            paymentMethodFilter
+                                            paymentMethodFilter,
                                         );
                                     }}
                                 >
@@ -541,6 +640,9 @@ function RaffleNumbersView() {
                                                 search: searchParams.search,
                                                 amount: searchParams.searchAmount,
                                                 ...filter,
+                                                paymentMethod: paymentMethodFilter,
+                                                startDate: startDate ? startDate.format('YYYY-MM-DD') : undefined,
+                                                endDate: endDate ? endDate.format('YYYY-MM-DD') : undefined
                                             },
                                             raffle?.totalNumbers || 0
                                         );

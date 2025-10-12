@@ -89,7 +89,7 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
 
 
             {raffleNumbers && token && <ViewRaffleNumberSharedModal
-                totalNumbers={raffleNumbers.total}
+                totalNumbers={raffle.totalNumbers || 0}
                 awards={awards}
                 raffle={raffle}
                 token={token}
