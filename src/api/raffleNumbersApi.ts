@@ -4,6 +4,8 @@ import { PayNumberForm, PayNumbersForm, RaffleNumberSchema, raffleNumbersExelFil
 
 export async function getRaffleNumers({params, raffleId} : {params : object, raffleId: string}) {
     try { 
+        console.log(params);
+        
         const {data} = await api.get(`/raffles-numbers/${raffleId}`, { params });
         const response = responseRaffleNumbersSchema.safeParse(data)
         if (response.success) {

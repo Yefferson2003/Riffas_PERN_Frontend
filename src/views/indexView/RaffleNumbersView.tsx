@@ -1,5 +1,5 @@
 import LocalActivityIcon from '@mui/icons-material/LocalActivity';
-import { Chip, FormControl, FormControlLabel, MenuItem, Pagination, Select, SelectChangeEvent, Skeleton, Switch, TextField } from "@mui/material";
+import { Chip, FormControl, FormControlLabel, MenuItem, Select, SelectChangeEvent, Skeleton, Switch, TextField } from "@mui/material";
 import { useQueries } from '@tanstack/react-query';
 import debounce from 'lodash.debounce';
 import { useCallback, useEffect, useState } from "react";
@@ -23,11 +23,15 @@ import ViewExpensesByUserModal from '../../components/indexView/modal/Expenses/V
 import ShareURLRaffleModal from '../../components/indexView/modal/ShareURLRaffleModal';
 import Awards from '../../components/indexView/raffle/Awards';
 import RaffleSideBar from '../../components/indexView/raffle/RaffleSideBar';
+import MobileErrorBoundary from '../../components/shared/MobileErrorBoundary';
+import MobileSafePagination from '../../components/shared/MobileSafePagination';
+import MobileDebugButton from '../../components/shared/MobileDebugButton';
 import socket from '../../socket';
 import { paymentMethodEnum, PaymentMethodType, RaffleNumber, RaffleNumbersPayments, User } from "../../types";
 import { colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros, getChipStyles } from "../../utils";
 import { exelRaffleNumbersFilter, exelRaffleNumbersFilterDetails } from '../../utils/exel';
 import LoaderView from "../LoaderView";
+import '../../styles/mobile-fixes.css';
 
 export type NumbersSelectedType = {
     numberId: number, 
@@ -87,9 +91,14 @@ function RaffleNumbersView() {
         searchAmount: '' 
     }); 
 
+    // Debounced search params con mejor manejo de errores
     const updateSearchParams = useCallback(
         debounce((values: { search: string; searchAmount: string }) => {
-            setSearchParams(values);
+            try {
+                setSearchParams(values);
+            } catch (error) {
+                console.error('Error actualizando parámetros de búsqueda:', error);
+            }
         }, 2000),
         []
     );
@@ -155,8 +164,24 @@ function RaffleNumbersView() {
         setPage(1);
     };
 
-    const handlePageChange = (_event: React.ChangeEvent<unknown>, newPage: number)=> {
-        setPage(newPage);
+    const handlePageChange = (_event: React.ChangeEvent<unknown>, newPage: number) => {
+        try {
+            // Validaciones básicas
+            if (!newPage || newPage < 1) {
+                console.warn('Página inválida:', newPage);
+                return;
+            }
+            
+            // En móviles, agregar un pequeño delay para evitar clicks múltiples
+            if (isSmallDevice) {
+                setTimeout(() => setPage(newPage), 50);
+            } else {
+                setPage(newPage);
+            }
+        } catch (error) {
+            console.error('Error al cambiar de página:', error);
+            toast.error('Error al cambiar de página');
+        }
     }
 
     const handleSwitchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -250,9 +275,13 @@ function RaffleNumbersView() {
     
     useEffect(() => {
         const handleUpdateQuery = (data: { raffleId: number }) => {
-            if (raffleId && data.raffleId === +raffleId) { 
-                refetch()
-            };
+            try {
+                if (raffleId && data.raffleId === +raffleId) { 
+                    refetch();
+                }
+            } catch (error) {
+                console.error('Error en socket update:', error);
+            }
         };
 
         socket.on('sellNumbers', handleUpdateQuery);
@@ -263,6 +292,34 @@ function RaffleNumbersView() {
             socket.off('sellNumber', handleUpdateQuery);
         };
     }, [raffleId, refetch]);
+
+    // Efecto para detectar problemas en móviles
+    useEffect(() => {
+        if (isSmallDevice) {
+            // Log información del dispositivo móvil
+            console.log('Dispositivo móvil detectado:', {
+                userAgent: navigator.userAgent,
+                viewport: { width: window.innerWidth, height: window.innerHeight },
+                screen: { width: screen.width, height: screen.height }
+            });
+
+            // Detectar problemas de memoria en móviles
+            const checkMemory = () => {
+                if ('memory' in performance) {
+                    const memInfo = (performance as unknown as { memory: { usedJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
+                    if (memInfo.usedJSHeapSize / memInfo.jsHeapSizeLimit > 0.9) {
+                        console.warn('Memoria alta detectada en móvil');
+                    }
+                }
+            };
+
+            const memoryCheck = setInterval(checkMemory, 30000); // Check cada 30 segundos
+
+            return () => {
+                clearInterval(memoryCheck);
+            };
+        }
+    }, [isSmallDevice]);
 
     // useEffect(() => {
     //     socket.on("connect", () => {
@@ -293,7 +350,7 @@ function RaffleNumbersView() {
     }
     
     return (
-        <section className="flex flex-col-reverse w-full pb-10 text-center lg:flex-col *:bg-white *:p-2 gap-5 *:rounded-xl">
+        <section className={`flex flex-col-reverse w-full pb-10 text-center lg:flex-col *:bg-white *:p-2 gap-5 *:rounded-xl mobile-safe ${isSmallDevice ? 'mobile-device' : ''}`}>
             
             {raffleNumbers &&
                 <RaffleSideBar 
@@ -529,61 +586,85 @@ function RaffleNumbersView() {
                     />
                 }
                 
-                <section className="grid grid-cols-5 cursor-pointer gap-x-1 gap-y-3 md:grid-cols-10 md:grid-rows-10">
-                {isLoadingRaffleNumbers && (
-                    <>
-                    {Array.from({ length: rowsPerPage }).map((_, i) => (
-                        <Skeleton 
-                            key={i} 
-                            variant="rectangular" 
-                            width="100%" 
-                            height={35} 
-                            sx={{ borderRadius: 2 }} 
-                        />
-                    ))}
-                    </>
-                )}
+                <MobileErrorBoundary>
+                    <section className="grid grid-cols-5 cursor-pointer gap-x-1 gap-y-3 md:grid-cols-10 md:grid-rows-10">
+                    {isLoadingRaffleNumbers && (
+                        <>
+                        {Array.from({ length: rowsPerPage }).map((_, i) => (
+                            <Skeleton 
+                                key={i} 
+                                variant="rectangular" 
+                                width="100%" 
+                                height={35} 
+                                sx={{ borderRadius: 2 }} 
+                            />
+                        ))}
+                        </>
+                    )}
 
-                {!isLoadingRaffleNumbers && raffleNumbers && raffle && raffleNumbers.total &&
-                    raffleNumbers.raffleNumbers.length === 0 ? (
-                    <p className='text-xl font-bold col-span-full text-azul'>No hay resultados...</p>
-                    ) : (
-                    raffleNumbers?.raffleNumbers.map(raffleNumber => (
-                        <Chip 
-                            sx={getChipStyles(raffleNumber.status)}
-                            key={raffleNumber.id} 
-                            label={formatWithLeadingZeros(raffleNumber.number, raffleNumbers.total)} 
-                            variant="filled" 
-                            size="small"
-                            disabled={
-                                user.rol.name === 'vendedor' &&
-                                raffleNumber.payments.length > 0 &&
-                                isVisibleRaffleNumbes(raffleNumber.payments) &&
-                                !isOptionSelectedNumber(raffleNumber.status)
-                            }
-                            color={colorStatusRaffleNumber[raffleNumber.status]}
-                            onClick={optionSeleted ? 
-                                () => toggleSelectNumber(raffleNumber.id, raffleNumber.status, raffleNumber.number, raffleNumber.firstName || '', raffleNumber.lastName || '') 
-                                : () => handleNavigateViewRaffleNumber(raffleNumber.id)
-                            }
-                        />
-                    ))
-                    )
-                }
-                </section>
+                    {!isLoadingRaffleNumbers && raffleNumbers && raffle && raffleNumbers.total &&
+                        raffleNumbers.raffleNumbers.length === 0 ? (
+                        <p className='text-xl font-bold col-span-full text-azul'>No hay resultados...</p>
+                        ) : (
+                        raffleNumbers?.raffleNumbers.map(raffleNumber => {
+                            const handleChipClick = optionSeleted ? 
+                                () => {
+                                    try {
+                                        toggleSelectNumber(raffleNumber.id, raffleNumber.status, raffleNumber.number, raffleNumber.firstName || '', raffleNumber.lastName || '');
+                                    } catch (error) {
+                                        console.error('Error al seleccionar número:', error);
+                                    }
+                                }
+                                : () => {
+                                    try {
+                                        handleNavigateViewRaffleNumber(raffleNumber.id);
+                                    } catch (error) {
+                                        console.error('Error al navegar:', error);
+                                    }
+                                };
+
+                            return (
+                                <Chip 
+                                    sx={{
+                                        ...getChipStyles(raffleNumber.status),
+                                        // Mejores estilos para móviles
+                                        touchAction: 'manipulation',
+                                        userSelect: 'none',
+                                        ...(isSmallDevice && {
+                                            minHeight: '36px',
+                                            '& .MuiChip-label': {
+                                                fontSize: '0.9rem',
+                                                fontWeight: 600
+                                            }
+                                        })
+                                    }}
+                                    key={raffleNumber.id} 
+                                    label={formatWithLeadingZeros(raffleNumber.number, raffleNumbers.total)} 
+                                    variant="filled" 
+                                    size={isSmallDevice ? 'medium' : 'small'}
+                                    disabled={
+                                        user.rol.name === 'vendedor' &&
+                                        raffleNumber.payments.length > 0 &&
+                                        isVisibleRaffleNumbes(raffleNumber.payments) &&
+                                        !isOptionSelectedNumber(raffleNumber.status)
+                                    }
+                                    color={colorStatusRaffleNumber[raffleNumber.status]}
+                                    onClick={handleChipClick}
+                                />
+                            );
+                        })
+                        )
+                    }
+                    </section>
+                </MobileErrorBoundary>
 
 
-                <div className='flex justify-center my-5'>   
-                    <Pagination     
-                        count={raffleNumbers?.totalPages} 
-                        color="primary" 
-                        onChange={handlePageChange} 
-                        page={page}
-                        siblingCount={1} 
-                        boundaryCount={1}
-                        size='small'
-                    /> 
-                </div>
+                <MobileSafePagination
+                    count={raffleNumbers?.totalPages}
+                    page={page}
+                    onChange={handlePageChange}
+                    isSmallDevice={isSmallDevice}
+                />
             </div>
         {raffle && <ViewUsersOfRaffleModal raffleId={raffle.id}/>}
         {raffle && <UpdateRaffleModal 
@@ -642,6 +723,9 @@ function RaffleNumbersView() {
             </>
             
         }
+
+        {/* Botón de debug para móviles */}
+        <MobileDebugButton />
 
         </section>
     )

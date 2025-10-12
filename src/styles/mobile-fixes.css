@@ -1,0 +1,80 @@
+/* Estilos específicos para mejorar la compatibilidad móvil */
+
+/* Mejoras generales para móviles */
+@media (max-width: 768px) {
+  /* Desactivar hover effects en móviles */
+  @media (hover: none) {
+    .mobile-safe * {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+  }
+
+  /* Mejorar el rendimiento de animaciones */
+  .mobile-safe * {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+  }
+
+  /* Optimizar scroll y touch */
+  .mobile-safe {
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+  }
+
+  /* Estilos específicos para la paginación */
+  .mobile-pagination {
+    padding: 10px 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .mobile-pagination .MuiPaginationItem-root {
+    touch-action: manipulation;
+    min-height: 44px;
+    min-width: 44px;
+    margin: 0 2px;
+  }
+
+  /* Estilos para los chips de números */
+  .mobile-chip {
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    min-height: 36px;
+    transition: none; /* Desactivar transiciones en móviles */
+  }
+
+  /* Prevenir zoom en inputs */
+  .mobile-input {
+    font-size: 16px !important;
+    transform: translateZ(0);
+  }
+}
+
+/* Clases de utilidad para debugging */
+.debug-mobile {
+  border: 2px dashed red !important;
+  background-color: rgba(255, 0, 0, 0.1) !important;
+}
+
+.debug-mobile::before {
+  content: "DEBUG: Mobile Element";
+  position: absolute;
+  top: -20px;
+  left: 0;
+  background: red;
+  color: white;
+  font-size: 10px;
+  padding: 2px 4px;
+  z-index: 9999;
+}
