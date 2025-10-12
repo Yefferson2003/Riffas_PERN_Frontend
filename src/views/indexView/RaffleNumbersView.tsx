@@ -25,7 +25,6 @@ import Awards from '../../components/indexView/raffle/Awards';
 import RaffleSideBar from '../../components/indexView/raffle/RaffleSideBar';
 import MobileErrorBoundary from '../../components/shared/MobileErrorBoundary';
 import MobileSafePagination from '../../components/shared/MobileSafePagination';
-import MobileDebugButton from '../../components/shared/MobileDebugButton';
 import socket from '../../socket';
 import { paymentMethodEnum, PaymentMethodType, RaffleNumber, RaffleNumbersPayments, User } from "../../types";
 import { colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros, getChipStyles } from "../../utils";
@@ -69,9 +68,6 @@ function RaffleNumbersView() {
     const [page, setPage] = useState<number>(1);
     const [rowsPerPage] = useState<number>(100);
     const [urlWasap, setUrlWasap] = useState<string>('')
-
-    
-
 
     const [paymentsSellNumbersModal, setPaymentsSellNumbersModal] = useState(false);
     const [pdfData, setPdfData] = useState<RaffleNumbersPayments | undefined>();
@@ -594,7 +590,7 @@ function RaffleNumbersView() {
                             <Skeleton 
                                 key={i} 
                                 variant="rectangular" 
-                                width="100%" 
+                                width="90%" 
                                 height={35} 
                                 sx={{ borderRadius: 2 }} 
                             />
@@ -725,7 +721,7 @@ function RaffleNumbersView() {
         }
 
         {/* Botón de debug para móviles */}
-        <MobileDebugButton />
+        {/* <MobileDebugButton /> */}
 
         </section>
     )
