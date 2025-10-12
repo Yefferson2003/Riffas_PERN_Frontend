@@ -128,10 +128,15 @@ export const raffleSchema = z.object({
     banerMovileImgUrl: z.string(),
 })
 
+export const raffleSchemaShared = raffleSchema.extend({
+    totalNumbers: z.number().min(0).optional()
+})
+
 export const raffleByIdSchema = raffleSchema.extend({
     userRiffle: z.array(z.object({
         userId: z.number()
-    })).nullable()
+    })).nullable(),
+    totalNumbers: z.number().min(0).optional()
 })
 
 export const createRaffleSchema = raffleSchema.pick({
@@ -189,6 +194,7 @@ export const URLSchema = z.object({
 
 
 export type Raffle = z.infer<typeof raffleSchema>
+export type RaffleSharedType = z.infer<typeof raffleSchemaShared>
 export type CreateRaffleForm = z.infer<typeof createRaffleSchema>
 export type UpdateRaffleForm = z.infer<typeof updateRaffleSchema>
 

@@ -201,8 +201,6 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
     // doc.save(`tickets_rifa_${raffle.id}.pdf`);
     // };
 
-    
-    
 
     const handleCloseModal = () => {
         setPaymentsSellNumbersModal(false)

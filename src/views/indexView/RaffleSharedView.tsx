@@ -89,12 +89,13 @@ function RaffleSharedView() {
 
             </div>
 
-            {token && awards && (
+            {token && awards && raffle && (
                 <RaffleNumbersShared
-                awards={awards}
-                raffle={raffle}
-                token={token}
-                price={raffle.price}
+                    awards={awards}
+                    raffle={raffle}
+                    token={token}
+                    price={raffle.price}
+                
                 />
             )}
             </section>

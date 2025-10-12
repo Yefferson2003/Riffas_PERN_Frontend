@@ -6,11 +6,11 @@ import { useNavigate } from 'react-router-dom';
 import { getRaffleNumersShared } from "../../api/raffleNumbersApi";
 import { colorStatusRaffleNumber, formatCurrencyCOP, formatWithLeadingZeros, getChipStyles } from "../../utils";
 import ViewRaffleNumberSharedModal from './ViewRaffleNumberSharedModal';
-import { AwardType, Raffle } from '../../types';
+import { AwardType, RaffleSharedType } from '../../types';
 
 type RaffleNumbersSharedProps = {
     awards: AwardType[]
-    raffle: Raffle
+    raffle: RaffleSharedType
     token: string
     price: string
 }
@@ -57,14 +57,14 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                             sx={{ borderRadius: '16px' }}
                         />
                     ))
-                ) : raffleNumbers && token && raffleNumbers.total && raffleNumbers.raffleNumbers.length === 0 ? (
+                ) : raffleNumbers && token && raffle.totalNumbers && raffleNumbers.raffleNumbers.length === 0 ? (
                     <p className='text-xl font-bold col-span-full text-azul'>No hay resultados...</p>
                 ) : (
                     raffleNumbers && raffleNumbers.raffleNumbers.map(raffleNumber => (
                         <Chip
                             sx={getChipStyles(raffleNumber.status)}
                             key={raffleNumber.id} 
-                            label={formatWithLeadingZeros(raffleNumber.number, raffleNumbers.total)} 
+                            label={formatWithLeadingZeros(raffleNumber.number, raffle.totalNumbers || 0)} 
                             variant="filled" 
                             size="small"
                             disabled={raffleNumber.status !== 'available'}

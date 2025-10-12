@@ -24,7 +24,7 @@ export const fetchRaffleNumbers = async (raffleId: number) => {
 type paymentMethodFilterType = PaymentMethodType | '' 
 
 
-export const exelRaffleNumbersFilterDetails = async (raffleId: string, params: object, totalNumbers: number, paymentMethodFilter: paymentMethodFilterType) => {
+export const exelRaffleNumbersFilterDetails = async (raffleId: string, params: object, totalNumbers: number, paymentMethodFilter: paymentMethodFilterType,) => {
 
     try {
         const data = await getRaffleNumersExelFilter({ params, raffleId });

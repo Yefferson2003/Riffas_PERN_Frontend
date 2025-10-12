@@ -290,32 +290,32 @@ function RaffleNumbersView() {
     }, [raffleId, refetch]);
 
     // Efecto para detectar problemas en móviles
-    useEffect(() => {
-        if (isSmallDevice) {
-            // Log información del dispositivo móvil
-            console.log('Dispositivo móvil detectado:', {
-                userAgent: navigator.userAgent,
-                viewport: { width: window.innerWidth, height: window.innerHeight },
-                screen: { width: screen.width, height: screen.height }
-            });
+    // useEffect(() => {
+    //     if (isSmallDevice) {
+    //         // Log información del dispositivo móvil
+    //         console.log('Dispositivo móvil detectado:', {
+    //             userAgent: navigator.userAgent,
+    //             viewport: { width: window.innerWidth, height: window.innerHeight },
+    //             screen: { width: screen.width, height: screen.height }
+    //         });
 
-            // Detectar problemas de memoria en móviles
-            const checkMemory = () => {
-                if ('memory' in performance) {
-                    const memInfo = (performance as unknown as { memory: { usedJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
-                    if (memInfo.usedJSHeapSize / memInfo.jsHeapSizeLimit > 0.9) {
-                        console.warn('Memoria alta detectada en móvil');
-                    }
-                }
-            };
+    //         // Detectar problemas de memoria en móviles
+    //         const checkMemory = () => {
+    //             if ('memory' in performance) {
+    //                 const memInfo = (performance as unknown as { memory: { usedJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
+    //                 if (memInfo.usedJSHeapSize / memInfo.jsHeapSizeLimit > 0.9) {
+    //                     console.warn('Memoria alta detectada en móvil');
+    //                 }
+    //             }
+    //         };
 
-            const memoryCheck = setInterval(checkMemory, 30000); // Check cada 30 segundos
+    //         const memoryCheck = setInterval(checkMemory, 30000); // Check cada 30 segundos
 
-            return () => {
-                clearInterval(memoryCheck);
-            };
-        }
-    }, [isSmallDevice]);
+    //         return () => {
+    //             clearInterval(memoryCheck);
+    //         };
+    //     }
+    // }, [isSmallDevice]);
 
     // useEffect(() => {
     //     socket.on("connect", () => {
@@ -348,11 +348,11 @@ function RaffleNumbersView() {
     return (
         <section className={`flex flex-col-reverse w-full pb-10 text-center lg:flex-col *:bg-white *:p-2 gap-5 *:rounded-xl mobile-safe ${isSmallDevice ? 'mobile-device' : ''}`}>
             
-            {raffleNumbers &&
+            {raffle &&
                 <RaffleSideBar 
                     raffleId={raffleId!} 
-                    raffle={raffle!}
-                    totalNumbers={raffleNumbers?.total}
+                    raffle={raffle}
+                    totalNumbers={raffle.totalNumbers || 0}
                 />
             }
             
@@ -522,7 +522,7 @@ function RaffleNumbersView() {
                                                 ...filter,
                                                 paymentMethod: paymentMethodFilter
                                             },
-                                            raffleNumbers?.total,
+                                            raffle?.totalNumbers || 0,
                                             paymentMethodFilter
                                         );
                                     }}
@@ -542,7 +542,7 @@ function RaffleNumbersView() {
                                                 amount: searchParams.searchAmount,
                                                 ...filter,
                                             },
-                                            raffleNumbers.total
+                                            raffle?.totalNumbers || 0
                                         );
                                     }}
                                 >
@@ -574,11 +574,11 @@ function RaffleNumbersView() {
                     </div>
                 </div>
                 
-                {raffleNumbers &&
+                {(raffleNumbers && raffle) &&
                     <NumbersSeleted 
                     numbersSeleted={numbersSeleted} 
                     setNumbersSeleted={setNumbersSeleted}
-                    totalNumbers={raffleNumbers.total}
+                    totalNumbers={raffle.totalNumbers || 0}
                     />
                 }
                 
@@ -598,7 +598,7 @@ function RaffleNumbersView() {
                         </>
                     )}
 
-                    {!isLoadingRaffleNumbers && raffleNumbers && raffle && raffleNumbers.total &&
+                    {!isLoadingRaffleNumbers && raffleNumbers && raffle && (raffle?.totalNumbers || 0) &&
                         raffleNumbers.raffleNumbers.length === 0 ? (
                         <p className='text-xl font-bold col-span-full text-azul'>No hay resultados...</p>
                         ) : (
@@ -635,7 +635,7 @@ function RaffleNumbersView() {
                                         })
                                     }}
                                     key={raffleNumber.id} 
-                                    label={formatWithLeadingZeros(raffleNumber.number, raffleNumbers.total)} 
+                                    label={formatWithLeadingZeros(raffleNumber.number, raffle?.totalNumbers || 0)} 
                                     variant="filled" 
                                     size={isSmallDevice ? 'medium' : 'small'}
                                     disabled={
@@ -670,7 +670,7 @@ function RaffleNumbersView() {
         {raffle && raffleNumbers && awards && <PayNumbersModal
             refetch={refetch}
             awards={awards}
-            totalNumbers={raffleNumbers.total}
+            totalNumbers={raffle.totalNumbers || 0}
             infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description, responsable: raffle.nameResponsable}}
             numbersSeleted={numbersSeleted} 
             raffleId={raffle.id}
@@ -681,7 +681,7 @@ function RaffleNumbersView() {
             setUrlWasap={setUrlWasap}
         />}
         {raffle && raffleNumbers && pdfData && awards && <PaymentSellNumbersModal
-            totalNumbers={raffleNumbers.total}
+            totalNumbers={raffle.totalNumbers || 0}
             raffle={raffle}
             awards={awards}
             setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
@@ -691,7 +691,7 @@ function RaffleNumbersView() {
             urlWasap={urlWasap}
         />}
         {raffle && raffleNumbers && awards && <ViewRaffleNumberData
-            totalNumbers={raffleNumbers.total}
+            totalNumbers={raffle.totalNumbers || 0}
             raffle={raffle}
             awards={awards}
             infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description, responsable: raffle.nameResponsable}}
