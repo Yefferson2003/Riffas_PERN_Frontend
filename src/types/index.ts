@@ -445,7 +445,12 @@ export const raffleNumbersExelFilterSchema = z.object({
         firstName: z.string().nullable(),
         lastName: z.string().nullable(),
         phone: z.string().nullable(),
+        payments: z.array(PaymentSchema.pick({
+            id: true,
+            amount: true,
+        }))
     })),
+    
 })
 
 

@@ -35,6 +35,7 @@ export const exelRaffleNumbersFilterDetails = async (raffleId: string, params: o
 
         const { raffleNumbers, rafflePrice, userLastName, userName, count } = data;
 
+        console.log('exelRaffleNumbersFilterDetails', data);
         
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("Resumen Rifa");
@@ -68,21 +69,29 @@ export const exelRaffleNumbersFilterDetails = async (raffleId: string, params: o
 
         // Agregar los números de la rifa y su estado con color de fondo según el estado
         raffleNumbers.forEach((raffle) => {
+            // Acceder a los datos desde dataValues si están disponibles
+            const raffleData =  raffle;
+            
+            // Calcular suma de payments si están disponibles y filtrados
+            const sumaPayments = raffleData.payments && raffleData.payments.length > 0 
+                ? raffleData.payments.reduce((sum: number, payment) => sum + (+payment.amount || 0), 0)
+                : +raffleData.paymentAmount || 0;
+
             const rowData = [
-                formatWithLeadingZeros(raffle.number, totalNumbers),
-                formatCurrencyCOP(+raffle.paymentAmount) || 0,
+                formatWithLeadingZeros(raffleData.number, totalNumbers),
+                formatCurrencyCOP(sumaPayments) || 0, // Usar suma de payments filtrados
                 paymentMethodFilter || '---', // Siempre agregar método de pago
-                formatCurrencyCOP(+raffle.paymentDue) || 0,
-                raffle.firstName || '---',
-                raffle.lastName || '---',
-                raffle.phone || '---',
-                translateRaffleStatus(raffle.status),
+                formatCurrencyCOP(+raffleData.paymentDue) || 0,
+                raffleData.firstName || '---',
+                raffleData.lastName || '---',
+                raffleData.phone || '---',
+                translateRaffleStatus(raffleData.status),
             ];
             
             const row = worksheet.addRow(rowData);
 
             let fillColor;
-            switch (raffle.status) {
+            switch (raffleData.status) {
             case "sold":
                 fillColor = "FF00FF00"; // Verde
                 break;
