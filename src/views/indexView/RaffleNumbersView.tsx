@@ -12,7 +12,7 @@ import { Navigate, useNavigate, useOutletContext, useParams } from "react-router
 import { toast } from 'react-toastify';
 import { getAwards } from '../../api/awardsApi';
 import { getExpensesTotal, getExpensesTotalByUser } from '../../api/expensesApi';
-import { getRaffleById } from '../../api/raffleApi';
+import { getRaffleById, getUsersByRaffle } from '../../api/raffleApi';
 import { getRaffleNumers } from '../../api/raffleNumbersApi';
 import NumbersSeleted from '../../components/indexView/NumbersSeleted';
 import PayNumbersModal from '../../components/indexView/PayNumbersModal';
@@ -78,6 +78,7 @@ function RaffleNumbersView() {
 
     const [filter, setFilter] = useState<{ sold?: boolean; available?: boolean; pending?: boolean }>({});
     const [paymentMethodFilter, setPaymentMethodFilter] = useState<PaymentMethodType | ''>('');
+    const [userFilter, setUserFilter] = useState<string>('');
     const [inputValues, setInputValues] = useState({ 
         search: '', 
         searchAmount: '' 
@@ -186,6 +187,12 @@ function RaffleNumbersView() {
         setOptionSeleted(e.target.checked)
     }
 
+    const handleUserFilterChange = (e: SelectChangeEvent<string>) => {
+        const value = e.target.value;
+        setUserFilter(value);
+        setPage(1);
+    }
+
     const handlePaymentMethodFilterChange = (e: SelectChangeEvent<string>) => {
         const value = e.target.value;
         const parsed = paymentMethodEnum.safeParse(value);
@@ -220,18 +227,18 @@ function RaffleNumbersView() {
         setEndDate(null);
         updateSearchParams.cancel();
         setPage(1);
-        
+        setUserFilter('');
         toast.success('Filtros reiniciados', { autoClose: 1500 });
     };
 
     // const { data: raffleNumbers, isLoading : isLoadingRaffleNumbers, isError : isErrorRaffleNumbers, refetch} = useRaffleNumbers(parsedRaffleId!, {filter, page, limit: rowsPerPage, search});
 
     // const { data: raffle, isLoading :isLoadingRaffle , isError: isErrorRaffle } = useRaffleById(parsedRaffleId!);
-    
-    const [raffleNumbersData, raffleData, awardsData, expensesTotalData, expensesTotalByUserData] = useQueries({
+
+    const [raffleNumbersData, raffleData, awardsData, expensesTotalData, expensesTotalByUserData, usersRaffleData] = useQueries({
         queries: [
             {
-                queryKey: ['raffleNumbers', searchParams.search, raffleId, filter, page, rowsPerPage, searchParams.searchAmount, paymentMethodFilter, startDate?.format('YYYY-MM-DD'), endDate?.format('YYYY-MM-DD')],
+                queryKey: ['raffleNumbers', searchParams.search, raffleId, filter, page, rowsPerPage, searchParams.searchAmount, paymentMethodFilter, startDate?.format('YYYY-MM-DD'), endDate?.format('YYYY-MM-DD'), userFilter],
                 queryFn: () => getRaffleNumers({ 
                     raffleId: raffleId!, 
                     params: { 
@@ -244,6 +251,7 @@ function RaffleNumbersView() {
                             startDate: startDate.format('YYYY-MM-DD'),
                             endDate: endDate.format('YYYY-MM-DD')
                         }),
+                        userId: userFilter,
                         ...filter
                     } 
                 }),
@@ -268,6 +276,12 @@ function RaffleNumbersView() {
                 queryFn: () => getExpensesTotalByUser({ raffleId: raffleId! }),
                 enabled: !!raffleId && user.rol.name !== 'admin',
             },
+            {
+                queryKey: ['usersRaffle', raffleId],
+                queryFn: () => getUsersByRaffle(+raffleId!),
+                enabled: !!raffleId,
+                retry: false
+            }
         ]
     });
 
@@ -276,6 +290,7 @@ function RaffleNumbersView() {
     const { data: awards, refetch: refechtAwards} = awardsData
     const { data: expenseTotal, refetch: refechtExpenseTotal, isLoading: isLoadingExpenseTotal} = expensesTotalData
     const { data: expenseTotalByUser, refetch: refechtExpenseTotalByUser,} = expensesTotalByUserData
+    const { data: usersRaffle,} = usersRaffleData
     
     const handleNavigateViewRaffleNumber = (raffleNumberId: number) => {
         navigate(`?viewRaffleNumber=${raffleNumberId}`)
@@ -458,12 +473,12 @@ function RaffleNumbersView() {
             </div>
 
             <div>
-                <div className="flex items-center justify-center gap-2 mb-5 text-2xl font-bold text-azul">
+                <div className="flex items-center justify-center gap-2 text-2xl font-bold text-azul">
                     <LocalActivityIcon/>
                     <h2>Comprar Boletas</h2>
                 </div>
                 
-                <div className='flex flex-col items-center justify-center gap-3 p-4 mb-5 rounded-lg shadow-sm bg-gray-50'>
+                <div className='flex flex-col items-center justify-center gap-3 mb-5 rounded-lg shadow-sm bg-gray-50'>
                     {/* Precio de la rifa */}
                     {raffle && (
                         <div className="text-center">
@@ -517,6 +532,30 @@ function RaffleNumbersView() {
                                         {method}
                                     </MenuItem>
                                 ))}
+                            </Select>
+                            <Select
+                                labelId="demo-simple-select-label-user"
+                                id="demo-simple-select-user"
+                                fullWidth
+                                value={userFilter}
+                                onChange={handleUserFilterChange}
+                                displayEmpty
+                                renderValue={(selectedValue) => {
+                                    if (!selectedValue) {
+                                        return <p>Elegir un usuario</p>;
+                                    }
+                                    const selectedUser = usersRaffle?.find(userRaffle => userRaffle.user.id === +selectedValue);
+                                    return selectedUser ? `${selectedUser.user.firstName} ${selectedUser.user.lastName}` : selectedValue;
+                                }}
+                            >
+                                <MenuItem value={''}>
+                                    <em>Todos</em>
+                                </MenuItem>
+                                {usersRaffle ? usersRaffle.map(userRaffle => (
+                                    <MenuItem key={userRaffle.user.id} value={userRaffle.user.id}>
+                                        {userRaffle.user.firstName} {userRaffle.user.lastName}
+                                    </MenuItem>
+                                )) : null}
                             </Select>
                             
                             <TextField 
@@ -593,7 +632,8 @@ function RaffleNumbersView() {
                                         !inputValues.search && 
                                         !inputValues.searchAmount && 
                                         !startDate && 
-                                        !endDate
+                                        !endDate &&
+                                        !userFilter
                                     }
                                 >
                                     Reiniciar Filtros
@@ -604,7 +644,7 @@ function RaffleNumbersView() {
                     
                     {/* Botones de descarga */}
                     {user.rol.name !== 'vendedor' &&
-                        (searchParams.search || searchParams.searchAmount || Object.keys(filter).length > 0 || paymentMethodFilter) &&
+                        (searchParams.search || searchParams.searchAmount || Object.keys(filter).length > 0 || paymentMethodFilter || userFilter) &&
                         raffleNumbers && (
                             <div className="flex flex-col w-full max-w-4xl gap-3 mt-4 sm:flex-row sm:justify-center sm:gap-4">
                                 <button
@@ -619,7 +659,8 @@ function RaffleNumbersView() {
                                                 ...filter,
                                                 paymentMethod: paymentMethodFilter,
                                                 startDate: startDate ? startDate.format('YYYY-MM-DD') : undefined,
-                                                endDate: endDate ? endDate.format('YYYY-MM-DD') : undefined
+                                                endDate: endDate ? endDate.format('YYYY-MM-DD') : undefined,
+                                                userId: userFilter
                                             },
                                             raffle?.totalNumbers || 0,
                                             paymentMethodFilter,
