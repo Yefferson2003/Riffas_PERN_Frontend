@@ -683,7 +683,8 @@ function RaffleNumbersView() {
                                                 ...filter,
                                                 paymentMethod: paymentMethodFilter,
                                                 startDate: startDate ? startDate.format('YYYY-MM-DD') : undefined,
-                                                endDate: endDate ? endDate.format('YYYY-MM-DD') : undefined
+                                                endDate: endDate ? endDate.format('YYYY-MM-DD') : undefined,
+                                                userId: userFilter
                                             },
                                             raffle?.totalNumbers || 0
                                         );
