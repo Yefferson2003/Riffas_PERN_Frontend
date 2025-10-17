@@ -70,8 +70,6 @@ export default function IndexLayout(props: Props) {
     const navigate = useNavigate()
     const { user, isError, isLoading} = useAuth()
     const token = localStorage.getItem('AUTH_TOKEN');
-    
-
 
     const queryClient = useQueryClient()
     const logout = () => {
@@ -128,7 +126,6 @@ export default function IndexLayout(props: Props) {
     const container = window !== undefined ? () => window().document.body : undefined;
     
     if (isLoading) return <LoaderView/>
-
 
     if (user) return (
         <main>

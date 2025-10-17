@@ -3,20 +3,20 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { LoadingButton } from "@mui/lab";
 import { FormControl, IconButton, InputAdornment, InputLabel, OutlinedInput, TextField } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { login } from "../../api/authApi";
 import ErrorMessage from "../../components/ErrorMessage";
 import { UserLoginForm } from "../../types";
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+// import { useAuth } from '../../hooks/useAuth';
 
 function LoginView() {
 
     const [showPassword, setShowPassword] = useState(false);
     // const token = localStorage.getItem('AUTH_TOKEN')
-    const {user} = useAuth()
+    // const {user} = useAuth()
     const navigate = useNavigate()
 
     const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -44,17 +44,19 @@ function LoginView() {
         onSuccess() {
             queryClient.invalidateQueries({queryKey: ['user']})
             reset()
-            navigate('/')
+            toast.success('Inicio de sesión exitoso')
+            setTimeout(() => navigate('/'), 2000);
+            return;
         }
     })
 
     const handleLogin = (formData: UserLoginForm) => {mutate(formData)}
 
-    useEffect(() => {
-        if (user) {
-            navigate("/")
-        }
-    }, [ user, navigate])
+    // useEffect(() => {
+    //     if (user) {
+    //         navigate("/")
+    //     }
+    // }, [ user, navigate])
     
     return (
         <div>
