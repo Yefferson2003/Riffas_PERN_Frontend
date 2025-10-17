@@ -304,8 +304,8 @@ function RaffleNumbersView() {
         });
     };
 
-    const isVisibleRaffleNumbes = (rafflePayments: { userId: number }[]) =>
-        user.rol.name === 'vendedor' && !rafflePayments.some(payment => payment.userId === user.id);
+    const isVisibleRaffleNumbes = (rafflePayments: { userId: number; isValid: boolean }[]) =>
+        user.rol.name === 'vendedor' && rafflePayments.some(payment => payment.userId != user.id && payment.isValid === true);
 
     const isOptionSelectedNumber= (raffleNumberStatus: RaffleNumber['status']) => {
         return optionSeleted && (raffleNumberStatus === 'available' || raffleNumberStatus === 'pending');
