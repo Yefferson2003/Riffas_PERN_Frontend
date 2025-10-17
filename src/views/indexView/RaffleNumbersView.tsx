@@ -545,6 +545,9 @@ function RaffleNumbersView() {
                                         return <p>Elegir un usuario</p>;
                                     }
                                     const selectedUser = usersRaffle?.find(userRaffle => userRaffle.user.id === +selectedValue);
+                                    if (user.rol.name === 'vendedor') {
+                                        return `${user.firstName} ${user.lastName}`;
+                                    }
                                     return selectedUser ? `${selectedUser.user.firstName} ${selectedUser.user.lastName}` : selectedValue;
                                 }}
                             >
@@ -556,6 +559,11 @@ function RaffleNumbersView() {
                                         {userRaffle.user.firstName} {userRaffle.user.lastName}
                                     </MenuItem>
                                 )) : null}
+                                {user.rol.name === 'vendedor' && 
+                                    <MenuItem key={user.id} value={user.id}>
+                                        {user.firstName} {user.lastName}
+                                    </MenuItem>
+                                }
                             </Select>
                             
                             <TextField 
@@ -643,7 +651,7 @@ function RaffleNumbersView() {
                     </div>
                     
                     {/* Botones de descarga */}
-                    {user.rol.name !== 'vendedor' &&
+                    {(user.rol.name !== 'vendedor') &&
                         (searchParams.search || searchParams.searchAmount || Object.keys(filter).length > 0 || paymentMethodFilter || userFilter) &&
                         raffleNumbers && (
                             <div className="flex flex-col w-full max-w-4xl gap-3 mt-4 sm:flex-row sm:justify-center sm:gap-4">
@@ -698,6 +706,57 @@ function RaffleNumbersView() {
                         )
                     }
                     
+                    {(user.rol.name == 'vendedor' && userFilter) &&
+                        <div className="flex flex-col w-full max-w-4xl gap-3 mt-4 sm:flex-row sm:justify-center sm:gap-4">
+                            <button
+                                className="flex-1 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 rounded-lg sm:flex-none sm:px-6 bg-azul hover:bg-blue-600 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                onClick={() => {
+                                    toast.info('Descargando archivo...', { autoClose: 2000 });
+                                    exelRaffleNumbersFilterDetails(
+                                        raffleId!,
+                                        {
+                                            search: searchParams.search,
+                                            amount: searchParams.searchAmount,
+                                            ...filter,
+                                            paymentMethod: paymentMethodFilter,
+                                            startDate: startDate ? startDate.format('YYYY-MM-DD') : undefined,
+                                            endDate: endDate ? endDate.format('YYYY-MM-DD') : undefined,
+                                            userId: userFilter
+                                        },
+                                        raffle?.totalNumbers || 0,
+                                        paymentMethodFilter,
+                                    );
+                                }}
+                            >
+                                <span className="flex items-center justify-center gap-2">
+                                    📄 <span className="hidden sm:inline">Descargar Búsqueda</span> Detallada
+                                </span>
+                            </button>
+                            <button
+                                className="flex-1 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 rounded-lg sm:flex-none sm:px-6 bg-azul hover:bg-blue-600 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                onClick={() => {
+                                    toast.info('Descargando archivo...', { autoClose: 2000 });
+                                    exelRaffleNumbersFilter(
+                                        raffleId!,
+                                        {
+                                            search: searchParams.search,
+                                            amount: searchParams.searchAmount,
+                                            ...filter,
+                                            paymentMethod: paymentMethodFilter,
+                                            startDate: startDate ? startDate.format('YYYY-MM-DD') : undefined,
+                                            endDate: endDate ? endDate.format('YYYY-MM-DD') : undefined,
+                                            userId: userFilter
+                                        },
+                                        raffle?.totalNumbers || 0
+                                    );
+                                }}
+                            >
+                                <span className="flex items-center justify-center gap-2">
+                                    📁 <span className="hidden sm:inline">Descargar Búsqueda</span> Simple
+                                </span>
+                            </button>
+                        </div>
+                    }
                     {/* Switch de selección */}
                     <div className="mt-2">
                         <FormControlLabel 
