@@ -8,26 +8,11 @@ type PhoneNumberInputProps = {
 };
 
 const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({ value, onChange }) => {
-    
-    const handlePhoneChange = (phone: string) => {
-        // Normalizar números argentinos
-        // Argentina: +54 9 11 xxxx-xxxx -> +54 11 xxxx-xxxx
-        let normalizedPhone = phone;
-        
-        if (phone.startsWith('549')) {
-            // Remover el "9" extra para números argentinos
-            normalizedPhone = phone.replace(/^549/, '54');
-        }
-        
-        // Llamar al onChange con el número normalizado
-        onChange(normalizedPhone);
-    };
-
     return (
         <PhoneInput
             country={'co'} // País predeterminado (Colombia)
             value={value}
-            onChange={handlePhoneChange}
+            onChange={onChange}
             inputStyle={{
                 width: '100%',
                 height: '40px',
@@ -36,11 +21,6 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({ value, onChange }) 
             containerStyle={{
                 marginBottom: '16px',
             }}
-            // Configuraciones adicionales para Argentina
-            specialLabel=""
-            countryCodeEditable={false}
-            enableSearch={true}
-            searchPlaceholder="Buscar país..."
         />
     );
 };
