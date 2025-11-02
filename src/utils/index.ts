@@ -2,16 +2,16 @@ import dayjs from "dayjs";
 import jsPDF from 'jspdf';
 import { PaymentSellNumbersModalProps } from "../components/indexView/PaymentSellNumbersModal";
 import { InfoRaffleType } from "../components/indexView/ViewRaffleNumberData";
-import { AwardType } from "../types";
+import { AwardType, StatusRaffleNumbersType } from "../types";
 export const azul = '#1446A0'
 
 
-export function translateRaffleStatus(status: "available" | "sold" | "pending" | "apartado"): string {
+export function translateRaffleStatus(status: StatusRaffleNumbersType): string {
     const translations: Record<typeof status, string> = {
         available: "Disponible",
         sold: "Pagados",
-        pending: "Pendiente",
-        apartado: "Apartado"
+        pending: "Apartado",
+        apartado: "Pendiente"
     };
     return translations[status] || status;
 }

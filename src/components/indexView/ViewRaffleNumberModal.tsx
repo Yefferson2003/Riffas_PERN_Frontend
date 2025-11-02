@@ -61,7 +61,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
     };
 
     const initialValues: PayNumberForm  = {
-        amount: +raffleNumber.paymentDue,
+        amount: raffleNumber.status === 'available' ? 0 : (+raffleNumber.paymentDue),
         firstName: raffleNumber.firstName || '',
         lastName: raffleNumber.lastName || '',
         // identificationType: raffleNumber.identificationType || 'CC',

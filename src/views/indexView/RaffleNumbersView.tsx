@@ -30,8 +30,8 @@ import RaffleSideBar from '../../components/indexView/raffle/RaffleSideBar';
 import MobileErrorBoundary from '../../components/shared/MobileErrorBoundary';
 import MobileSafePagination from '../../components/shared/MobileSafePagination';
 import socket from '../../socket';
-import { paymentMethodEnum, PaymentMethodType, RaffleNumber, RaffleNumbersPayments, User } from "../../types";
-import { colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros, getChipStyles } from "../../utils";
+import { paymentMethodEnum, PaymentMethodType, RaffleNumber, RaffleNumbersPayments, statusRaffleNumbersEnum, User } from "../../types";
+import { colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros, getChipStyles, translateRaffleStatus } from "../../utils";
 import { exelRaffleNumbersFilter, exelRaffleNumbersFilterDetails } from '../../utils/exel';
 import LoaderView from "../LoaderView";
 import '../../styles/mobile-fixes.css';
@@ -504,10 +504,17 @@ function RaffleNumbersView() {
                                 fullWidth
                             >
                                 <MenuItem value={'all'}>Todos</MenuItem>
-                                <MenuItem value={'available'}>Disponibles</MenuItem>
+                                {statusRaffleNumbersEnum.map(status => (
+                                    <MenuItem key={status} value={status}>
+                                        {translateRaffleStatus(status)}
+                                    </MenuItem>
+                                ))}
+                                    
+                                    
+                                {/* <MenuItem value={'available'}>Disponibles</MenuItem>
                                 <MenuItem value={'pending'}>Pendientes</MenuItem>
                                 <MenuItem value={'sold'}>Vendidos</MenuItem>
-                                <MenuItem value={'apartado'}>Apartados</MenuItem>
+                                <MenuItem value={'apartado'}>Apartados</MenuItem> */}
                             </Select>
                             
                             <Select
