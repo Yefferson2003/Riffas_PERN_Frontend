@@ -45,7 +45,7 @@ function LoginView() {
             queryClient.invalidateQueries({queryKey: ['user']})
             reset()
             toast.success('Inicio de sesión exitoso')
-            setTimeout(() => navigate('/'), 2000);
+            setTimeout(() => navigate('/'), 500);
             return;
         }
     })
