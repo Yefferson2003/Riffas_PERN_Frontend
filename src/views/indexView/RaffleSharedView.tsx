@@ -58,7 +58,7 @@ function RaffleSharedView() {
                         {/* BANNER */}
                         <div className="relative">
                             <img
-                                className="object-cover w-full h-48 sm:h-56 md:h-64 lg:h-72"
+                                className="object-contain w-full h-48 sm:h-56 md:h-64 lg:h-72"
                                 src={
                                     isSmallDevice
                                         ? raffle?.banerMovileImgUrl || "/banner_default.jpg"
