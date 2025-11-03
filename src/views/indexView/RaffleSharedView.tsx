@@ -56,7 +56,7 @@ function RaffleSharedView() {
                     {/* CONTENEDOR PRINCIPAL */}
                     <div className="overflow-hidden bg-white shadow-xl rounded-3xl">
                         {/* BANNER */}
-                        <div className="relative">
+                        {/* <div className="relative">
                             <img
                                 className="object-contain w-full h-48 sm:h-56 md:h-64 lg:h-72"
                                 src={
@@ -67,7 +67,12 @@ function RaffleSharedView() {
                                 alt="banner rifa"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                        </div>
+                        </div> */}
+                        <img 
+                            className="w-full lg:h-40 lg:object-cover"
+                            src={isSmallDevice ? raffle?.banerMovileImgUrl || '/banner_default.jpg' : raffle?.banerImgUrl  || '/banner_default.jpg'}
+                            alt="banner riffa" 
+                        />
                         
                         {/* TÍTULO PRINCIPAL */}
                         <div className="px-4 py-6 sm:px-6 md:px-8">
