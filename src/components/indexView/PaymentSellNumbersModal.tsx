@@ -337,7 +337,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                     </div>
                                     <div className='flex gap-3'>
                                     <p>Método de Pago:</p>
-                                    <p className='font-bold capitalize text-azul'>{payment.paymentMethod || 'No especificado'}</p>
+                                    {/* <p className='font-bold capitalize text-azul'>{payment.paymentMethod || 'No especificado'}</p> */}
                                     </div>
                                     {!payment.paidAt ? (
                                         <div className='flex gap-3'>
@@ -352,11 +352,11 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                     )}
                                     <div className='flex gap-3'>
                                     <p>Vendedor:</p>
-                                    <p className='font-bold capitalize text-azul'>{payment.user.firstName + ' ' + payment.user.lastName}</p>
+                                    <p className='font-bold capitalize text-azul'>{payment.user ? `${payment.user.firstName} ${payment.user.lastName}` : 'No registrado'}</p>
                                     </div>
                                     <div className='flex gap-3'>
                                     <p>Identificación:</p>
-                                    <p className='font-bold capitalize text-azul'>{payment.user.identificationNumber}</p>
+                                    <p className='font-bold capitalize text-azul'>{payment.user ? payment.user.identificationNumber : 'No registrada'}</p>
                                     </div>
                                 </Box>
                             ))}

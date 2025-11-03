@@ -1,16 +1,17 @@
 import { Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Modal, Select, SelectChangeEvent, Switch, TextField } from "@mui/material";
-import { QueryObserverResult, RefetchOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { getActiveRafflePayMethods } from "../../api/payMethodeApi";
 import { getRaffleNumbersPending, sellNumbers } from "../../api/raffleNumbersApi";
-import { AwardType, paymentMethodEnum, PayNumbersForm, RaffleNumbersPayments } from "../../types";
-import { formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from "../../utils";
+import { AwardType, PayNumbersForm, RaffleNumbersPayments } from "../../types";
+import { capitalize, formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from "../../utils";
+import { NumbersSelectedType } from "../../views/indexView/RaffleNumbersView";
 import ButtonCloseModal from "../ButtonCloseModal";
 import PhoneNumberInput from "../PhoneNumberInput";
 import { InfoRaffleType } from "./ViewRaffleNumberData";
-import { NumbersSelectedType } from "../../views/indexView/RaffleNumbersView";
 
 const style = {
     position: 'absolute',
@@ -28,19 +29,7 @@ const style = {
 };
 
 type PayNumbersModalProps = {
-    refetch: (options?: RefetchOptions | undefined) => Promise<QueryObserverResult<{
-        raffleNumbers: {
-            number: number;
-            status: "sold" | "available" | "pending" | "apartado";
-            id: number;
-            payments: {
-                userId: number;
-            }[];
-        }[];
-        total: number;
-        totalPages: number;
-        currentPage: number;
-    } | undefined, Error>>
+    refetch: () => void
     awards: AwardType[]
     totalNumbers: number
     infoRaffle: InfoRaffleType,
@@ -58,7 +47,8 @@ type ActionModeType = 'buy' | 'separate';
 function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap} : PayNumbersModalProps) {
 
     const queryClient = useQueryClient()
-    const paymentMethods = paymentMethodEnum.options
+
+    
     
     // MODAL //
     const navigate = useNavigate(); 
@@ -71,6 +61,8 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
     const [priceEspecial, setPriceEspecial] = useState(false)
     const [actionMode, setActionMode] = useState<ActionModeType>('buy')
     const [reservedDate, setReservedDate] = useState<string | null>('')
+    // Efecto para llenar datos del primer elemento
+    const [isInitialized, setIsInitialized] = useState(false);
 
     const numbersIds = numbersSeleted.map(num => num.numberId);
 
@@ -83,13 +75,37 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
         retry: false
     })
 
+    // Obtener métodos de pago activos de la rifa
+    const {
+        data: rafflePayMethods,
+        isLoading: isLoadingPayMethods,
+        isError: isErrorPayMethods
+    } = useQuery({
+        queryKey: ['activeRafflePayMethods', raffleId],
+        queryFn: () => getActiveRafflePayMethods(raffleId),
+        enabled: !!raffleId && show,
+        retry: 2
+    });
+
     const handleOnChange = ( e: SelectChangeEvent) => {
         const selectedMode = e.target.value as ActionModeType;
         setActionMode(selectedMode);
         
-        // Si el modo es 'separate' (Apartar Números), cambiar método de pago a 'Apartado'
-        if (selectedMode === 'separate') {
-            setValue('paymentMethod', 'Apartado');
+        // Si el modo es 'separate' (Apartar Números), buscar y seleccionar método "apartado"
+        if (selectedMode === 'separate' && rafflePayMethods) {
+            const apartadoMethod = rafflePayMethods.find(
+                method => method.payMethode.name.toLowerCase() === 'apartado'
+            );
+            if (apartadoMethod) {
+                setValue('paymentMethod', apartadoMethod.id);
+            }
+        } else if (selectedMode === 'buy' && rafflePayMethods) {
+            // Si el modo es 'buy', buscar "efectivo" o usar el primero disponible
+            const efectivoMethod = rafflePayMethods.find(
+                method => method.payMethode.name.toLowerCase() === 'efectivo'
+            );
+            const defaultMethod = efectivoMethod || rafflePayMethods[0];
+            setValue('paymentMethod', defaultMethod.id);
         }
     }
 
@@ -117,13 +133,28 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
         address: '',
         phone: '',
         amount: 0,
-        paymentMethod: 'Efectivo'
+        paymentMethod: 0, // Se actualizará con useEffect cuando tengamos los datos
+        reference: ''
     }
 
     const {register, handleSubmit, watch, reset, formState: {errors}, setValue, control} = useForm({
         defaultValues : initialValues
     })
-    const { phone, amount} = watch();
+    const { phone, amount, paymentMethod} = watch();
+
+    // Establecer método de pago por defecto cuando se cargen los datos
+    React.useEffect(() => {
+        if (rafflePayMethods && rafflePayMethods.length > 0 && paymentMethod === 0 && !isInitialized) {
+            // Buscar método "efectivo" primero
+            const efectivoMethod = rafflePayMethods.find(
+                method => method.payMethode.name.toLowerCase() === 'efectivo'
+            );
+            
+            // Si existe efectivo, usarlo; si no, usar el primero disponible
+            const defaultMethod = efectivoMethod || rafflePayMethods[0];
+            setValue('paymentMethod', defaultMethod.id);
+        }
+    }, [rafflePayMethods, paymentMethod, setValue, isInitialized]);
     
     // Llenar datos automáticamente cuando hay números pendientes
     const isReadOnlyMode = pendingNumbers && pendingNumbers.length > 0;
@@ -140,8 +171,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
         }, 0)
         : 0;
     
-    // Efecto para llenar datos del primer elemento
-    const [isInitialized, setIsInitialized] = useState(false);
+
 
     // Crear una clave única para detectar cambios en números seleccionados
     const numbersKey = numbersIds.join(',');
@@ -152,20 +182,28 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
     }, [numbersKey]);
 
     React.useEffect(() => {
-        if (isReadOnlyMode && pendingNumbers && pendingNumbers.length > 0 && !isInitialized) {
+        if (isReadOnlyMode && pendingNumbers && pendingNumbers.length > 0 && !isInitialized && rafflePayMethods) {
             const firstNumber = pendingNumbers[0];
+            
+            // Buscar método "efectivo" por defecto para modo readonly
+            const efectivoMethod = rafflePayMethods.find(
+                method => method.payMethode.name.toLowerCase() === 'efectivo'
+            );
+            const defaultPayMethod = efectivoMethod || rafflePayMethods[0];
+            
             reset({
                 raffleNumbersIds: numbersIds,
                 firstName: firstNumber.firstName || '',
                 lastName: firstNumber.lastName || '',
                 address: firstNumber.address || '',
                 amount: totalDebtToPay,
-                paymentMethod: 'Efectivo',
+                paymentMethod: defaultPayMethod.id,
                 phone: firstNumber.phone || '',
+                reference: ''
             });
             setIsInitialized(true);
         }
-    }, [isReadOnlyMode, pendingNumbers, totalDebtToPay, reset, numbersIds, isInitialized]);
+    }, [isReadOnlyMode, pendingNumbers, totalDebtToPay, reset, numbersIds, isInitialized, rafflePayMethods]);
 
     
     React.useEffect(() => {
@@ -176,7 +214,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
             address: '',
             phone: '',
             amount: 0,
-            paymentMethod: 'Efectivo'
+            paymentMethod: 0
         })
         setIsInitialized(false); // También resetear cuando se abre/cierra el modal
     }, [show, reset]);
@@ -202,7 +240,16 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
             queryClient.invalidateQueries({queryKey: ['recaudo', raffleId]})
             queryClient.invalidateQueries({queryKey: ['recaudoByVendedor', raffleId]})
             toast.success('Rifas Compradas')
-            reset()
+            reset({
+                raffleNumbersIds: [],
+                firstName: '',
+                lastName: '',
+                address: '',
+                phone: '',
+                amount: 0,
+                paymentMethod: 0,
+                reference: ''
+            })
             setPriceEspecial(false)
             setActionMode('buy')
             setNumbersSeleted([])
@@ -362,15 +409,56 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                             {...field}
                             labelId="paymentMethodLabel"
                             label="Método de pago"
+                            value={field.value || ''}
+                            onChange={(e) => {
+                                const selectedValue = Number(e.target.value);
+                                field.onChange(selectedValue);
+                            }}
+                            disabled={isLoadingPayMethods}
                         >
                             <MenuItem disabled value="">
-                            Seleccione un método de pago
+                                {isLoadingPayMethods ? 'Cargando métodos...' : 'Seleccione un método de pago'}
                             </MenuItem>
-                            {paymentMethods.map((method) => (
-                            <MenuItem key={method} value={method}>
-                                {method}
-                            </MenuItem>
-                            ))}
+                            {isErrorPayMethods ? (
+                                <MenuItem disabled value={'error'}>
+                                    Error al cargar métodos de pago
+                                </MenuItem>
+                            ) : (
+                                rafflePayMethods?.map((payMethod) => {
+                                    const hasExtraData = payMethod.accountNumber || payMethod.accountHolder || payMethod.bankName;
+                                    
+                                    return (
+                                        <MenuItem key={payMethod.id} value={payMethod.id}>
+                                            {hasExtraData ? (
+                                                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>
+                                                        {capitalize(payMethod.payMethode.name)}
+                                                    </Box>
+                                                    <Box sx={{ fontSize: '0.75rem', color: 'text.secondary', mt: 0.5 }}>
+                                                        {payMethod.accountNumber && (
+                                                            <Box component="span">Cuenta: {payMethod.accountNumber}</Box>
+                                                        )}
+                                                        {payMethod.accountHolder && (
+                                                            <Box component="span" sx={{ ml: payMethod.accountNumber ? 1 : 0 }}>
+                                                                {payMethod.accountNumber && ' | '}Titular: {payMethod.accountHolder}
+                                                            </Box>
+                                                        )}
+                                                        {payMethod.bankName && (
+                                                            <Box component="span" sx={{ display: 'block', mt: 0.25 }}>
+                                                                Banco: {payMethod.bankName}
+                                                            </Box>
+                                                        )}
+                                                    </Box>
+                                                </Box>
+                                            ) : (
+                                                <Box sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>
+                                                    {capitalize(payMethod.payMethode.name)}
+                                                </Box>
+                                            )}
+                                        </MenuItem>
+                                    );
+                                })
+                            )}
                         </Select>
                         {errors.paymentMethod && (
                             <p className="mt-1 text-sm text-red-500">{errors.paymentMethod.message}</p>
@@ -379,7 +467,19 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                     )}
                     />
 
-                    
+                    {!isLoadingPayMethods && rafflePayMethods && rafflePayMethods.length === 0 && (
+                        <div className="p-3 text-sm text-yellow-800 bg-yellow-100 border border-yellow-400 rounded-md">
+                            <strong>Atención:</strong> No hay métodos de pago configurados para esta rifa. Contacte al administrador.
+                        </div>
+                    )}
+
+                    <TextField 
+                        id="reference" 
+                        label="Referencia de pago (opcional)" 
+                        variant="outlined" 
+                        placeholder="Ej: 123456"
+                        {...register('reference')}
+                    />
 
                     {
                         isReadOnlyMode && pendingNumbers && pendingNumbers.length > 0 ? (
@@ -485,7 +585,12 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                     <Button
                         type="submit"
                         variant="contained"
-                        disabled={isPending || isLoadingPending}
+                        disabled={
+                            isPending || 
+                            isLoadingPending || 
+                            isLoadingPayMethods || 
+                            (rafflePayMethods && rafflePayMethods.length === 0)
+                        }
                     >
                         {isReadOnlyMode ? 'Abonar Boletas' : actionMode === 'buy' ? 'Comprar Boletas' : 'Apartar Boletas'}
                     </Button>

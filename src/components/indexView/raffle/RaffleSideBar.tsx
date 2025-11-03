@@ -5,6 +5,7 @@ import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
 import AddLinkIcon from '@mui/icons-material/AddLink';
+import PaymentIcon from '@mui/icons-material/Payment';
 import { IconButton, Tooltip } from '@mui/material';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Raffle, User } from '../../../types';
@@ -28,6 +29,7 @@ function RaffleSideBar({ raffleId, raffle, totalNumbers }: RaffleSideBarProps) {
     const handleNavigateExpensesByUser = () => navigate('?viewExpenses=true');
     const handleNavigateExpensesByRaffle = () => navigate('?viewExpensesByRaffle=true');
     const handleNavigateShareURLRaffle = () => navigate('?viewShareURLRaffle=true');
+    const handleNavigatePayMethodesRaffle = () => navigate('?viewPayMethodesRaffle=true');
 
     const canManage = user.rol.name === 'responsable' || user.rol.name === 'admin';
     const canCollaborate = user.rol.name === 'responsable' || user.rol.name === 'admin';
@@ -76,6 +78,12 @@ function RaffleSideBar({ raffleId, raffle, totalNumbers }: RaffleSideBarProps) {
                 <IconButton onClick={handleNavigateViewUsers}>
                 <Tooltip title="Colaboradores">
                     <GroupIcon />
+                </Tooltip>
+                </IconButton>
+
+                <IconButton onClick={handleNavigatePayMethodesRaffle}>
+                <Tooltip title="Métodos de pago" placement="bottom-start">
+                    <PaymentIcon />
                 </Tooltip>
                 </IconButton>
 

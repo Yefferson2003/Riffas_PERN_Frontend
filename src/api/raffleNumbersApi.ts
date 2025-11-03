@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { PayNumberForm, PayNumbersForm, RaffleNumberSchema, raffleNumbersExelFilterSchema, raffleNumberSharedSchema, RaffleNumberUpdateForm, RafflePayResponseSchema, responseRaffleNumbersExelSchema, responseRaffleNumbersPendingSchema, responseRaffleNumbersSchema, responseRaffleNumbersSchemaShared } from "../types";
+import { PayNumberForm, PayNumbersForm, PayNumbersSharedFormType, RaffleNumberSchema, raffleNumbersExelFilterSchema, raffleNumberSharedSchema, RaffleNumberUpdateForm, RafflePayResponseSchema, responseRaffleNumbersExelSchema, responseRaffleNumbersPendingSchema, responseRaffleNumbersSchema, responseRaffleNumbersSchemaShared } from "../types";
 
 export async function getRaffleNumers({params, raffleId} : {params : object, raffleId: string}) {
     try { 
@@ -36,13 +36,14 @@ export async function getRaffleNumbersPending({raffleId, raffleNumbersIds } : {r
     }
 }
 
-export async function getRaffleNumersShared({ token, limit, page } : { token: string, page: number, limit: number}) {
+export async function getRaffleNumersShared({ token, limit, page, search } : { token: string, page: number, limit: number, search?: string}) {
     try { 
         const {data} = await api.get(`/raffles-numbers/shared`, { 
             params: {
                 token,
                 limit,
-                page
+                page,
+                search
             }
         });
 
@@ -59,8 +60,6 @@ export async function getRaffleNumersShared({ token, limit, page } : { token: st
         }
     }
 }
-
-
 
 export async function getRaffleNumersExelFilter({params, raffleId} : {params : object, raffleId: string}) {
     try { 
@@ -172,9 +171,9 @@ export async function amountNumber({formData, raffleId, raffleNumberId, params}:
     }
 }
 
-export async function amountNumberShared({formData, token, raffleNumberId}:{formData : PayNumberForm, token: string, raffleNumberId: number}) {
+export async function amountNumberShared({formData, token,}:{formData : PayNumbersSharedFormType, token: string}) {
     try {
-        const {data} = await api.post(`/raffles-numbers/shared/amount-number/${raffleNumberId}`, formData, { params:{
+        const {data} = await api.post(`/raffles-numbers/shared/amount-number`, formData, { params:{
             token
         } })
         const response = RafflePayResponseSchema.safeParse(data)

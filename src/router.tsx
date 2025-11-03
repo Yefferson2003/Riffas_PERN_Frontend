@@ -9,6 +9,7 @@ import RaffleNumbersView from "./views/indexView/RaffleNumbersView"
 import RaffleSharedView from "./views/indexView/RaffleSharedView"
 import TermsAndConditionsView from "./views/TermsAndConditionsView"
 import PrivacyPolicyView from "./views/PrivacyPolicyView"
+import PayMethodeView from "./views/indexView/PayMethodeView"
 
 
 function Router() {
@@ -27,6 +28,7 @@ function Router() {
                     <Route path="/" element={<IndexView/>} index/>
                     <Route path="/users" element={<UsersView/>} index/>
                     <Route path="/raffle/:raffleId" element={<RaffleNumbersView/>} index/>
+                    <Route path="/pay-methods" element={<PayMethodeView/>} index/>
                 </Route>
 
 

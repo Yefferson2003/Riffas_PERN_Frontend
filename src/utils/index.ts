@@ -5,6 +5,29 @@ import { InfoRaffleType } from "../components/indexView/ViewRaffleNumberData";
 import { AwardType, StatusRaffleNumbersType } from "../types";
 export const azul = '#1446A0'
 
+/**
+ * Convierte una cadena de texto a formato capitalizado (primera letra mayúscula, resto minúsculas)
+ * @param text - El texto a capitalizar
+ * @returns El texto capitalizado
+ */
+export function capitalize(text: string): string {
+    if (!text || typeof text !== 'string') return '';
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+}
+
+/**
+ * Capitaliza cada palabra en una cadena de texto
+ * @param text - El texto a capitalizar
+ * @returns El texto con cada palabra capitalizada
+ */
+export function capitalizeWords(text: string): string {
+    if (!text || typeof text !== 'string') return '';
+    return text
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
 
 export function translateRaffleStatus(status: StatusRaffleNumbersType): string {
     const translations: Record<typeof status, string> = {
@@ -237,20 +260,16 @@ export const redirectToWhatsApp = ({
 
 ${paymentTypeMessage}
 
-📌 Detalles:
+📌 *Detalles de la Rifa*
 🔢 Números: *${numbersList}*
 💬 Descripción: *${infoRaffle.description.trim()}*
 💵 Valor por número: *${formatCurrencyCOP(rafflePrice)}*
 📉 Deuda actual: *${formatCurrencyCOP(deuda)}*
-🗓 Sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*
-
-🎯 *Detalles de la Rifa*
-📅 Fecha Juego: *${formatDateTimeLarge(infoRaffle.playDate)}*
-💵 Valor por número: *${formatCurrencyCOP(+infoRaffle.amountRaffle)}*
-🎁 Premios:
-${premios}
-
+🗓 Fecha del sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*
 🕒 Reservado: *${formatDateTimeLarge(reservedDate ?? "")}*
+
+🎁 *Premios:*
+${premios}
 
 Si tienes alguna pregunta, estamos aquí para ayudarte 🤝
 
@@ -535,7 +554,7 @@ export const handleDownloadPDF = async ({
             entry.payments
                 .filter((p) => p.isValid)
                 .forEach((p) => {
-                    doc.text(`${formatCurrencyCOP(+p.amount)} - ${p.user.firstName}`, 5, y);
+                    doc.text(`${formatCurrencyCOP(+p.amount)} - ${p.user?.firstName ?? ''}`, 5, y);
                     y += LINE_SPACING;
                 });
         } else {
@@ -586,16 +605,16 @@ export const handleDownloadReservationPDF = async ({
     raffle,
     awards,
     totalNumbers,
-    reservation, 
+    reservations, 
 }: Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "totalNumbers"> & {
-    reservation: {
+    reservations: {
         number: number;
         firstName?: string ;
         lastName?: string ;
         phone?: string ;
         address?: string ;
         reservedDate?: string;
-    };
+    }[];
 }) => {
     const doc = new jsPDF({
         orientation: "portrait",
@@ -606,7 +625,9 @@ export const handleDownloadReservationPDF = async ({
     const LINE_SPACING = 4;
     const SECTION_SPACING = 6;
 
-    let y = 10;
+    reservations.forEach((reservation, index) => {
+        if (index > 0) doc.addPage([80, 150]);
+        let y = 10;
 
     // 🧾 Encabezado
     doc.setFont("courier", "bold");
@@ -733,22 +754,25 @@ export const handleDownloadReservationPDF = async ({
     doc.text(`${formatCurrencyCOP(+raffle.price)}`, 30, y);
     y += SECTION_SPACING;
 
-    // 🙏 Pie de página
-    y += SECTION_SPACING;
-    doc.setFont("courier", "italic");
-    doc.text(`Reservado: ${formatDateTimeLarge(reservation.reservedDate ?? "")}`, 5, y);
-    y += LINE_SPACING;
-    doc.setFont("courier", "bold");
-    doc.text("¡Número apartado con éxito!", 40, y, { align: "center" });
+        // 🙏 Pie de página
+        y += SECTION_SPACING;
+        doc.setFont("courier", "italic");
+        doc.text(`Reservado: ${formatDateTimeLarge(reservation.reservedDate ?? "")}`, 5, y);
+        y += LINE_SPACING;
+        doc.setFont("courier", "bold");
+        doc.text("¡Número apartado con éxito!", 40, y, { align: "center" });
 
-    // 📄 Número de página
-    doc.setFontSize(8);
-    doc.text(`Página 1`, 75, 145, { align: "right" });
+        // 📄 Número de página
+        doc.setFontSize(8);
+        doc.text(`Página ${index + 1}`, 75, 145, { align: "right" });
+    });
 
     // 📥 Descargar PDF
     const todayDate = dayjs().format("DDMMYYYY");
-    const boletoNumber = formatWithLeadingZeros(reservation.number, totalNumbers);
-    const filename = `Apartado_Boleto_${boletoNumber}_${todayDate}.pdf`;
+    const numbersText = reservations.length > 1 
+        ? `${reservations.length}_Boletos` 
+        : `Boleto_${formatWithLeadingZeros(reservations[0].number, totalNumbers)}`;
+    const filename = `Apartado_${numbersText}_${todayDate}.pdf`;
 
     const pdfBlob = doc.output("blob");
     downloadPDF(pdfBlob, filename);
@@ -928,7 +952,7 @@ export const handleViewAndDownloadPDF = async ({
             entry.payments
                 .filter((p) => p.isValid)
                 .forEach((p) => {
-                    doc.text(`${formatCurrencyCOP(+p.amount)} - ${p.user.firstName}`, 5, y);
+                    doc.text(`${formatCurrencyCOP(+p.amount)} - ${p.user?.firstName ?? ''}`, 5, y);
                     y += LINE_SPACING;
                 });
         } else {

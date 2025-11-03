@@ -222,6 +222,84 @@ export const paymentMethodEnum = z.enum([
 
 export type PaymentMethodType = z.infer<typeof paymentMethodEnum>
 
+
+// PAYMENT METHODS
+export const payMethodeSchema = z.object({
+    id: z.number(),
+    name: z.string(),
+    icon: z.string().nullable(),
+    isActive: z.boolean(),
+    // createdAt: z.string(),
+    // updatedAt: z.string()
+})
+
+export const payMethodesSchema = z.array(payMethodeSchema)
+
+export const createPayMethodSchema = z.object({
+    name: z.string(),
+    // isActive: z.boolean().optional().default(true)
+})
+
+export const updatePayMethodSchema = z.object({
+    name: z.string().min(1, 'El nombre es obligatorio').optional(),
+})
+
+export const rafflePayMethodeSchema = z.object({
+    id: z.number(),
+    raffleId: z.number(),
+    payMethodeId: z.number(),
+    accountNumber: z.string().nullable(),
+    accountHolder: z.string().nullable(),
+    // type: z.enum(['bank_transfer', 'digital_wallet', 'cash', 'card', 'crypto']).nullable(),
+    bankName: z.string().nullable(),
+    // instructions: z.string().nullable(),
+    // fee: z.number().nullable(),
+    // order: z.number(),
+    isActive: z.boolean(),
+    // createdAt: z.string(),
+    // updatedAt: z.string(),
+    payMethode: payMethodeSchema.pick({
+        id: true,
+        name: true,
+        isActive: true,
+        icon: true
+    })
+})
+
+
+// Definición del esquema para los pagos
+const userVendedor = z.object({
+    firstName: z.string(),
+    lastName: z.string(),
+    identificationNumber: z.string()
+}).nullable().optional()
+
+const PaymentSchema = z.object({
+    id: z.number(),
+    amount: z.string(), 
+    paidAt: z.string().nullable(), 
+    riffleNumberId: z.number(),
+    userId: z.number().nullable().optional(),
+    createdAt: z.string(), 
+    updatedAt: z.string(),
+    isValid: z.boolean(),
+    user: userVendedor,
+    reference: z.string().nullable().optional(),
+    rafflePayMethode: rafflePayMethodeSchema.pick({
+            id: true,
+            accountHolder: true,
+            accountNumber: true,
+            bankName: true,
+        }).extend({
+            payMethode: payMethodeSchema.pick({
+                id: true,
+                name: true,
+                isActive: true
+            })
+        }).nullable().optional()
+    // paymentMethod: paymentMethodEnum.nullish()
+});
+
 export const payNumbersSchema = z.object({
     raffleNumbersIds: z.array(z.number()),
     // identificationType: z.enum(['CC', 'TI', 'CE']),
@@ -230,8 +308,11 @@ export const payNumbersSchema = z.object({
     lastName: z.string(),
     phone: z.string(),
     address: z.string(),
-    paymentMethod: paymentMethodEnum
-})
+    // paymentMethod: paymentMethodEnum
+    paymentMethod: z.number()
+}).merge(PaymentSchema.pick({
+    reference: true
+}))
 
 export const payNumberSchema = payNumbersSchema.pick({
     // identificationType: true,
@@ -240,29 +321,11 @@ export const payNumberSchema = payNumbersSchema.pick({
     lastName: true,
     phone: true,
     address: true,
-    paymentMethod: true
+    paymentMethod: true,
+    reference: true
 }).extend({
     amount: z.number()
 })
-
-// Definición del esquema para los pagos
-const userVendedor = z.object({
-    firstName: z.string(),
-    lastName: z.string(),
-    identificationNumber: z.string()
-})
-const PaymentSchema = z.object({
-    id: z.number(),
-    amount: z.string(), 
-    paidAt: z.string().nullable(), 
-    riffleNumberId: z.number(),
-    userId: z.number(),
-    createdAt: z.string(), 
-    updatedAt: z.string(),
-    isValid: z.boolean(),
-    user: userVendedor,
-    paymentMethod: paymentMethodEnum.nullish()
-});
 
 export const RaffleNumberSchema = z.object({
     id: z.number(),
@@ -280,7 +343,31 @@ export const RaffleNumberSchema = z.object({
     raffleId: z.number(),
     createdAt: z.string(), 
     updatedAt: z.string(), 
-    payments: z.array(PaymentSchema),
+    payments: z.array(PaymentSchema.pick({
+        id: true,
+        amount: true,
+        paidAt: true,
+        riffleNumberId: true,
+        userId: true,
+        createdAt: true,
+        updatedAt: true,
+        isValid: true,
+        user: true,
+        reference: true
+    }).extend({
+        rafflePayMethode: rafflePayMethodeSchema.pick({
+            id: true,
+            accountHolder: true,
+            accountNumber: true,
+            bankName: true,
+        }).extend({
+            payMethode: payMethodeSchema.pick({
+                id: true,
+                name: true,
+                isActive: true
+            })
+        }).nullable().optional()
+    })),
 });
 
 export const raffleNumberSharedSchema = RaffleNumberSchema.pick({
@@ -382,6 +469,7 @@ export const raffleNumberPendingSchema = RaffleNumberSchema.pick({
 
 export const responseRaffleNumbersPendingSchema = z.array(raffleNumberPendingSchema)
 
+//nuevo
 export const raffleNumberSharedResponseSchema = RaffleNumberSchema.pick({
     id: true,
     number: true,
@@ -452,6 +540,20 @@ export const raffleNumbersExelFilterSchema = z.object({
         payments: z.array(PaymentSchema.pick({
             id: true,
             amount: true,
+            reference: true,
+        }).extend({
+            rafflePayMethode: rafflePayMethodeSchema.pick({
+            id: true,
+            accountHolder: true,
+            accountNumber: true,
+            bankName: true,
+            }).extend({
+                payMethode: payMethodeSchema.pick({
+                    id: true,
+                    name: true,
+                    isActive: true
+                })
+            }).nullable().optional()
         }))
     })),
     
@@ -465,6 +567,12 @@ export type RaffleNumber = z.infer<typeof RaffleNumberSchema> //
 export type RaffleNumbersPayments = z.infer<typeof RafflePayResponseSchema>
 export type PayNumbersForm = z.infer<typeof payNumbersSchema> & { amount?: number}
 export type PayNumberForm = z.infer<typeof payNumberSchema>
+
+export const payNumbersSharedSchema = payNumberSchema.extend({
+    raffleNumbersIds: z.array(z.number())
+})
+
+export type PayNumbersSharedFormType = z.infer<typeof payNumbersSharedSchema>
 
 export const totalSchema = z.object({
     totalRecaudado: z.number(),
@@ -563,4 +671,38 @@ export const responseRafflesDetailsNumbers = z.array(raffleSchema.pick({
         paymentAmount: true
     }))
 }))
+
+
+
+export const rafflePayMethodeSchemaArray = z.array(rafflePayMethodeSchema)
+
+export const assignPayMethodToRaffleSchema = z.object({
+    payMethodeId: z.number(),
+    accountNumber: z.string().optional(),
+    accountHolder: z.string().optional(),
+    // type: z.enum(['bank_transfer', 'digital_wallet', 'cash', 'card', 'crypto']).optional(),
+    bankName: z.string().optional(),
+    // instructions: z.string().optional(),
+    // fee: z.number().min(0).max(100).optional().default(0),
+    // order: z.number().min(0).optional().default(0)
+})
+
+// export const updateRafflePayMethodSchema = z.object({
+//     accountNumber: z.string().optional(),
+//     accountHolder: z.string().optional(),
+//     type: z.enum(['bank_transfer', 'digital_wallet', 'cash', 'card', 'crypto']).optional(),
+//     bankName: z.string().optional(),
+//     instructions: z.string().optional(),
+//     fee: z.number().min(0).max(100).optional(),
+//     order: z.number().min(0).optional(),
+//     isActive: z.boolean().optional()
+// })
+
+// TYPES
+export type PayMethodeType = z.infer<typeof payMethodeSchema>
+export type PayMethodFormType = z.infer<typeof createPayMethodSchema>
+export type UpdatePayMethodFormType = z.infer<typeof updatePayMethodSchema>
+export type RafflePayMethodeType = z.infer<typeof rafflePayMethodeSchema>
+export type AssignPayMethodToRaffleFormType = z.infer<typeof assignPayMethodToRaffleSchema>
+// export type UpdateRafflePayMethodFormType = z.infer<typeof updateRafflePayMethodSchema>
 

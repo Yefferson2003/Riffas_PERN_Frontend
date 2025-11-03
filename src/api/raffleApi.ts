@@ -17,11 +17,11 @@ export async function getRaffles(params = {}) {
     }
 }
 
-export async function getRaffleShared({ token } : { token: string}) {
+export async function getRaffleShared({ token} : { token: string,}) {
     try {
         const {data} = await api.get('/raffles/shared', {
             params: {
-                token
+                token,
             }
         })
         

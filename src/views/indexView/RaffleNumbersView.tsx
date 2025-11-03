@@ -12,6 +12,7 @@ import { Navigate, useNavigate, useOutletContext, useParams } from "react-router
 import { toast } from 'react-toastify';
 import { getAwards } from '../../api/awardsApi';
 import { getExpensesTotal, getExpensesTotalByUser } from '../../api/expensesApi';
+import { getActiveRafflePayMethods } from '../../api/payMethodeApi';
 import { getRaffleById, getUsersByRaffle } from '../../api/raffleApi';
 import { getRaffleNumers } from '../../api/raffleNumbersApi';
 import NumbersSeleted from '../../components/indexView/NumbersSeleted';
@@ -25,13 +26,14 @@ import ViewUsersOfRaffleModal from '../../components/indexView/ViewUsersOfRaffle
 import ViewAdminExpensesModal from '../../components/indexView/modal/Expenses/ViewAdminExpensesModal';
 import ViewExpensesByUserModal from '../../components/indexView/modal/Expenses/ViewExpensesByUserModal';
 import ShareURLRaffleModal from '../../components/indexView/modal/ShareURLRaffleModal';
+import RafflePayMethodsModal from '../../components/indexView/modal/RafflePayMethodsModal';
 import Awards from '../../components/indexView/raffle/Awards';
 import RaffleSideBar from '../../components/indexView/raffle/RaffleSideBar';
 import MobileErrorBoundary from '../../components/shared/MobileErrorBoundary';
 import MobileSafePagination from '../../components/shared/MobileSafePagination';
 import socket from '../../socket';
-import { paymentMethodEnum, PaymentMethodType, RaffleNumber, RaffleNumbersPayments, statusRaffleNumbersEnum, User } from "../../types";
-import { colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros, getChipStyles, translateRaffleStatus } from "../../utils";
+import { RaffleNumber, RaffleNumbersPayments, statusRaffleNumbersEnum, User } from "../../types";
+import { capitalize, colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros, getChipStyles, translateRaffleStatus } from "../../utils";
 import { exelRaffleNumbersFilter, exelRaffleNumbersFilterDetails } from '../../utils/exel';
 import LoaderView from "../LoaderView";
 import '../../styles/mobile-fixes.css';
@@ -60,7 +62,6 @@ function RaffleNumbersView() {
     const navigate = useNavigate()
 
     const isSmallDevice = useMediaQuery({ maxWidth: 768 });
-    const paymentMethods = paymentMethodEnum.options
     
     const { raffleId } = useParams<{ raffleId: string }>();
     // const parsedRaffleId = raffleId ? parseInt(raffleId, 10) : undefined;
@@ -77,7 +78,7 @@ function RaffleNumbersView() {
     const [numbersSeleted, setNumbersSeleted] = useState<NumbersSelectedType[]>([])
 
     const [filter, setFilter] = useState<{ sold?: boolean; available?: boolean; pending?: boolean }>({});
-    const [paymentMethodFilter, setPaymentMethodFilter] = useState<PaymentMethodType | ''>('');
+    const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('');
     const [userFilter, setUserFilter] = useState<string>('');
     const [inputValues, setInputValues] = useState({ 
         search: '', 
@@ -195,14 +196,13 @@ function RaffleNumbersView() {
 
     const handlePaymentMethodFilterChange = (e: SelectChangeEvent<string>) => {
         const value = e.target.value;
-        const parsed = paymentMethodEnum.safeParse(value);
-        if (parsed.success) {
-            setPaymentMethodFilter(parsed.data);
-        } else {
+        if (value === '') {
             setPaymentMethodFilter('');
             // Resetear fechas cuando se deselecciona el método de pago
             setStartDate(null);
             setEndDate(null);
+        } else {
+            setPaymentMethodFilter(value);
         }
         setPage(1); // Reset page when filter changes
     }
@@ -235,7 +235,7 @@ function RaffleNumbersView() {
 
     // const { data: raffle, isLoading :isLoadingRaffle , isError: isErrorRaffle } = useRaffleById(parsedRaffleId!);
 
-    const [raffleNumbersData, raffleData, awardsData, expensesTotalData, expensesTotalByUserData, usersRaffleData] = useQueries({
+    const [raffleNumbersData, raffleData, awardsData, expensesTotalData, expensesTotalByUserData, usersRaffleData, payMethodsData] = useQueries({
         queries: [
             {
                 queryKey: ['raffleNumbers', searchParams.search, raffleId, filter, page, rowsPerPage, searchParams.searchAmount, paymentMethodFilter, startDate?.format('YYYY-MM-DD'), endDate?.format('YYYY-MM-DD'), userFilter],
@@ -281,6 +281,11 @@ function RaffleNumbersView() {
                 queryFn: () => getUsersByRaffle(+raffleId!),
                 enabled: !!raffleId,
                 retry: false
+            },
+            {
+                queryKey: ['rafflePayMethods', raffleId],
+                queryFn: () => getActiveRafflePayMethods(raffleId!),
+                enabled: !!raffleId,
             }
         ]
     });
@@ -291,6 +296,7 @@ function RaffleNumbersView() {
     const { data: expenseTotal, refetch: refechtExpenseTotal, isLoading: isLoadingExpenseTotal} = expensesTotalData
     const { data: expenseTotalByUser, refetch: refechtExpenseTotalByUser,} = expensesTotalByUserData
     const { data: usersRaffle,} = usersRaffleData
+    const { data: payMethods, isLoading: isLoadingPayMethods} = payMethodsData
     
     const handleNavigateViewRaffleNumber = (raffleNumberId: number) => {
         navigate(`?viewRaffleNumber=${raffleNumberId}`)
@@ -319,11 +325,16 @@ function RaffleNumbersView() {
         });
     };
 
-    const isVisibleRaffleNumbes = (rafflePayments: { userId: number; isValid: boolean }[]) =>
-        user.rol.name === 'vendedor' && rafflePayments.some(payment => payment.userId != user.id && payment.isValid === true);
+    const isVisibleRaffleNumbes = (rafflePayments: { userId?: number | null | undefined; isValid: boolean }[]) =>
+        user.rol.name === 'vendedor' && rafflePayments.some(payment => (payment.userId ?? undefined) !== user.id && payment.isValid === true);
 
     const isOptionSelectedNumber= (raffleNumberStatus: RaffleNumber['status']) => {
         return optionSeleted && (raffleNumberStatus === 'available' || raffleNumberStatus === 'pending');
+    }
+
+    //handle refecth
+    const handleRefetch = () => {
+        refetch()
     }
     
     useEffect(() => {
@@ -528,17 +539,22 @@ function RaffleNumbersView() {
                                     if (!selected) {
                                         return <p>Método de pago</p>;
                                     }
-                                    return selected;
+                                    const selectedMethod = payMethods?.find(method => method.id === Number(selected));
+                                    return selectedMethod ? capitalize(selectedMethod.payMethode.name) : selected;
                                 }}
                             >
                                 <MenuItem value={''}>
                                     <em>Todos los métodos</em>
                                 </MenuItem>
-                                {paymentMethods.map(method => (
-                                    <MenuItem key={method} value={method}>
-                                        {method}
+                                {payMethods?.map(method => (
+                                    <MenuItem key={method.id} value={method.id}>
+                                        {capitalize(method.payMethode.name)}
                                     </MenuItem>
-                                ))}
+                                )) || (
+                                    <MenuItem disabled>
+                                        <em>{isLoadingPayMethods ? 'Cargando métodos...' : 'No hay métodos disponibles'}</em>
+                                    </MenuItem>
+                                )}
                             </Select>
                             <Select
                                 labelId="demo-simple-select-label-user"
@@ -666,6 +682,8 @@ function RaffleNumbersView() {
                                     className="flex-1 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 rounded-lg sm:flex-none sm:px-6 bg-azul hover:bg-blue-600 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                     onClick={() => {
                                         toast.info('Descargando archivo...', { autoClose: 2000 });
+                                        // const selectedMethod = payMethods?.find(method => method.payMethode.id.toString() === paymentMethodFilter);
+                                        // const methodName = selectedMethod ? capitalize(selectedMethod.payMethode.name) : '';
                                         exelRaffleNumbersFilterDetails(
                                             raffleId!,
                                             {
@@ -678,7 +696,7 @@ function RaffleNumbersView() {
                                                 userId: userFilter
                                             },
                                             raffle?.totalNumbers || 0,
-                                            paymentMethodFilter,
+                                            // methodName,
                                         );
                                     }}
                                 >
@@ -719,6 +737,8 @@ function RaffleNumbersView() {
                                 className="flex-1 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 rounded-lg sm:flex-none sm:px-6 bg-azul hover:bg-blue-600 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                 onClick={() => {
                                     toast.info('Descargando archivo...', { autoClose: 2000 });
+                                    // const selectedMethod = payMethods?.find(method => method.payMethode.id.toString() === paymentMethodFilter);
+                                    // const methodName = selectedMethod ? capitalize(selectedMethod.payMethode.name) : '';
                                     exelRaffleNumbersFilterDetails(
                                         raffleId!,
                                         {
@@ -731,7 +751,7 @@ function RaffleNumbersView() {
                                             userId: userFilter
                                         },
                                         raffle?.totalNumbers || 0,
-                                        paymentMethodFilter,
+                                        // methodName,
                                     );
                                 }}
                             >
@@ -878,7 +898,7 @@ function RaffleNumbersView() {
             refechtRaffle={refechtRaffle}
         />}
         {raffle && raffleNumbers && awards && <PayNumbersModal
-            refetch={refetch}
+            refetch={handleRefetch}
             awards={awards}
             totalNumbers={raffle.totalNumbers || 0}
             infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description, responsable: raffle.nameResponsable}}
@@ -925,6 +945,9 @@ function RaffleNumbersView() {
                 refechtExpenseTotalByUser={refechtExpenseTotalByUser}
             />
             <ShareURLRaffleModal
+            />
+            <RafflePayMethodsModal
+                raffleId={raffleId!}
             />
             </>
             

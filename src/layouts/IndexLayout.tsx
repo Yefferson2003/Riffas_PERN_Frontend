@@ -34,11 +34,13 @@ interface Props {
 
 const drawerWidth = 240;
 const navItemsBase = ['index', 'logout'];
-const navItemsAdmin = ['index', 'users', 'logout', ];
+const navItemsResponsable = ['index', 'users', 'logout', ];
+const navItemsAdmin = ['index', 'users', 'payMethods', 'logout', ];
 
 const navItemsTraslations: { [key: string]: string } = {
     index: 'Inicio',
     users: 'Usuarios',
+    payMethods: 'Métodos de Pago',
     logout: 'Cerrar Sesión',
 };
 
@@ -46,6 +48,7 @@ const navItemsUrls: { [key: string]: string } = {
     index: '/',
     logout: '/',
     users: '/users',
+    payMethods: '/pay-methods',
 };
 
 function HideOnScroll(props: Props) {
@@ -92,9 +95,9 @@ export default function IndexLayout(props: Props) {
     };
 
     const getNavItems = () => {
-        return (user?.rol.name === 'admin' || user?.rol.name === 'responsable')
+        return (user?.rol.name === 'admin')
             ? navItemsAdmin
-            : navItemsBase;
+            : user?.rol.name === 'responsable' ? navItemsResponsable : navItemsBase;
     };
 
     const drawer = (

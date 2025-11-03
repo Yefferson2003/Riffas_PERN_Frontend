@@ -1,7 +1,8 @@
 import LocalActivityIcon from '@mui/icons-material/LocalActivity';
-import { Chip, Pagination, Skeleton } from "@mui/material";
+import SearchIcon from '@mui/icons-material/Search';
+import { Chip, Pagination, Skeleton, Button, TextField, InputAdornment } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { getRaffleNumersShared } from "../../api/raffleNumbersApi";
 import { colorStatusRaffleNumber, formatCurrencyCOP, formatWithLeadingZeros, getChipStyles } from "../../utils";
@@ -21,10 +22,37 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
 
     const [page, setPage] = useState<number>(1);
     const [rowsPerPage] = useState<number>(100);
+    const [selectedNumbers, setSelectedNumbers] = useState<{id: number, number: number, status: string}[]>([]);
+    const [searchInput, setSearchInput] = useState<string>('');
+    const [searchQuery, setSearchQuery] = useState<string>('');
+
+    // Debug: observar cambios en searchQuery
+    useEffect(() => {
+        console.log('searchQuery cambió a:', searchQuery);
+    }, [searchQuery]);
+
+    // Función para ejecutar la búsqueda manualmente
+    const handleSearch = () => {
+        console.log('Ejecutando búsqueda manual con valor:', searchInput); // Debug
+        setSearchQuery(searchInput);
+        setPage(1); // Resetear página cuando se busca
+    };
+
+    // Función para limpiar la búsqueda
+    const handleClearSearch = () => {
+        setSearchInput('');
+        setSearchQuery('');
+        setPage(1);
+    };
 
     const { data: raffleNumbers, isLoading, refetch } = useQuery({
-        queryKey: ['raffleNumbersShared', token, page, rowsPerPage],
-        queryFn: () => getRaffleNumersShared({ page, limit: rowsPerPage, token }),
+        queryKey: ['raffleNumbersShared', token, page, rowsPerPage, searchQuery],
+        queryFn: () =>getRaffleNumersShared({ 
+            page, 
+            limit: rowsPerPage, 
+            token, 
+            search: searchQuery || undefined 
+        }),
         enabled: !!token,
     });
 
@@ -32,8 +60,59 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
         setPage(newPage);
     }
 
-    const handleNavigateViewRaffleNumber = (raffleNumberId: number) => {
-        navigate(`?viewRaffleNumber=${raffleNumberId}`)
+    const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;
+        console.log('Input value cambiado:', value); // Debug
+        
+        // Solo permitir números (permitir string vacío para poder borrar)
+        if (value && !/^\d*$/.test(value)) {
+            console.log('Valor rechazado por no ser numérico:', value); // Debug
+            return;
+        }
+        
+        setSearchInput(value);
+    };
+
+    // Manejar Enter en el input para buscar
+    const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
+
+
+    const toggleSelectNumber = (raffleNumber: {id: number, number: number, status: string}) => {
+        if (raffleNumber.status !== 'available') return;
+
+        setSelectedNumbers(prev => {
+            const isSelected = prev.some(num => num.id === raffleNumber.id);
+            if (isSelected) {
+                return prev.filter(num => num.id !== raffleNumber.id);
+            } else {
+                return [...prev, {
+                    id: raffleNumber.id,
+                    number: raffleNumber.number,
+                    status: raffleNumber.status
+                }];
+            }
+        });
+    }
+
+    const isNumberSelected = (raffleNumberId: number) => {
+        return selectedNumbers.some(num => num.id === raffleNumberId);
+    }
+
+    const handleOpenModal = () => {
+        if (selectedNumbers.length === 0) {
+            return;
+        }
+        // Abrir modal sin depender de un ID específico
+        navigate(`?apartarNumbers=true`);
+    }
+
+    const handleRefetch = () => {
+        refetch()
     }
 
     return (
@@ -44,6 +123,203 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                 <h2>Apartar Boletas</h2>
                 </div>
                 <h3 className='text-xl font-bold'>{formatCurrencyCOP(+price)}</h3>
+            </div>
+
+            {/* Input de búsqueda con botones - Responsive */}
+            <div className="flex justify-center px-4 mb-6">
+                <div className="w-full max-w-2xl">
+                    {/* Layout para pantallas grandes (md+) */}
+                    <div className="hidden gap-3 md:flex">
+                        <TextField
+                            fullWidth
+                            size="small"
+                            placeholder="Buscar número específico..."
+                            value={searchInput}
+                            onChange={handleSearchChange}
+                            onKeyPress={handleKeyPress}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchIcon sx={{ color: '#1446A0' }} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '25px',
+                                    backgroundColor: 'white',
+                                    '& fieldset': {
+                                        borderColor: '#e0e4e7',
+                                        borderWidth: '2px',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#1446A0',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#1446A0',
+                                        borderWidth: '2px',
+                                    },
+                                },
+                                '& .MuiInputBase-input': {
+                                    padding: '12px 16px',
+                                    fontSize: '0.95rem',
+                                    fontWeight: '500',
+                                },
+                                '& .MuiInputBase-input::placeholder': {
+                                    color: '#94a3b8',
+                                    opacity: 1,
+                                },
+                            }}
+                        />
+                        
+                        <Button
+                            variant="contained"
+                            onClick={handleSearch}
+                            disabled={!searchInput.trim()}
+                            sx={{
+                                borderRadius: '25px',
+                                px: 3,
+                                py: 1,
+                                minWidth: 'auto',
+                                fontWeight: 'bold',
+                                backgroundColor: '#1446A0',
+                                '&:hover': {
+                                    backgroundColor: '#0f3a8a',
+                                },
+                                '&:disabled': {
+                                    backgroundColor: '#94a3b8',
+                                }
+                            }}
+                        >
+                            Buscar
+                        </Button>
+
+                        {searchQuery && (
+                            <Button
+                                variant="outlined"
+                                onClick={handleClearSearch}
+                                sx={{
+                                    borderRadius: '25px',
+                                    px: 3,
+                                    py: 1,
+                                    minWidth: 'auto',
+                                    fontWeight: 'bold',
+                                    borderColor: '#1446A0',
+                                    color: '#1446A0',
+                                    '&:hover': {
+                                        borderColor: '#0f3a8a',
+                                        color: '#0f3a8a',
+                                        backgroundColor: 'rgba(20, 70, 160, 0.04)',
+                                    },
+                                }}
+                            >
+                                Limpiar
+                            </Button>
+                        )}
+                    </div>
+
+                    {/* Layout para pantallas pequeñas (móviles) */}
+                    <div className="space-y-3 md:hidden">
+                        <TextField
+                            fullWidth
+                            size="small"
+                            placeholder="Buscar número específico..."
+                            value={searchInput}
+                            onChange={handleSearchChange}
+                            onKeyPress={handleKeyPress}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchIcon sx={{ color: '#1446A0' }} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '20px',
+                                    backgroundColor: 'white',
+                                    '& fieldset': {
+                                        borderColor: '#e0e4e7',
+                                        borderWidth: '2px',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#1446A0',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#1446A0',
+                                        borderWidth: '2px',
+                                    },
+                                },
+                                '& .MuiInputBase-input': {
+                                    padding: '10px 14px',
+                                    fontSize: '0.9rem',
+                                    fontWeight: '500',
+                                },
+                                '& .MuiInputBase-input::placeholder': {
+                                    color: '#94a3b8',
+                                    opacity: 1,
+                                },
+                            }}
+                        />
+                        
+                        <div className="flex w-full gap-2">
+                            <Button
+                                variant="contained"
+                                onClick={handleSearch}
+                                disabled={!searchInput.trim()}
+                                fullWidth
+                                sx={{
+                                    borderRadius: '20px',
+                                    py: 1.2,
+                                    fontWeight: 'bold',
+                                    fontSize: '0.9rem',
+                                    backgroundColor: '#1446A0',
+                                    '&:hover': {
+                                        backgroundColor: '#0f3a8a',
+                                    },
+                                    '&:disabled': {
+                                        backgroundColor: '#94a3b8',
+                                    }
+                                }}
+                            >
+                                🔍 Buscar
+                            </Button>
+
+                            {searchQuery && (
+                                <Button
+                                    variant="outlined"
+                                    onClick={handleClearSearch}
+                                    sx={{
+                                        borderRadius: '20px',
+                                        py: 1.2,
+                                        px: 3,
+                                        minWidth: 'auto',
+                                        fontWeight: 'bold',
+                                        fontSize: '0.9rem',
+                                        borderColor: '#1446A0',
+                                        color: '#1446A0',
+                                        '&:hover': {
+                                            borderColor: '#0f3a8a',
+                                            color: '#0f3a8a',
+                                            backgroundColor: 'rgba(20, 70, 160, 0.04)',
+                                        },
+                                    }}
+                                >
+                                    ✕
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Indicador de búsqueda activa - Responsive */}
+                    {searchQuery && (
+                        <div className="mt-3 text-center">
+                            <span className="inline-block px-3 py-1.5 text-xs sm:text-sm font-medium text-blue-700 bg-blue-100 rounded-full border border-blue-200">
+                                🎯 Buscando: #{formatWithLeadingZeros(+searchQuery, raffle.totalNumbers || 0)}
+                            </span>
+                        </div>
+                    )}
+                </div>
             </div>
             
             <section className="grid grid-cols-5 gap-x-1 gap-y-3 md:grid-cols-10 md:grid-rows-10">
@@ -60,20 +336,56 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                 ) : raffleNumbers && token && raffle.totalNumbers && raffleNumbers.raffleNumbers.length === 0 ? (
                     <p className='text-xl font-bold col-span-full text-azul'>No hay resultados...</p>
                 ) : (
-                    raffleNumbers && raffleNumbers.raffleNumbers.map(raffleNumber => (
-                        <Chip
-                            sx={getChipStyles(raffleNumber.status)}
-                            key={raffleNumber.id} 
-                            label={formatWithLeadingZeros(raffleNumber.number, raffle.totalNumbers || 0)} 
-                            variant="filled" 
-                            size="small"
-                            disabled={raffleNumber.status !== 'available'}
-                            color={colorStatusRaffleNumber[raffleNumber.status]}
-                            onClick={() => handleNavigateViewRaffleNumber(raffleNumber.id)}
-                        />
-                    ))
+                    raffleNumbers && raffleNumbers.raffleNumbers.map(raffleNumber => {
+                        const isSelected = isNumberSelected(raffleNumber.id);
+                        const isAvailable = raffleNumber.status === 'available';
+                        
+                        return (
+                            <Chip
+                                key={raffleNumber.id}
+                                sx={getChipStyles(raffleNumber.status)}
+                                label={formatWithLeadingZeros(raffleNumber.number, raffle.totalNumbers || 0)} 
+                                variant="filled" 
+                                size="small"
+                                disabled={!isAvailable}
+                                color={isSelected ? 'primary' : colorStatusRaffleNumber[raffleNumber.status]}
+                                onClick={() => {
+                                    if (isAvailable) {
+                                        toggleSelectNumber(raffleNumber);
+                                    }
+                                }}
+                            />
+                        );
+                    })
                 )}
             </section>
+
+            {/* Botón para abrir modal con números seleccionados */}
+            {selectedNumbers.length > 0 && (
+                <div className="fixed z-50 transform -translate-x-1/2 bottom-6 left-1/2">
+                    <Button
+                        variant="contained"
+                        size="large"
+                        onClick={handleOpenModal}
+                        sx={{
+                            borderRadius: '25px',
+                            px: 4,
+                            py: 1.5,
+                            fontWeight: 'bold',
+                            fontSize: '1rem',
+                            boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                            '&:hover': {
+                                boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                            }
+                        }}
+                    >
+                        Apartar {selectedNumbers.length} número{selectedNumbers.length > 1 ? 's' : ''}
+                        <span className="ml-2 px-2 py-0.5 bg-white text-blue-600 rounded-full text-sm font-bold">
+                            {formatCurrencyCOP(+price * selectedNumbers.length)}
+                        </span>
+                    </Button>
+                </div>
+            )}
 
             <div className='flex justify-center my-5'>   
                 <Pagination  
@@ -93,7 +405,9 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                 awards={awards}
                 raffle={raffle}
                 token={token}
-                raffleRefetch={refetch}
+                raffleRefetch={handleRefetch}
+                selectedNumbers={selectedNumbers}
+                setSelectedNumbers={setSelectedNumbers}
             />}
         </div>
     );
