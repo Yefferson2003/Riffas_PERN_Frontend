@@ -5,7 +5,8 @@ import { Navigate, useParams } from "react-router-dom";
 import LoaderView from "../LoaderView";
 import { capitalize, formatDateTimeLarge } from "../../utils";
 import { useMediaQuery } from "react-responsive";
-import { Box } from "@mui/material";
+import { Box, Fab, Tooltip } from "@mui/material";
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import AwardsShared from "../../components/shared/AwardsShared";
 import RaffleNumbersShared from "../../components/shared/RaffleNumbersShared";
 import RaffleProgressBar from "../../components/indexView/RaffleProgressBar";
@@ -263,6 +264,60 @@ function RaffleSharedView() {
                     </div>
                 </footer>
             </div>
+
+            {/* Botón flotante de WhatsApp */}
+            {raffle.contactRifero && (
+                <Tooltip 
+                    title="Contáctanos por WhatsApp para más información"
+                    placement="left"
+                    arrow
+                >
+                    <Fab
+                        onClick={() => {
+                            const phoneNumber = raffle.contactRifero?.replace(/[^0-9+]/g, '');
+                            const message = encodeURIComponent(
+                                `¡Hola! 👋\n\nEstoy interesado/a en la rifa "${raffle.name}".\n\n¿Podrías darme más información? Me gustaría conocer:\n\n📋 Detalles adicionales\n🎯 Disponibilidad de números\n💰 Formas de pago\n📅 Proceso de sorteo\n\n¡Gracias!`
+                            );
+                            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
+                            window.open(whatsappUrl, '_blank');
+                        }}
+                        sx={{
+                            position: 'fixed',
+                            bottom: { xs: 20, md: 30 },
+                            right: { xs: 20, md: 30 },
+                            width: { xs: 56, md: 64 },
+                            height: { xs: 56, md: 64 },
+                            backgroundColor: '#25D366',
+                            color: 'white',
+                            boxShadow: '0 8px 20px rgba(37, 211, 102, 0.4), 0 4px 12px rgba(37, 211, 102, 0.3)',
+                            zIndex: 1000,
+                            '&:hover': {
+                                backgroundColor: '#128C7E',
+                                transform: 'scale(1.1)',
+                                boxShadow: '0 12px 28px rgba(37, 211, 102, 0.5), 0 6px 16px rgba(37, 211, 102, 0.4)',
+                            },
+                            '&:active': {
+                                transform: 'scale(0.95)',
+                            },
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            animation: 'whatsapp-pulse 2s infinite',
+                            '@keyframes whatsapp-pulse': {
+                                '0%': {
+                                    boxShadow: '0 8px 20px rgba(37, 211, 102, 0.4), 0 4px 12px rgba(37, 211, 102, 0.3)',
+                                },
+                                '50%': {
+                                    boxShadow: '0 12px 30px rgba(37, 211, 102, 0.6), 0 6px 18px rgba(37, 211, 102, 0.4)',
+                                },
+                                '100%': {
+                                    boxShadow: '0 8px 20px rgba(37, 211, 102, 0.4), 0 4px 12px rgba(37, 211, 102, 0.3)',
+                                }
+                            }
+                        }}
+                    >
+                        <WhatsAppIcon sx={{ fontSize: { xs: 28, md: 32 } }} />
+                    </Fab>
+                </Tooltip>
+            )}
         </Box>
     );
 }

@@ -1,6 +1,7 @@
 import { Box, Button, FormControl, Modal, TextField, Typography, Popover } from "@mui/material";
 import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import ButtonCloseModal from "../ButtonCloseModal";
+import PhoneNumberInput from "../PhoneNumberInput";
 import { Raffle, UpdateRaffleForm, User } from "../../types";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
@@ -72,6 +73,7 @@ function UpdateRaffleModal({raffle, refechtRaffle} : UpdateRaffleModalProps) {
         banerImgUrl: raffle.banerImgUrl,
         banerMovileImgUrl: raffle.banerMovileImgUrl,
         color: raffle.color || '#1976d2',
+        contactRifero: raffle.contactRifero || '',
     }
 
     const {register, handleSubmit, setValue, watch, reset, formState: {errors}} = useForm({
@@ -82,6 +84,7 @@ function UpdateRaffleModal({raffle, refechtRaffle} : UpdateRaffleModalProps) {
     const startDate = watch("startDate");
     const editDate = watch("editDate");
     const playDate = watch("playDate");
+    const contactRifero = watch("contactRifero");
 
     useEffect(() => {
         if (playDate) {
@@ -199,7 +202,8 @@ function UpdateRaffleModal({raffle, refechtRaffle} : UpdateRaffleModalProps) {
                 playDate: dayjs(raffle.playDate),
                 banerImgUrl: raffle.banerImgUrl,
                 banerMovileImgUrl: raffle.banerMovileImgUrl,
-                color: raffle.color || '#1976d2'
+                color: raffle.color || '#1976d2',
+                contactRifero: raffle.contactRifero || '',
             })
         }
     }, [raffle, reset])
@@ -257,6 +261,19 @@ function UpdateRaffleModal({raffle, refechtRaffle} : UpdateRaffleModalProps) {
                         helperText={errors.nameResponsable?.message}
                         {...register('nameResponsable', {required: 'Nombre del Responsable Obligatorio'})}
                     />
+
+                    <div>
+                        <p className="mb-2 text-sm font-medium text-gray-700">Número de contacto WhatsApp</p>
+                        <PhoneNumberInput
+                            value={contactRifero || ''}
+                            onChange={(value) => {
+                                setValue('contactRifero', value);
+                            }}
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                            Número de WhatsApp para contacto con los clientes
+                        </p>
+                    </div>
                     
                     <TextField id="description" label="Descripción" variant="outlined" 
                         error={!!errors.description}

@@ -13,6 +13,7 @@ import { uploadImageToCloudinary } from "../../api/cloudinary";
 import { createRaffle } from "../../api/raffleApi";
 import { CreateRaffleForm } from "../../types";
 import ButtonCloseModal from "../ButtonCloseModal";
+import PhoneNumberInput from "../PhoneNumberInput";
 import UploadImageButton from "./UploadImageButton";
 
 const style = {
@@ -61,6 +62,7 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
         quantity: 1000,
         banerMovileImgUrl: '',
         color: '#1976d2',
+        contactRifero: '',
     }
 
     const {register, handleSubmit, setValue, watch, reset, formState: {errors}} = useForm({
@@ -71,6 +73,7 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
     const startDate = watch("startDate");
     const editDate = watch("editDate");
     const playDate = watch("playDate");
+    const contactRifero = watch("contactRifero");
 
     useEffect(() => {
         if (playDate) {
@@ -242,6 +245,19 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
                             },
                         })}
                     />
+
+                    <div>
+                        <p className="mb-2 text-sm font-medium text-gray-700">Número de contacto para clientes</p>
+                        <PhoneNumberInput
+                            value={contactRifero || ''}
+                            onChange={(value) => {
+                                setValue('contactRifero', value);
+                            }}
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                            Número de WhatsApp para contacto con los clientes
+                        </p>
+                    </div>
                     
                     
                     <TextField id="description" label="Descripción" variant="outlined" 
