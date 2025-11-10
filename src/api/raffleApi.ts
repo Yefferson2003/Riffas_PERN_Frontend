@@ -142,7 +142,8 @@ export async function createRaffle({newFormData, banerImgUrl, banerMovileImgUrl}
             editDate: newFormData.editDate?.toISOString(),
             playDate: newFormData.playDate?.toISOString(),
             banerImgUrl: banerImgUrl,
-            banerMovileImgUrl: banerMovileImgUrl
+            banerMovileImgUrl: banerMovileImgUrl,
+            // color: newFormData.color
         }
         const {data} = await api.post<string>('/raffles', formData)
         return data

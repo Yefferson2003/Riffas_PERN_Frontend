@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { PayNumberForm, PayNumbersForm, PayNumbersSharedFormType, RaffleNumberSchema, raffleNumbersExelFilterSchema, raffleNumberSharedSchema, RaffleNumberUpdateForm, RafflePayResponseSchema, responseRaffleNumbersExelSchema, responseRaffleNumbersPendingSchema, responseRaffleNumbersSchema, responseRaffleNumbersSchemaShared } from "../types";
+import { PayNumberForm, PayNumbersForm, PayNumbersSharedFormType, RaffleNumberSchema, raffleNumbersExelFilterSchema, raffleNumberSharedSchema, RaffleNumberUpdateForm, RafflePayResponseSchema, ramdomNumberSchema, responseRaffleNumbersExelSchema, responseRaffleNumbersPendingSchema, responseRaffleNumbersSchema, responseRaffleNumbersSchemaShared } from "../types";
 
 export async function getRaffleNumers({params, raffleId} : {params : object, raffleId: string}) {
     try { 
@@ -203,6 +203,26 @@ export async function deleteNumberClient({raffleId, raffleNumberId}:{ raffleId: 
     try {
         const {data} = await api.delete<string>(`/raffles-numbers/${raffleId}/delete-client/${raffleNumberId}`)
         return data
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+
+export async function getRandomAvailableNumberShared({ token }: { token: string}) {
+    try {
+        const { data } = await api.get(`/raffles-numbers/shared/random-number`, {
+            params: { token }
+        });
+
+        const response = ramdomNumberSchema.safeParse(data);
+
+        if (response.success) {
+            return response.data;
+        }
+
     } catch (error) {
         if (isAxiosError(error) && error.response) {
             console.log(error);

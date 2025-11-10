@@ -2,10 +2,10 @@ import LocalActivityIcon from '@mui/icons-material/LocalActivity';
 import SearchIcon from '@mui/icons-material/Search';
 import CasinoIcon from '@mui/icons-material/Casino';
 import { Chip, Pagination, Skeleton, Button, TextField, InputAdornment, Tooltip } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import { getRaffleNumersShared } from "../../api/raffleNumbersApi";
+import { getRaffleNumersShared, getRandomAvailableNumberShared } from "../../api/raffleNumbersApi";
 import { colorStatusRaffleNumber, formatCurrencyCOP, formatWithLeadingZeros, getChipStyles } from "../../utils";
 import ViewRaffleNumberSharedModal from './ViewRaffleNumberSharedModal';
 import { AwardType, RaffleSharedType } from '../../types';
@@ -57,6 +57,41 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
         enabled: !!token,
     });
 
+    // Mutation para obtener número aleatorio
+    const randomNumberMutation = useMutation({
+        mutationFn: () => getRandomAvailableNumberShared({ token }),
+        onSuccess: (randomNumberData) => {
+            if (randomNumberData) {
+                // Verificar si el número ya está seleccionado
+                const isAlreadySelected = selectedNumbers.some(selected => selected.id === randomNumberData.id);
+                
+                if (isAlreadySelected) {
+                    alert('El número seleccionado ya está en tu lista. Intenta de nuevo.');
+                    return;
+                }
+
+                // Agregar el número a la selección
+                setSelectedNumbers(prev => [...prev, {
+                    id: randomNumberData.id,
+                    number: randomNumberData.number,
+                    status: randomNumberData.status
+                }]);
+                
+                console.log(`¡Número ${randomNumberData.number} agregado a la selección!`);
+            }
+        },
+        onError: (error) => {
+            // Manejar errores
+            const errorMessage = error instanceof Error ? error.message : 'Error al obtener número aleatorio';
+            alert(errorMessage);
+        }
+    });
+
+    // Función para seleccionar un número aleatorio
+    const selectRandomNumber = () => {
+        randomNumberMutation.mutate();
+    };
+
     const handlePageChange = (_event: React.ChangeEvent<unknown>, newPage: number)=> {
         setPage(newPage);
     }
@@ -81,8 +116,6 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
         }
     };
 
-
-
     const toggleSelectNumber = (raffleNumber: {id: number, number: number, status: string}) => {
         if (raffleNumber.status !== 'available') return;
 
@@ -99,33 +132,6 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
             }
         });
     }
-
-    // Función para seleccionar un número aleatorio disponible
-    const selectRandomNumber = () => {
-        if (!raffleNumbers?.raffleNumbers) return;
-
-        // Filtrar números disponibles de la página actual
-        const availableNumbers = raffleNumbers.raffleNumbers.filter(
-            num => num.status === 'available' && !selectedNumbers.some(selected => selected.id === num.id)
-        );
-
-        if (availableNumbers.length === 0) {
-            // Si no hay números disponibles en la página actual, mostrar mensaje
-            alert('No hay números disponibles en esta página. Cambia de página para encontrar números disponibles.');
-            return;
-        }
-
-        // Seleccionar un número aleatorio
-        const randomIndex = Math.floor(Math.random() * availableNumbers.length);
-        const randomNumber = availableNumbers[randomIndex];
-
-        // Agregarlo a la selección
-        toggleSelectNumber({
-            id: randomNumber.id,
-            number: randomNumber.number,
-            status: randomNumber.status
-        });
-    };
 
     const isNumberSelected = (raffleNumberId: number) => {
         return selectedNumbers.some(num => num.id === raffleNumberId);
@@ -152,11 +158,12 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                 </div>
                 
                 {/* Botón de número aleatorio */}
-                <Tooltip title="Seleccionar número aleatorio de esta página" arrow>
+                <Tooltip title="Elegir un número aleatorio disponible" arrow>
                     <Button
                         variant="contained"
                         startIcon={<CasinoIcon />}
                         onClick={selectRandomNumber}
+                        disabled={randomNumberMutation.isPending}
                         sx={{
                             bgcolor: 'primary.main',
                             color: 'white',
@@ -174,14 +181,60 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                             '&:active': {
                                 transform: 'scale(0.95)',
                             },
+                            '&:disabled': {
+                                bgcolor: 'grey.400',
+                                color: 'white',
+                                opacity: 0.7,
+                            },
                             transition: 'all 0.2s ease-in-out',
                             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
                         }}
                         size="medium"
                     >
-                        Número de la Suerte
+                        {randomNumberMutation.isPending ? 'Eligiendo...' : 'Elegir a la Suerte'}
                     </Button>
                 </Tooltip>
+
+                {/* Mostrar números seleccionados */}
+                {selectedNumbers.length > 0 && (
+                    <div className="w-full max-w-2xl">
+                        <p className="mb-2 text-sm font-medium text-center text-gray-600">
+                            Números seleccionados:
+                        </p>
+                        <div className="flex flex-wrap justify-center gap-2">
+                            {selectedNumbers.map((selectedNumber) => (
+                                <Chip
+                                    key={selectedNumber.id}
+                                    label={formatWithLeadingZeros(selectedNumber.number, raffle.totalNumbers || 0)}
+                                    color="primary"
+                                    variant="filled"
+                                    size="medium"
+                                    onDelete={() => {
+                                        setSelectedNumbers(prev => 
+                                            prev.filter(num => num.id !== selectedNumber.id)
+                                        );
+                                    }}
+                                    sx={{
+                                        fontWeight: 'bold',
+                                        fontSize: '0.9rem',
+                                        '& .MuiChip-deleteIcon': {
+                                            color: 'white',
+                                            fontSize: '1.2rem',
+                                            '&:hover': {
+                                                color: 'rgba(255, 255, 255, 0.8)',
+                                            }
+                                        }
+                                    }}
+                                />
+                            ))}
+                        </div>
+                        <div className="mt-2 text-center">
+                            <span className="text-sm font-bold text-gray-700">
+                                Total: {formatCurrencyCOP(+price * selectedNumbers.length)}
+                            </span>
+                        </div>
+                    </div>
+                )}
                 
                 <h3 className='text-xl font-bold'>{formatCurrencyCOP(+price)}</h3>
                 <p className="text-sm text-gray-600">Precio por boleta</p>

@@ -129,6 +129,7 @@ export const raffleSchema = z.object({
     price: z.string(),
     banerImgUrl: z.string(),
     banerMovileImgUrl: z.string(),
+    // color: z.string().nullable()
 })
 
 export const raffleSchemaShared = raffleSchema.extend({
@@ -161,7 +162,8 @@ export const createRaffleSchema = raffleSchema.pick({
     banerImgUrl: true,
     nitResponsable: true,
     nameResponsable: true,
-    banerMovileImgUrl: true
+    banerMovileImgUrl: true,
+    // color: true
 })
 .extend({
     quantity: z.number(),
@@ -718,3 +720,8 @@ export type RafflePayMethodeType = z.infer<typeof rafflePayMethodeSchema>
 export type AssignPayMethodToRaffleFormType = z.infer<typeof assignPayMethodToRaffleSchema>
 // export type UpdateRafflePayMethodFormType = z.infer<typeof updateRafflePayMethodSchema>
 
+export const ramdomNumberSchema = z.object({
+    id: z.number(),
+    number: z.number(),
+    status: z.enum(statusRaffleNumbersEnum)
+})

@@ -1,4 +1,5 @@
 import { Box, Typography, Tooltip } from '@mui/material';
+import { TrendingUp } from '@mui/icons-material';
 
 interface RaffleProgressBarProps {
     numbersByStatus?: {
@@ -31,30 +32,53 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default' 
                 maxWidth: '100%',
                 mx: 'auto', 
                 p: { xs: 2, sm: 3 },
-                bg: 'white',
-                borderRadius: 2,
-                boxShadow: '0 2px 4px -1px rgb(0 0 0 / 0.1)'
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // Gradiente llamativo
+                borderRadius: 3, // Más redondeado
+                boxShadow: '0 8px 32px rgba(102, 126, 234, 0.25), 0 4px 16px rgba(118, 75, 162, 0.15)', // Sombras más llamativas
+                border: '2px solid rgba(255, 255, 255, 0.2)', // Borde sutil
+                position: 'relative',
+                overflow: 'hidden',
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)',
+                    animation: 'shimmer 3s infinite',
+                    pointerEvents: 'none'
+                },
+                '@keyframes shimmer': {
+                    '0%': { transform: 'translateX(-100%)' },
+                    '100%': { transform: 'translateX(100%)' }
+                }
             }}>
                 {/* Título para versión shared */}
-                <Typography variant="h6" sx={{ 
-                    textAlign: 'center', 
-                    mb: { xs: 1.5, sm: 2 }, 
-                    color: '#1446A0',
-                    fontWeight: 'bold',
-                    fontSize: { xs: '1.1rem', sm: '1.25rem' }
-                }}>
-                    Progreso de Rifa
-                </Typography>
+                <Box sx={{ textAlign: 'center', mb: { xs: 2, sm: 3 }, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                    <TrendingUp sx={{ color: 'white', fontSize: { xs: '1.5rem', sm: '2rem' } }} />
+                    <Typography variant="h4" sx={{ 
+                        color: 'white', // Texto blanco para contraste
+                        fontWeight: 'bold',
+                        fontSize: { xs: '1.5rem', sm: '2rem' },
+                        textShadow: '0 2px 4px rgba(0,0,0,0.3)', // Sombra en el texto
+                        letterSpacing: '0.5px' // Espaciado de letras
+                    }}>
+                        {combinedPercentage.toFixed(1)}% Vendidos
+                    </Typography>
+                </Box>
 
                 {/* Barra de progreso simplificada */}
                 <Box sx={{ position: 'relative', mb: { xs: 2, sm: 2.5 } }}>
                     <Box sx={{
                         width: '100%',
-                        height: { xs: 12, sm: 14, md: 16 },
-                        borderRadius: { xs: 6, sm: 7, md: 8 },
-                        backgroundColor: '#f3f4f6',
+                        height: { xs: 16, sm: 20, md: 24 }, // Más alta
+                        borderRadius: { xs: 8, sm: 10, md: 12 }, // Más redondeada
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)', // Fondo semitransparente
                         position: 'relative',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        border: '1px solid rgba(255, 255, 255, 0.3)', // Borde sutil
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)' // Sombra interior
                     }}>
                         {/* Progreso combinado */}
                         {combined > 0 && (
@@ -64,24 +88,21 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default' 
                                 top: 0,
                                 width: `${combinedPercentage}%`,
                                 height: '100%',
-                                backgroundColor: 'linear-gradient(45deg, #10b981 30%, #059669 90%)', // Gradiente verde
-                                background: 'linear-gradient(45deg, #10b981 30%, #059669 90%)',
-                                borderRadius: combinedPercentage === 100 ? { xs: 6, sm: 7, md: 8 } : { xs: '6px 0 0 6px', sm: '7px 0 0 7px', md: '8px 0 0 8px' },
-                                transition: 'width 0.5s ease-in-out'
+                                background: 'linear-gradient(45deg, #ff6b6b 0%, #feca57 25%, #48dbfb 50%, #ff9ff3 75%, #54a0ff 100%)', // Gradiente arcoíris
+                                borderRadius: combinedPercentage === 100 ? { xs: 8, sm: 10, md: 12 } : { xs: '8px 0 0 8px', sm: '10px 0 0 10px', md: '12px 0 0 12px' },
+                                transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)', // Transición más suave
+                                backgroundSize: '200% 100%',
+                                animation: 'gradientShift 4s ease-in-out infinite', // Animación del gradiente
+                                boxShadow: '0 2px 8px rgba(255, 107, 107, 0.4)', // Sombra colorida
+                                '@keyframes gradientShift': {
+                                    '0%, 100%': { backgroundPosition: '0% 50%' },
+                                    '50%': { backgroundPosition: '100% 50%' }
+                                }
                             }} />
                         )}
                     </Box>
 
-                    {/* Porcentaje */}
-                    <Typography variant="body2" sx={{ 
-                        textAlign: 'center', 
-                        mt: { xs: 0.75, sm: 1 }, 
-                        fontWeight: 'bold',
-                        color: '#374151',
-                        fontSize: { xs: '0.85rem', sm: '0.95rem' }
-                    }}>
-                        {combinedPercentage.toFixed(1)}% Vendidos
-                    </Typography>
+
                 </Box>
 
                 {/* Estadísticas simplificadas
@@ -237,7 +258,7 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default' 
                             top: 0,
                             width: `${pendingPercentage}%`,
                             height: '100%',
-                            backgroundColor: '#f59e0b'
+                            backgroundColor: '#ed6c02' // Amarillo warning de MUI
                         }} />
                     )}
                     
@@ -249,7 +270,7 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default' 
                             top: 0,
                             width: `${apartadoPercentage}%`,
                             height: '100%',
-                            backgroundColor: '#8b5cf6',
+                            backgroundColor: '#ffd700', // Amarillo puro (gold)
                             borderRadius: apartadoProgress === 100 ? { xs: 4, sm: 5, md: 6 } : { xs: '0 4px 4px 0', sm: '0 5px 5px 0', md: '0 6px 6px 0' }
                         }} />
                     )}
@@ -313,14 +334,14 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default' 
                         <Box sx={{ 
                             width: { xs: 8, sm: 10, md: 12 }, 
                             height: { xs: 8, sm: 10, md: 12 }, 
-                            backgroundColor: '#f59e0b', 
+                            backgroundColor: '#ed6c02', // Amarillo warning de MUI
                             borderRadius: '50%', 
                             mx: 'auto', 
                             mb: { xs: 0.25, sm: 0.5 }
                         }} />
                         <Typography variant="caption" sx={{ 
                             fontWeight: 'bold', 
-                            color: '#d97706',
+                            color: '#e65100', // Color de texto warning más oscuro de MUI
                             fontSize: { xs: '0.6rem', sm: '0.75rem' },
                             display: 'block'
                         }}>
@@ -347,14 +368,14 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default' 
                         <Box sx={{ 
                             width: { xs: 8, sm: 10, md: 12 }, 
                             height: { xs: 8, sm: 10, md: 12 }, 
-                            backgroundColor: '#8b5cf6', 
+                            backgroundColor: '#ffd700', // Amarillo puro (gold)
                             borderRadius: '50%', 
                             mx: 'auto', 
                             mb: { xs: 0.25, sm: 0.5 }
                         }} />
                         <Typography variant="caption" sx={{ 
                             fontWeight: 'bold', 
-                            color: '#7c3aed',
+                            color: '#b8860b', // Color de texto dorado oscuro para contraste
                             fontSize: { xs: '0.6rem', sm: '0.75rem' },
                             display: 'block'
                         }}>

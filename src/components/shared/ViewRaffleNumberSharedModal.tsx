@@ -1,4 +1,5 @@
 import { Box, Button, Chip, FormControl, Modal, TextField } from "@mui/material";
+import { CheckCircle } from "@mui/icons-material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -240,42 +241,77 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                     <h3 className="mb-4 text-lg font-semibold text-center text-azul">
                         Selecciona el método de pago
                     </h3>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    
+                    {/* Grid compacto de métodos de pago */}
+                    <div className="flex flex-wrap justify-center gap-4 mb-4">
                         {payMethods?.map((method) => (
-                            <div
+                            <button
                                 key={method.id}
+                                type="button"
                                 onClick={() => setSelectedPaymentMethod(method.id)}
                                 className={`
-                                    cursor-pointer p-5 rounded-2xl transition-all duration-300 text-center relative overflow-hidden
+                                    relative flex flex-col items-center justify-center p-4 transition-all duration-300 border-2 rounded-2xl min-w-[90px] max-w-[110px] group
                                     ${selectedPaymentMethod === method.id
-                                        ? 'bg-gradient-to-br from-blue-50 to-blue-100 shadow-xl transform scale-105 ring-2 ring-blue-400 ring-opacity-60'
-                                        : 'bg-white shadow-lg hover:shadow-2xl hover:transform hover:scale-102'
+                                        ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 transform scale-110 ring-4 ring-blue-300 ring-opacity-30'
+                                        : 'border-gray-200 bg-white hover:border-blue-300 hover:transform hover:scale-105'
                                     }
                                 `}
                             >
-                                {/* Indicador de selección */}
-                                {selectedPaymentMethod === method.id && (
-                                    <div className="absolute top-2 right-2">
-                                        <div className="flex items-center justify-center w-6 h-6 text-white bg-blue-500 rounded-full">
-                                            <span className="text-xs font-bold">✓</span>
-                                        </div>
-                                    </div>
-                                )}
-                                
-                                <div className="mb-3">
-                                    {method.payMethode?.icon && (
+                                {/* Icono del método de pago con overlay de selección */}
+                                <div className="relative flex items-center justify-center w-12 h-12 mb-3">
+                                    {method.payMethode?.icon ? (
                                         <img 
                                             src={method.payMethode.icon} 
                                             alt={method.payMethode.name}
-                                            className="object-contain w-12 h-12 mx-auto"
+                                            className={`
+                                                object-contain w-10 h-10 transition-all duration-300
+                                                ${selectedPaymentMethod === method.id ? 'brightness-110' : ''}
+                                            `}
                                         />
-                                    ) }
+                                    ) : (
+                                        <div className={`
+                                            flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300
+                                            ${selectedPaymentMethod === method.id ? 'bg-blue-200' : 'bg-gray-100'}
+                                        `}>
+                                            <span className={`
+                                                text-sm font-bold
+                                                ${selectedPaymentMethod === method.id ? 'text-blue-700' : 'text-gray-500'}
+                                            `}>$</span>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Checkmark overlay cuando está seleccionado */}
+                                    {selectedPaymentMethod === method.id && (
+                                        <div className="absolute flex items-center justify-center -top-1 -right-1 animate-bounce">
+                                            <CheckCircle sx={{ 
+                                                color: '#22c55e', 
+                                                fontSize: '1.5rem',
+                                                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
+                                            }} />
+                                        </div>
+                                    )}
                                 </div>
                                 
-                                <h4 className="mb-1 text-sm font-bold text-gray-800">
-                                    {capitalizeWords(method.payMethode?.name || '')}
-                                </h4>
-                            </div>
+                                {/* Nombre del método */}
+                                <span className={`
+                                    text-xs font-semibold text-center leading-tight transition-all duration-300
+                                    ${selectedPaymentMethod === method.id ? 'text-blue-700' : 'text-gray-700 group-hover:text-gray-900'}
+                                `}>
+                                    {capitalizeWords(method.payMethode?.name || '').length > 14 
+                                        ? capitalizeWords(method.payMethode?.name || '').substring(0, 14) + '...'
+                                        : capitalizeWords(method.payMethode?.name || '')
+                                    }
+                                </span>
+
+                                {/* Efecto de brillo en hover */}
+                                <div className={`
+                                    absolute inset-0 rounded-2xl transition-all duration-300 pointer-events-none
+                                    ${selectedPaymentMethod === method.id 
+                                        ? 'bg-gradient-to-tr from-transparent via-white/20 to-transparent' 
+                                        : 'group-hover:bg-gradient-to-tr group-hover:from-transparent group-hover:via-white/10 group-hover:to-transparent'
+                                    }
+                                `} />
+                            </button>
                         ))}
                     </div>
                     
