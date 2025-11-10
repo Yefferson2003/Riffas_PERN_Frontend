@@ -1,6 +1,7 @@
 import LocalActivityIcon from '@mui/icons-material/LocalActivity';
 import SearchIcon from '@mui/icons-material/Search';
-import { Chip, Pagination, Skeleton, Button, TextField, InputAdornment } from "@mui/material";
+import CasinoIcon from '@mui/icons-material/Casino';
+import { Chip, Pagination, Skeleton, Button, TextField, InputAdornment, Tooltip } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
@@ -99,6 +100,33 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
         });
     }
 
+    // Función para seleccionar un número aleatorio disponible
+    const selectRandomNumber = () => {
+        if (!raffleNumbers?.raffleNumbers) return;
+
+        // Filtrar números disponibles de la página actual
+        const availableNumbers = raffleNumbers.raffleNumbers.filter(
+            num => num.status === 'available' && !selectedNumbers.some(selected => selected.id === num.id)
+        );
+
+        if (availableNumbers.length === 0) {
+            // Si no hay números disponibles en la página actual, mostrar mensaje
+            alert('No hay números disponibles en esta página. Cambia de página para encontrar números disponibles.');
+            return;
+        }
+
+        // Seleccionar un número aleatorio
+        const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+        const randomNumber = availableNumbers[randomIndex];
+
+        // Agregarlo a la selección
+        toggleSelectNumber({
+            id: randomNumber.id,
+            number: randomNumber.number,
+            status: randomNumber.status
+        });
+    };
+
     const isNumberSelected = (raffleNumberId: number) => {
         return selectedNumbers.some(num => num.id === raffleNumberId);
     }
@@ -117,12 +145,46 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
 
     return (
         <div>
-            <div className="flex flex-col items-center justify-center gap-2 mb-5 text-2xl font-bold text-azul">
+            <div className="flex flex-col items-center justify-center gap-3 mb-5 text-2xl font-bold text-azul">
                 <div className='flex items-center gap-2'>
-                <LocalActivityIcon/>
-                <h2>Apartar Boletas</h2>
+                    <LocalActivityIcon/>
+                    <h2>Apartar Boletas</h2>
                 </div>
+                
+                {/* Botón de número aleatorio */}
+                <Tooltip title="Seleccionar número aleatorio de esta página" arrow>
+                    <Button
+                        variant="contained"
+                        startIcon={<CasinoIcon />}
+                        onClick={selectRandomNumber}
+                        sx={{
+                            bgcolor: 'primary.main',
+                            color: 'white',
+                            borderRadius: '25px',
+                            px: 3,
+                            py: 1,
+                            fontWeight: 'bold',
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                            textTransform: 'none',
+                            '&:hover': {
+                                bgcolor: 'primary.dark',
+                                transform: 'scale(1.05)',
+                                boxShadow: '0 4px 12px rgba(20, 70, 160, 0.3)',
+                            },
+                            '&:active': {
+                                transform: 'scale(0.95)',
+                            },
+                            transition: 'all 0.2s ease-in-out',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                        }}
+                        size="medium"
+                    >
+                        Número de la Suerte
+                    </Button>
+                </Tooltip>
+                
                 <h3 className='text-xl font-bold'>{formatCurrencyCOP(+price)}</h3>
+                <p className="text-sm text-gray-600">Precio por boleta</p>
             </div>
 
             {/* Input de búsqueda con botones - Responsive */}
