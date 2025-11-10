@@ -12,12 +12,13 @@ const style = {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: 400,
-    maxWidth: '100vw',
-    bgcolor: '#f1f5f9',
-    border: '2px solid #000',
-    boxShadow: 24,
-    p: 4,
+    width: { xs: '95vw', sm: 600, md: 800, lg: 1000 },
+    maxWidth: '95vw',
+    bgcolor: '#ffffff',
+    border: 'none',
+    borderRadius: 3,
+    boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+    p: { xs: 2, sm: 3, md: 4 },
     maxHeight: '95vh', 
     overflowY: 'auto',
 };
@@ -213,159 +214,281 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
             aria-describedby="modal-modal-description"
         >
             <Box sx={style}>
-            <div className="flex justify-between w-full">
-                <IconButton
-                    component="button"
-                    onClick={(e) => {
-                        e.preventDefault(); // evita navegación
-                        handleDownloadPDF({ awards, pdfData, raffle, totalNumbers });
-                    }}
-                >
-                    <Tooltip title='Descargar PDF'>
-                        <PictureAsPdfIcon color="error" />
-                    </Tooltip>
-                </IconButton>
-                
-                <a
-                    href={urlWasap}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', marginLeft: 8, marginRight: 8 }}
-                >
-                    <Tooltip title="Enviar por WhatsApp">
-                        <img
-                            src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
-                            alt="WhatsApp"
-                            width={28}
-                            height={28}
-                            style={{ display: 'block' }}
-                        />
-                    </Tooltip>
-                </a>
-                
-                <IconButton
-                    onClick={handleCloseModal}
-                >
-                    <Tooltip title='Cerrar Ventana'>
-                        <CloseIcon/>
-                    </Tooltip>
-                </IconButton>
-            </div>
-
-            <div>
-                <p className="mb-4 text-2xl font-bold text-center">
-                    Resumen de Compra
-                </p>
-                <Box>
-                
-                <Box sx={{ mb: 2, border: "3px solid #1446A0", p: 2, borderRadius: 2}}>
-                    <div className='flex gap-3'>
-                    <p>Rifa #:</p>
-                    <p className='font-bold text-azul'>{raffle.id+ '-' +raffle.nitResponsable}</p>
-                    </div>
-                    <div className='flex gap-3'>
-                    <p>Info: <span className='font-bold text-azul'>{raffle.description}</span></p>
-                    </div>
-                    <div className='flex gap-3'>
-                    <p>Juega:</p>
-                    <p className='font-bold text-azul'>{formatDateTimeLarge(raffle.playDate)}</p>
-                    </div>
-                </Box>
+                {/* Header con acciones */}
+                <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    mb: 3,
+                    pb: 2,
+                    borderBottom: '2px solid #e2e8f0'
+                }}>
+                    <Typography variant="h4" sx={{ 
+                        fontWeight: 'bold', 
+                        color: '#1e40af',
+                        fontSize: { xs: '1.5rem', md: '2rem' }
+                    }}>
+                        Resumen de Compra
+                    </Typography>
                     
-                {pdfData.map((raffle) => (
-                    <Box key={raffle.id} sx={{ mb: 2, border: "3px solid #1446A0", p: 2, borderRadius: 2}}>
-                        <div className='flex gap-3'>
-                        <p>Número:</p>
-                        <p className='font-bold text-azul'>{formatWithLeadingZeros(raffle.number, totalNumbers)}</p>
-                        </div>
-                        
-                        <div className='flex gap-3'>
-                        <p>Nombre:</p>
-                        <p className='font-bold capitalize text-azul'>{raffle.firstName} {raffle.lastName}</p>
-                        </div>
-                        
-                        <div className='flex gap-3'>
-                        <p>Teléfono: </p>
-                        <p className='font-bold capitalize text-azul'>{raffle.phone}</p>
-                        </div>
-                        
-                        <div className='flex gap-3'>
-                        <p>Dirección:</p>
-                        <p className='font-bold capitalize text-azul'>{raffle.address}</p>
-                        </div>
-                        
-                        <div className='flex gap-3'>
-                        <p>Monto Pagado:</p>
-                        <p className='font-bold capitalize text-azul'>{formatCurrencyCOP(+raffle.paymentAmount)}</p>
-                        </div>
-                        
-                        <div className='flex gap-3'>
-                        <p>Monto A Deber:</p>
-                        <p className='font-bold capitalize text-azul'>{formatCurrencyCOP(+raffle.paymentDue)}</p>
-                        </div>
-                        
-                        <div className='flex gap-3'>
-                        <p>Fecha Reservado:</p>
-                        <p className='font-bold capitalize text-azul'>{formatDateTimeLarge(raffle.reservedDate)}</p>
-                        </div>
-                        <Box
-                            sx={{
-                                mt: 2,
-                                p: 2,
-                                backgroundColor: "#F4F6FA",
-                                border: "2px dashed #1446A0",
-                                borderRadius: 2,
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <IconButton
+                            component="button"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleDownloadPDF({ awards, pdfData, raffle, totalNumbers });
+                            }}
+                            sx={{ 
+                                bgcolor: '#fee2e2',
+                                '&:hover': { bgcolor: '#fecaca' },
+                                borderRadius: 2
                             }}
                         >
-                            <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                                Pagos realizados:
+                            <Tooltip title='Descargar PDF'>
+                                <PictureAsPdfIcon sx={{ color: '#dc2626' }} />
+                            </Tooltip>
+                        </IconButton>
+                        
+                        <IconButton
+                            component="a"
+                            href={urlWasap}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{ 
+                                bgcolor: '#dcfce7',
+                                '&:hover': { bgcolor: '#bbf7d0' },
+                                borderRadius: 2
+                            }}
+                        >
+                            <Tooltip title="Enviar por WhatsApp">
+                                <img
+                                    src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+                                    alt="WhatsApp"
+                                    width={24}
+                                    height={24}
+                                    style={{ display: 'block' }}
+                                />
+                            </Tooltip>
+                        </IconButton>
+                        
+                        <IconButton
+                            onClick={handleCloseModal}
+                            sx={{ 
+                                bgcolor: '#f1f5f9',
+                                '&:hover': { bgcolor: '#e2e8f0' },
+                                borderRadius: 2
+                            }}
+                        >
+                            <Tooltip title='Cerrar Ventana'>
+                                <CloseIcon sx={{ color: '#64748b' }} />
+                            </Tooltip>
+                        </IconButton>
+                    </Box>
+                </Box>
+                {/* Información de la rifa */}
+                <Box sx={{ 
+                    mb: 3, 
+                    p: 3, 
+                    bgcolor: '#f8fafc',
+                    border: '2px solid #1446A0', 
+                    borderRadius: 2,
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
+                        <Box>
+                            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                Rifa #:
                             </Typography>
-                            {raffle.payments.map((payment,) => (
-                                <Box
-                                    key={payment.id}
-                                    sx={{
-                                        mb: 1,
-                                        p: 1,
-                                        border: "1px solid #D6D6D6",
-                                        borderRadius: 1,
-                                        backgroundColor: "#FFFFFF",
-                                    }}
-                                >
-                                    <div className='flex gap-3'>
-                                    <p>Monto:</p>
-                                    <p className='font-bold capitalize text-azul'>{formatCurrencyCOP(+payment.amount)}</p>
-                                    </div>
-                                    <div className='flex gap-3'>
-                                    <p>Método de Pago:</p>
-                                    {/* <p className='font-bold capitalize text-azul'>{payment.paymentMethod || 'No especificado'}</p> */}
-                                    </div>
-                                    {!payment.paidAt ? (
-                                        <div className='flex gap-3'>
-                                        <p>Fecha:</p>
-                                        <p className='font-bold capitalize text-azul'>{formatDateTimeLarge(payment.createdAt)}</p>
-                                        </div>
-                                    ) : (
-                                        <div className='flex gap-3'>
-                                        <p>Fecha:</p>
-                                        <p className='font-bold capitalize text-azul'>{formatDateTimeLargeIsNull(payment.paidAt)}</p>
-                                        </div>
-                                    )}
-                                    <div className='flex gap-3'>
-                                    <p>Vendedor:</p>
-                                    <p className='font-bold capitalize text-azul'>{payment.user ? `${payment.user.firstName} ${payment.user.lastName}` : 'No registrado'}</p>
-                                    </div>
-                                    <div className='flex gap-3'>
-                                    <p>Identificación:</p>
-                                    <p className='font-bold capitalize text-azul'>{payment.user ? payment.user.identificationNumber : 'No registrada'}</p>
-                                    </div>
-                                </Box>
-                            ))}
+                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                                {raffle.id + '-' + raffle.nitResponsable}
+                            </Typography>
+                        </Box>
+                        <Box>
+                            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                Descripción:
+                            </Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                                {raffle.description}
+                            </Typography>
+                        </Box>
+                        <Box>
+                            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                Fecha de Juego:
+                            </Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                                {formatDateTimeLarge(raffle.playDate)}
+                            </Typography>
                         </Box>
                     </Box>
-                ))}
                 </Box>
-            </div>
-            
+                {/* Lista de números comprados */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    {pdfData.map((raffleNumber) => (
+                        <Box 
+                            key={raffleNumber.id} 
+                            sx={{ 
+                                p: 3, 
+                                bgcolor: '#ffffff',
+                                border: "2px solid #1446A0", 
+                                borderRadius: 2,
+                                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                            }}
+                        >
+                            {/* Información principal del número */}
+                            <Box sx={{ 
+                                display: 'grid', 
+                                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, 
+                                gap: 2, 
+                                mb: 3 
+                            }}>
+                                <Box>
+                                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                        Número:
+                                    </Typography>
+                                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                                        {formatWithLeadingZeros(raffleNumber.number, totalNumbers)}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                        Nombre:
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0', textTransform: 'capitalize' }}>
+                                        {raffleNumber.firstName} {raffleNumber.lastName}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                        Teléfono:
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                                        {raffleNumber.phone}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                        Dirección:
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0', textTransform: 'capitalize' }}>
+                                        {raffleNumber.address}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                        Monto Pagado:
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#059669' }}>
+                                        {formatCurrencyCOP(+raffleNumber.paymentAmount)}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                        Saldo Pendiente:
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ fontWeight: 'bold', color: +raffleNumber.paymentDue > 0 ? '#dc2626' : '#059669' }}>
+                                        {formatCurrencyCOP(+raffleNumber.paymentDue)}
+                                    </Typography>
+                                </Box>
+                            </Box>
+
+                            {/* Fecha de reserva */}
+                            <Box sx={{ mb: 3 }}>
+                                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                    Fecha de Reserva:
+                                </Typography>
+                                <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                                    {formatDateTimeLarge(raffleNumber.reservedDate)}
+                                </Typography>
+                            </Box>
+
+                            {/* Historial de pagos */}
+                            <Box
+                                sx={{
+                                    p: 3,
+                                    backgroundColor: "#f8fafc",
+                                    border: "2px dashed #1446A0",
+                                    borderRadius: 2,
+                                }}
+                            >
+                                <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, color: '#1e40af' }}>
+                                    Historial de Pagos
+                                </Typography>
+                                {raffleNumber.payments.length > 0 ? (
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                        {raffleNumber.payments.map((payment) => (
+                                            <Box
+                                                key={payment.id}
+                                                sx={{
+                                                    p: 2,
+                                                    border: "1px solid #e2e8f0",
+                                                    borderRadius: 2,
+                                                    backgroundColor: "#ffffff",
+                                                    boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)'
+                                                }}
+                                            >
+                                                <Box sx={{ 
+                                                    display: 'grid', 
+                                                    gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, 
+                                                    gap: 2 
+                                                }}>
+                                                    <Box>
+                                                        <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                                            Monto:
+                                                        </Typography>
+                                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#059669' }}>
+                                                            {formatCurrencyCOP(+payment.amount)}
+                                                        </Typography>
+                                                    </Box>
+                                                    <Box>
+                                                        <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                                            Método:
+                                                        </Typography>
+                                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0', textTransform: 'capitalize' }}>
+                                                            {payment.rafflePayMethode?.payMethode.name || 'No especificado'}
+                                                        </Typography>
+                                                    </Box>
+                                                    <Box>
+                                                        <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                                            Fecha:
+                                                        </Typography>
+                                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                                                            {!payment.paidAt ? 
+                                                                formatDateTimeLarge(payment.createdAt) : 
+                                                                formatDateTimeLargeIsNull(payment.paidAt)
+                                                            }
+                                                        </Typography>
+                                                    </Box>
+                                                    <Box>
+                                                        <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                                            Vendedor:
+                                                        </Typography>
+                                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0', textTransform: 'capitalize' }}>
+                                                            {payment.user ? `${payment.user.firstName} ${payment.user.lastName}` : 'No registrado'}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                                {payment.user?.identificationNumber && (
+                                                    <Box sx={{ mt: 1 }}>
+                                                        <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                                            Identificación:
+                                                        </Typography>
+                                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                                                            {payment.user.identificationNumber}
+                                                        </Typography>
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                ) : (
+                                    <Typography variant="body1" sx={{ color: '#64748b', fontStyle: 'italic', textAlign: 'center' }}>
+                                        No hay pagos registrados
+                                    </Typography>
+                                )}
+                            </Box>
+                        </Box>
+                    ))}
+                </Box>
             </Box>
         </Modal>
     )

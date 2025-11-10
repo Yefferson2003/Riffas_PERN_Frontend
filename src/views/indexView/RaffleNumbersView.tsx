@@ -1,4 +1,7 @@
 import LocalActivityIcon from '@mui/icons-material/LocalActivity';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CasinoIcon from '@mui/icons-material/Casino';
 import { Chip, FormControl, FormControlLabel, MenuItem, Select, SelectChangeEvent, Skeleton, Switch, TextField } from "@mui/material";
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -29,6 +32,7 @@ import ShareURLRaffleModal from '../../components/indexView/modal/ShareURLRaffle
 import RafflePayMethodsModal from '../../components/indexView/modal/RafflePayMethodsModal';
 import Awards from '../../components/indexView/raffle/Awards';
 import RaffleSideBar from '../../components/indexView/raffle/RaffleSideBar';
+import RaffleProgressBar from '../../components/indexView/RaffleProgressBar';
 import MobileErrorBoundary from '../../components/shared/MobileErrorBoundary';
 import MobileSafePagination from '../../components/shared/MobileSafePagination';
 import socket from '../../socket';
@@ -426,10 +430,9 @@ function RaffleNumbersView() {
             
             <div className="space-y-3">
                 <div className="flex flex-col items-center lg:justify-between lg:flex-row">
-                <div className="flex flex-col items-center lg:flex-row">
-                    <h2 className="text-2xl font-bold lg:text-start lg:text-3xl text-azul">{raffle?.name}</h2>
-
-                </div>
+                    <div className="flex flex-col items-center lg:flex-row">
+                        <h2 className="text-2xl font-bold lg:text-start lg:text-3xl text-azul">{raffle?.name}</h2>
+                    </div>
 
                     <div className="text-xl">
                         <p>{raffle?.nitResponsable}</p>
@@ -445,43 +448,66 @@ function RaffleNumbersView() {
                     raffleDate={raffle?.playDate}
                 />
                 
+                {/* Fechas importantes */}
                 {raffle && 
-                <div className="space-y-3 md:justify-between md:flex md:space-y-0">
-                    <div>
-                        <p className="text-xl font-bold text-azul">Inicio</p>
-                        <p>{formatDateTimeLarge(raffle.startDate)}</p>   
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-10">
+                    <div className="p-6 text-center transition-all duration-300 transform border-0 shadow-lg hover:scale-105 bg-gradient-to-br from-green-50 via-green-100 to-green-200 rounded-2xl hover:shadow-xl">
+                        <div className="inline-block p-3 mb-3 bg-white rounded-full shadow-md bg-opacity-70">
+                            <PlayArrowIcon sx={{ fontSize: 24, color: '#047857', fontWeight: 'bold' }} />
+                        </div>
+                        <p className="mb-3 text-xl font-bold text-green-700 drop-shadow-sm">Inicio</p>
+                        <p className="text-lg font-semibold text-gray-800">{formatDateTimeLarge(raffle.startDate)}</p>   
                     </div>
 
-                    <div>
-                        <p className="text-xl font-bold text-azul">Limite de Compra</p>
-                        <p>{formatDateTimeLarge(raffle.editDate)}</p>
+                    <div className="p-6 text-center transition-all duration-300 transform border-0 shadow-lg hover:scale-105 bg-gradient-to-br from-orange-50 via-orange-100 to-orange-200 rounded-2xl hover:shadow-xl">
+                        <div className="inline-block p-3 mb-3 bg-white rounded-full shadow-md bg-opacity-70">
+                            <AccessTimeIcon sx={{ fontSize: 24, color: '#c2410c', fontWeight: 'bold' }} />
+                        </div>
+                        <p className="mb-3 text-xl font-bold text-orange-700 drop-shadow-sm">Límite de Compra</p>
+                        <p className="text-lg font-semibold text-gray-800">{formatDateTimeLarge(raffle.editDate)}</p>
                     </div>
-                    <div>
-                        <p className="text-xl font-bold text-azul">Juega</p>
-                        <p>{formatDateTimeLarge(raffle.playDate)}</p>
+                    
+                    <div className="p-6 text-center transition-all duration-300 transform border-0 shadow-lg hover:scale-105 bg-gradient-to-br from-purple-50 via-purple-100 to-purple-200 rounded-2xl hover:shadow-xl">
+                        <div className="inline-block p-3 mb-3 bg-white rounded-full shadow-md bg-opacity-70">
+                            <CasinoIcon sx={{ fontSize: 24, color: '#7c3aed', fontWeight: 'bold' }} />
+                        </div>
+                        <p className="mb-3 text-xl font-bold text-purple-700 drop-shadow-sm">Juega</p>
+                        <p className="text-lg font-semibold text-gray-800">{formatDateTimeLarge(raffle.playDate)}</p>
                     </div>
                 </div>}
                 
                 { raffle && raffleId && user.rol.name !== 'vendedor' && 
-                    <Recaudo 
-                        raffleId={+raffleId}
-                        expenseTotal={expenseTotal!}
-                        expenseTotalByUser={expenseTotalByUser! || 0}
-                    />
+                    <div className="p-4 shadow-md rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50">
+                        <Recaudo 
+                            raffleId={+raffleId}
+                            expenseTotal={expenseTotal!}
+                            expenseTotalByUser={expenseTotalByUser! || 0}
+                        />
+                    </div>
                 }
                 { raffle && raffleId && user.rol.name == 'vendedor' && 
-                    <RecaudoByVendedor 
-                        raffleId={+raffleId}
-                        expenseTotalByUser={expenseTotalByUser!}
-                    />
+                    <div className="p-4 shadow-md rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50">
+                        <RecaudoByVendedor 
+                            raffleId={+raffleId}
+                            expenseTotalByUser={expenseTotalByUser!}
+                        />
+                    </div>
                 }
 
                 <img 
-                    className="w-full lg:h-40 lg:object-cover"
+                    className="w-full lg:h-40 lg:object-cover rounded-xl"
                     src={isSmallDevice ? raffle?.banerMovileImgUrl || '/banner_default.jpg' : raffle?.banerImgUrl  || '/banner_default.jpg'}
                     alt="banner riffa" 
                 />
             </div>
+
+            {/* Componente de progreso de la rifa */}
+            {raffle && raffle.totalNumbers && (
+                <RaffleProgressBar 
+                    numbersByStatus={raffle.numbersByStatus}
+                    totalNumbers={raffle.totalNumbers}
+                />
+            )}
 
             <div>
                 <div className="flex items-center justify-center gap-2 text-2xl font-bold text-azul">
@@ -489,7 +515,7 @@ function RaffleNumbersView() {
                     <h2>Comprar Boletas</h2>
                 </div>
                 
-                <div className='flex flex-col items-center justify-center gap-3 mb-5 rounded-lg shadow-sm bg-gray-50'>
+                <div className='flex flex-col items-center justify-center gap-3 mb-5 bg-transparent'>
                     {/* Precio de la rifa */}
                     {raffle && (
                         <div className="text-center">

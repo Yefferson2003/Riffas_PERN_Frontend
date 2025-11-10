@@ -8,6 +8,7 @@ import { useMediaQuery } from "react-responsive";
 import { Box } from "@mui/material";
 import AwardsShared from "../../components/shared/AwardsShared";
 import RaffleNumbersShared from "../../components/shared/RaffleNumbersShared";
+import RaffleProgressBar from "../../components/indexView/RaffleProgressBar";
 
 function RaffleSharedView() {
     const { token } = useParams<{ token: string }>();
@@ -121,6 +122,17 @@ function RaffleSharedView() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Barra de progreso para versión compartida */}
+                    {raffle && raffle.numbersByStatus && raffle.totalNumbers && (
+                        <div className="px-4 pb-6 sm:px-6 md:px-8">
+                            <RaffleProgressBar 
+                                numbersByStatus={raffle.numbersByStatus}
+                                totalNumbers={raffle.totalNumbers}
+                                variant="shared"
+                            />
+                        </div>
+                    )}
 
                     {/* NÚMEROS DE LA RIFA */}
                     {token && awards && raffle && (

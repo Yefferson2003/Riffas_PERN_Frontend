@@ -132,14 +132,26 @@ export const raffleSchema = z.object({
 })
 
 export const raffleSchemaShared = raffleSchema.extend({
-    totalNumbers: z.number().min(0).optional()
+    totalNumbers: z.number().min(0).optional(),
+    numbersByStatus: z.object({
+        available: z.number(),
+        sold: z.number(),
+        pending: z.number(),
+        apartado: z.number()
+    }).optional()
 })
 
 export const raffleByIdSchema = raffleSchema.extend({
     userRiffle: z.array(z.object({
         userId: z.number()
     })).nullable(),
-    totalNumbers: z.number().min(0).optional()
+    totalNumbers: z.number().min(0).optional(),
+    numbersByStatus: z.object({
+        available: z.number(),
+        sold: z.number(),
+        pending: z.number(),
+        apartado: z.number()
+    }).optional()
 })
 
 export const createRaffleSchema = raffleSchema.pick({

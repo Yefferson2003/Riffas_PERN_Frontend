@@ -1,4 +1,4 @@
-import { IconButton, Tooltip } from "@mui/material"
+import { Box, IconButton, Tooltip } from "@mui/material"
 import { useNavigate } from "react-router-dom"
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -52,89 +52,106 @@ function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfD
     }
     
     return (
-        <div className="flex justify-between w-full">
-            
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             <IconButton
                 onClick={handleDeleteNumberClient}
                 disabled={isPending}
+                sx={{ 
+                    bgcolor: '#fee2e2',
+                    '&:hover': { bgcolor: '#fecaca' },
+                    borderRadius: 2,
+                    '&:disabled': { bgcolor: '#f3f4f6' }
+                }}
             >
                 <Tooltip title='Eliminar Cliente de la Rifa'>
-                    <DeleteIcon color={isPending ? 'disabled' : 'error'}/>
+                    <DeleteIcon sx={{ color: isPending ? '#9ca3af' : '#dc2626' }}/>
                 </Tooltip>
             </IconButton>
             
-            {raffleNumberStatus !== 'available' &&
+            {raffleNumberStatus !== 'available' && (
                 <IconButton
                     onClick={() => handleMessageToWhatsAppAviso({ telefono, number, totalNumbers, name, raffleName: raffle.name })}
+                    sx={{ 
+                        bgcolor: '#fef3c7',
+                        '&:hover': { bgcolor: '#fde68a' },
+                        borderRadius: 2
+                    }}
                 >
-                    <Tooltip title='Eliminar Cliente de la Rifa'>
-                        <CampaignIcon color='warning'/>
+                    <Tooltip title='Enviar Aviso por WhatsApp'>
+                        <CampaignIcon sx={{ color: '#d97706' }}/>
                     </Tooltip>
                 </IconButton>
-            }
+            )}
 
-            { raffleNumberStatus !== 'available' && 
+            {raffleNumberStatus !== 'available' && (
                 <>
-                <ButtoToWasap
-                    handleToWasap={handleToWasap}
-                />
-                <div>
+                    <ButtoToWasap handleToWasap={handleToWasap} />
+                    
                     <IconButton
                         onClick={(e) => {
-                            e.preventDefault(); // evita navegación
+                            e.preventDefault();
                             handleDownloadPDF({ awards, pdfData, raffle, totalNumbers});
+                        }}
+                        sx={{ 
+                            bgcolor: '#fee2e2',
+                            '&:hover': { bgcolor: '#fecaca' },
+                            borderRadius: 2
                         }}
                     >
                         <Tooltip title='Descargar PDF'>
-                            <PictureAsPdfIcon color="error" />
+                            <PictureAsPdfIcon sx={{ color: '#dc2626' }} />
                         </Tooltip>
                     </IconButton>
 
-                </div>
-                <div>
                     <IconButton
                         onClick={(e) => {
-                            e.preventDefault(); // evita navegación
+                            e.preventDefault();
                             handleViewAndDownloadPDF({ awards, pdfData, raffle, totalNumbers});
+                        }}
+                        sx={{ 
+                            bgcolor: '#dbeafe',
+                            '&:hover': { bgcolor: '#bfdbfe' },
+                            borderRadius: 2
                         }}
                     >
                         <Tooltip title='Ver Ticket'>
-                            <AdfScannerIcon color="primary"/>
+                            <AdfScannerIcon sx={{ color: '#2563eb' }}/>
                         </Tooltip>
                     </IconButton>
-
-                </div>
-                
                 </>
-            }
+            )}
 
-            {(raffleNumberStatus == 'apartado') || (raffleNumberStatus == 'pending') &&
-                <>
-                <div>
-                    <IconButton
-                        onClick={(e) => {
-                            e.preventDefault(); // evita navegación
-                            handleSendPaymentReminderWhatsApp()
-                        }}
-                    >
-                        <Tooltip title='Recordar Pago'>
-                            <AttachMoneyIcon color="success"/>
-                        </Tooltip>
-                    </IconButton>
-                </div>
-                </>
-            }
+            {(raffleNumberStatus == 'apartado' || raffleNumberStatus == 'pending') && (
+                <IconButton
+                    onClick={(e) => {
+                        e.preventDefault();
+                        handleSendPaymentReminderWhatsApp()
+                    }}
+                    sx={{ 
+                        bgcolor: '#dcfce7',
+                        '&:hover': { bgcolor: '#bbf7d0' },
+                        borderRadius: 2
+                    }}
+                >
+                    <Tooltip title='Recordar Pago'>
+                        <AttachMoneyIcon sx={{ color: '#059669' }}/>
+                    </Tooltip>
+                </IconButton>
+            )}
 
-            
             <IconButton
                 onClick={() => navigate(location.pathname, {replace: true})}
+                sx={{ 
+                    bgcolor: '#f1f5f9',
+                    '&:hover': { bgcolor: '#e2e8f0' },
+                    borderRadius: 2
+                }}
             >
                 <Tooltip title='Cerrar Ventana'>
-                    <CloseIcon/>
+                    <CloseIcon sx={{ color: '#64748b' }}/>
                 </Tooltip>
             </IconButton>
-
-        </div>
+        </Box>
     )
 }
 
