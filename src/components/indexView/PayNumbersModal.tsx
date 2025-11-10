@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getActiveRafflePayMethods } from "../../api/payMethodeApi";
 import { getRaffleNumbersPending, sellNumbers } from "../../api/raffleNumbersApi";
+import { getRaffleById } from "../../api/raffleApi";
 import { AwardType, PayNumbersForm, RaffleNumbersPayments } from "../../types";
 import { capitalize, formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from "../../utils";
 import { NumbersSelectedType } from "../../views/indexView/RaffleNumbersView";
@@ -48,6 +49,12 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
 
     const queryClient = useQueryClient()
 
+    // Obtener datos de la rifa para el color
+    const { data: raffle } = useQuery({
+        queryKey: ['raffle', raffleId],
+        queryFn: () => getRaffleById(raffleId.toString()),
+        enabled: !!raffleId
+    });
     
     
     // MODAL //
@@ -331,10 +338,28 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
             <Box sx={style}>
             <ButtonCloseModal/>
             
-            <h2 className="mb-5 text-2xl font-bold text-center text-azul">Comprar Numeros</h2>
-            <p className="mb-5 text-xl font-bold text-center">LLena este formulario para comprar los numeros seleccionados</p>
-            <p className="text-center">Números seleccionados</p>
-            <p className="font-bold text-center text-azul text-wrap"> {
+            <h2 
+                className="mb-5 text-2xl font-bold text-center"
+                style={{ color: raffle?.color || '#1976d2' }}
+            >
+                Comprar Numeros
+            </h2>
+            <p 
+                className="mb-5 text-xl font-bold text-center"
+                style={{ color: raffle?.color || '#1976d2' }}
+            >
+                LLena este formulario para comprar los numeros seleccionados
+            </p>
+            <p 
+                className="text-center"
+                style={{ color: raffle?.color || '#1976d2' }}
+            >
+                Números seleccionados
+            </p>
+            <p 
+                className="font-bold text-center text-wrap"
+                style={{ color: raffle?.color || '#1976d2' }}
+            > {
                 numbersSeleted.length > 0
                 ? `${numbersSeleted
                     .map((num) => formatWithLeadingZeros(num.number, totalNumbers))
@@ -342,11 +367,37 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                 : "No hay números seleccionados."}
             </p>
 
-            {!isReadOnlyMode ? <p className="text-center">Valor de la Rifa:<span className="font-bold text-azul"> {formatCurrencyCOP(currentRafflePrice)}</span></p> : null}
+            {!isReadOnlyMode ? 
+                <p className="text-center">
+                    Valor de la Rifa:
+                    <span 
+                        className="font-bold" 
+                        style={{ color: raffle?.color || '#1976d2' }}
+                    >
+                        {" "}{formatCurrencyCOP(currentRafflePrice)}
+                    </span>
+                </p> : null}
 
-            {isReadOnlyMode &&   <p className="text-center">Valor abonado:<span className="font-bold text-azul"> {formatCurrencyCOP(totalAbonado)}</span></p>}
+            {isReadOnlyMode &&   
+                <p className="text-center">
+                    Valor abonado:
+                    <span 
+                        className="font-bold" 
+                        style={{ color: raffle?.color || '#1976d2' }}
+                    >
+                        {" "}{formatCurrencyCOP(totalAbonado)}
+                    </span>
+                </p>}
 
-            <p className="my-5 text-center">Total a pagar: <span className="font-bold text-azul">{formatCurrencyCOP(totalToPay)}</span></p>
+            <p className="my-5 text-center">
+                Total a pagar: 
+                <span 
+                    className="font-bold" 
+                    style={{ color: raffle?.color || '#1976d2' }}
+                >
+                    {formatCurrencyCOP(totalToPay)}
+                </span>
+            </p>
 
 
             <div className="text-center ">
@@ -357,9 +408,21 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                             checked={priceEspecial} 
                             onChange={handleChangePriceSpecial}
                             disabled={isReadOnlyMode}
+                            sx={{
+                                '& .MuiSwitch-switchBase.Mui-checked': {
+                                    color: raffle?.color || '#1976d2',
+                                },
+                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                    backgroundColor: raffle?.color || '#1976d2',
+                                }
+                            }}
                         />
                     }
-                    label="Aplicar Precio Especial"
+                    label={
+                        <span style={{ color: raffle?.color || '#1976d2', fontWeight: 'bold' }}>
+                            Aplicar Precio Especial
+                        </span>
+                    }
                 />
             </div>
         
@@ -379,6 +442,19 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                             variant="outlined" 
                             error={!!errors.amount}
                             helperText={errors.amount?.message}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    '&:hover fieldset': {
+                                        borderColor: raffle?.color || '#1976d2',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: raffle?.color || '#1976d2',
+                                    },
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                    color: raffle?.color || '#1976d2',
+                                },
+                            }}
                             {...register('amount', {
                             required: 'Monto obligatorio',
                             pattern: {
@@ -404,7 +480,16 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                     rules={{ required: 'Seleccione un método de pago' }}
                     render={({ field }) => (
                         <FormControl fullWidth error={!!errors.paymentMethod}>
-                        <InputLabel id="paymentMethodLabel">Método de pago</InputLabel>
+                        <InputLabel 
+                            id="paymentMethodLabel"
+                            sx={{
+                                '&.Mui-focused': {
+                                    color: raffle?.color || '#1976d2',
+                                },
+                            }}
+                        >
+                            Método de pago
+                        </InputLabel>
                         <Select
                             {...field}
                             labelId="paymentMethodLabel"
@@ -415,6 +500,14 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                                 field.onChange(selectedValue);
                             }}
                             disabled={isLoadingPayMethods}
+                            sx={{
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: raffle?.color || '#1976d2',
+                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: raffle?.color || '#1976d2',
+                                },
+                            }}
                         >
                             <MenuItem disabled value="">
                                 {isLoadingPayMethods ? 'Cargando métodos...' : 'Seleccione un método de pago'}
@@ -478,6 +571,19 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                         label="Referencia de pago (opcional)" 
                         variant="outlined" 
                         placeholder="Ej: 123456"
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                '&:hover fieldset': {
+                                    borderColor: raffle?.color || '#1976d2',
+                                },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: raffle?.color || '#1976d2',
+                                },
+                            },
+                            '& .MuiInputLabel-root.Mui-focused': {
+                                color: raffle?.color || '#1976d2',
+                            },
+                        }}
                         {...register('reference')}
                     />
 
@@ -485,32 +591,73 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                         isReadOnlyMode && pendingNumbers && pendingNumbers.length > 0 ? (
                             <>
                                 <div className="p-2 space-y-4 bg-white border-2 border-gray-300 rounded-lg">
-                                    <h3 className="mb-2 text-lg font-bold text-center text-azul">Datos del Cliente</h3>
+                                    <h3 
+                                        className="mb-2 text-lg font-bold text-center"
+                                        style={{ color: raffle?.color || '#1976d2' }}
+                                    >
+                                        Datos del Cliente
+                                    </h3>
                                     
                                     <div className="grid grid-cols-1 gap-2">
                                         <div className="p-3 border rounded-md bg-gray-50">
-                                            <p className="mb-1 text-sm font-semibold text-azul">Nombres</p>
+                                            <p 
+                                                className="mb-1 text-sm font-semibold"
+                                                style={{ color: raffle?.color || '#1976d2' }}
+                                            >
+                                                Nombres
+                                            </p>
                                             <p className="text-base font-medium text-gray-900">{pendingNumbers[0].firstName || '—'}</p>
                                         </div>
 
                                         <div className="p-3 border rounded-md bg-gray-50">
-                                            <p className="mb-1 text-sm font-semibold text-azul">Apellidos</p>
+                                            <p 
+                                                className="mb-1 text-sm font-semibold"
+                                                style={{ color: raffle?.color || '#1976d2' }}
+                                            >
+                                                Apellidos
+                                            </p>
                                             <p className="text-base font-medium text-gray-900">{pendingNumbers[0].lastName || '—'}</p>
                                         </div>
 
                                         <div className="p-3 border rounded-md bg-gray-50">
-                                            <p className="mb-1 text-sm font-semibold text-azul">Teléfono</p>
+                                            <p 
+                                                className="mb-1 text-sm font-semibold"
+                                                style={{ color: raffle?.color || '#1976d2' }}
+                                            >
+                                                Teléfono
+                                            </p>
                                             <p className="text-base font-medium text-gray-900">{pendingNumbers[0].phone || '—'}</p>
                                         </div>
 
                                         <div className="p-3 border rounded-md bg-gray-50">
-                                            <p className="mb-1 text-sm font-semibold text-azul">Dirección</p>
+                                            <p 
+                                                className="mb-1 text-sm font-semibold"
+                                                style={{ color: raffle?.color || '#1976d2' }}
+                                            >
+                                                Dirección
+                                            </p>
                                             <p className="text-base font-medium text-gray-900">{pendingNumbers[0].address || '—'}</p>
                                         </div>
 
-                                        <div className="p-3 border-2 border-blue-200 rounded-md bg-blue-50">
-                                            <p className="mb-1 text-sm font-semibold text-azul">Monto adeudado (total)</p>
-                                            <p className="text-xl font-bold text-azul">{formatCurrencyCOP(totalDebtToPay)}</p>
+                                        <div 
+                                            className="p-3 border-2 rounded-md"
+                                            style={{ 
+                                                borderColor: raffle?.color || '#1976d2',
+                                                backgroundColor: raffle?.color ? `${raffle.color}15` : '#e3f2fd'
+                                            }}
+                                        >
+                                            <p 
+                                                className="mb-1 text-sm font-semibold"
+                                                style={{ color: raffle?.color || '#1976d2' }}
+                                            >
+                                                Monto adeudado (total)
+                                            </p>
+                                            <p 
+                                                className="text-xl font-bold"
+                                                style={{ color: raffle?.color || '#1976d2' }}
+                                            >
+                                                {formatCurrencyCOP(totalDebtToPay)}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -520,14 +667,45 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                             <TextField id="firstName" label="Nombres" variant="outlined" 
                                 error={!!errors.firstName}
                                 helperText={errors.firstName?.message}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '&:hover fieldset': {
+                                            borderColor: raffle?.color || '#1976d2',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: raffle?.color || '#1976d2',
+                                        },
+                                    },
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                        color: raffle?.color || '#1976d2',
+                                    },
+                                }}
                                 {...register('firstName', {required: 'Nombres Obligatorio'})}
                             />
                             <TextField id="lastName" label="Apellidos" variant="outlined" 
                                 error={!!errors.lastName}
                                 helperText={errors.lastName?.message}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '&:hover fieldset': {
+                                            borderColor: raffle?.color || '#1976d2',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: raffle?.color || '#1976d2',
+                                        },
+                                    },
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                        color: raffle?.color || '#1976d2',
+                                    },
+                                }}
                                 {...register('lastName', {required: 'Apellidos Obligatorio'})}
                             />
-                            <p className="text-sm text-black text-start">Número de teléfono</p>
+                            <p 
+                                className="text-sm text-start"
+                                style={{ color: raffle?.color || '#1976d2' }}
+                            >
+                                Número de teléfono
+                            </p>
                             <PhoneNumberInput
                                 
                                 value={phone}
@@ -540,16 +718,46 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                             <TextField id="address" label="Dirección" variant="outlined" 
                                 error={!!errors.address}
                                 helperText={errors.address?.message}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '&:hover fieldset': {
+                                            borderColor: raffle?.color || '#1976d2',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: raffle?.color || '#1976d2',
+                                        },
+                                    },
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                        color: raffle?.color || '#1976d2',
+                                    },
+                                }}
                                 {...register('address', {required: 'Dirección Obligatoria'})}
                             />
                             <FormControl>
-                            <InputLabel id="actionModeTypelabel">Tipo de reserva</InputLabel>
+                            <InputLabel 
+                                id="actionModeTypelabel"
+                                sx={{
+                                    '&.Mui-focused': {
+                                        color: raffle?.color || '#1976d2',
+                                    },
+                                }}
+                            >
+                                Tipo de reserva
+                            </InputLabel>
                             <Select
                                 id="actionModeTypelabel"
                                 label="Tipo de reserva"
                                 value={actionMode}
                                 onChange={handleOnChange}
                                 disabled={isReadOnlyMode}
+                                sx={{
+                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: raffle?.color || '#1976d2',
+                                    },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: raffle?.color || '#1976d2',
+                                    },
+                                }}
                             >
                                 <MenuItem value={'buy'}>Comprar Números</MenuItem>
                                 <MenuItem value={'separate'}>Apartar Números</MenuItem>
@@ -585,6 +793,12 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                     <Button
                         type="submit"
                         variant="contained"
+                        sx={{
+                            bgcolor: raffle?.color || '#1976d2',
+                            '&:hover': {
+                                bgcolor: raffle?.color ? `${raffle.color}dd` : '#1565c0'
+                            }
+                        }}
                         disabled={
                             isPending || 
                             isLoadingPending || 

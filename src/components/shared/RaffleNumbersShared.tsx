@@ -15,11 +15,14 @@ type RaffleNumbersSharedProps = {
     raffle: RaffleSharedType
     token: string
     price: string
+    raffleColor?: string
 }
 
-function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersSharedProps) {
+function RaffleNumbersShared({ token, raffle, price, awards, raffleColor}: RaffleNumbersSharedProps) {
 
     const navigate = useNavigate()
+
+    const primaryColor = raffleColor || '#1976d2';
 
     const [page, setPage] = useState<number>(1);
     const [rowsPerPage] = useState<number>(100);
@@ -151,7 +154,10 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
 
     return (
         <div>
-            <div className="flex flex-col items-center justify-center gap-3 mb-5 text-2xl font-bold text-azul">
+            <div 
+                className="flex flex-col items-center justify-center gap-3 mb-5 text-2xl font-bold"
+                style={{ color: primaryColor }}
+            >
                 <div className='flex items-center gap-2'>
                     <LocalActivityIcon/>
                     <h2>Apartar Boletas</h2>
@@ -165,7 +171,7 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                         onClick={selectRandomNumber}
                         disabled={randomNumberMutation.isPending}
                         sx={{
-                            bgcolor: 'primary.main',
+                            bgcolor: primaryColor,
                             color: 'white',
                             borderRadius: '25px',
                             px: 3,
@@ -173,10 +179,11 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                             fontWeight: 'bold',
                             fontSize: { xs: '0.8rem', sm: '0.9rem' },
                             textTransform: 'none',
+                            boxShadow: `0 4px 12px ${primaryColor}40, 0 2px 6px ${primaryColor}20`,
                             '&:hover': {
-                                bgcolor: 'primary.dark',
+                                bgcolor: `${primaryColor}dd`,
                                 transform: 'scale(1.05)',
-                                boxShadow: '0 4px 12px rgba(20, 70, 160, 0.3)',
+                                boxShadow: `0 8px 20px ${primaryColor}50, 0 4px 10px ${primaryColor}30`,
                             },
                             '&:active': {
                                 transform: 'scale(0.95)',
@@ -187,7 +194,6 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                                 opacity: 0.7,
                             },
                             transition: 'all 0.2s ease-in-out',
-                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
                         }}
                         size="medium"
                     >
@@ -198,7 +204,7 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                 {/* Mostrar números seleccionados */}
                 {selectedNumbers.length > 0 && (
                     <div className="w-full max-w-2xl">
-                        <p className="mb-2 text-sm font-medium text-center text-gray-600">
+                        <p className="mb-2 text-sm font-medium text-center" style={{ color: primaryColor }}>
                             Números seleccionados:
                         </p>
                         <div className="flex flex-wrap justify-center gap-2">
@@ -217,6 +223,7 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                                     sx={{
                                         fontWeight: 'bold',
                                         fontSize: '0.9rem',
+                                        bgcolor: primaryColor,
                                         '& .MuiChip-deleteIcon': {
                                             color: 'white',
                                             fontSize: '1.2rem',
@@ -229,7 +236,7 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                             ))}
                         </div>
                         <div className="mt-2 text-center">
-                            <span className="text-sm font-bold text-gray-700">
+                            <span className="text-sm font-bold" style={{ color: primaryColor }}>
                                 Total: {formatCurrencyCOP(+price * selectedNumbers.length)}
                             </span>
                         </div>
@@ -237,7 +244,7 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                 )}
                 
                 <h3 className='text-xl font-bold'>{formatCurrencyCOP(+price)}</h3>
-                <p className="text-sm text-gray-600">Precio por boleta</p>
+                <p className="text-sm" style={{ color: primaryColor }}>Precio por boleta</p>
             </div>
 
             {/* Input de búsqueda con botones - Responsive */}
@@ -255,7 +262,7 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
-                                        <SearchIcon sx={{ color: '#1446A0' }} />
+                                        <SearchIcon sx={{ color: primaryColor }} />
                                     </InputAdornment>
                                 ),
                             }}
@@ -263,16 +270,19 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                                 '& .MuiOutlinedInput-root': {
                                     borderRadius: '25px',
                                     backgroundColor: 'white',
+                                    boxShadow: `0 2px 8px ${primaryColor}15`,
                                     '& fieldset': {
                                         borderColor: '#e0e4e7',
                                         borderWidth: '2px',
                                     },
                                     '&:hover fieldset': {
-                                        borderColor: '#1446A0',
+                                        borderColor: primaryColor,
+                                        boxShadow: `0 0 0 3px ${primaryColor}20`,
                                     },
                                     '&.Mui-focused fieldset': {
-                                        borderColor: '#1446A0',
+                                        borderColor: primaryColor,
                                         borderWidth: '2px',
+                                        boxShadow: `0 0 0 3px ${primaryColor}20`,
                                     },
                                 },
                                 '& .MuiInputBase-input': {
@@ -297,9 +307,11 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                                 py: 1,
                                 minWidth: 'auto',
                                 fontWeight: 'bold',
-                                backgroundColor: '#1446A0',
+                                backgroundColor: primaryColor,
+                                boxShadow: `0 2px 8px ${primaryColor}30`,
                                 '&:hover': {
-                                    backgroundColor: '#0f3a8a',
+                                    backgroundColor: `${primaryColor}dd`,
+                                    boxShadow: `0 4px 12px ${primaryColor}40`,
                                 },
                                 '&:disabled': {
                                     backgroundColor: '#94a3b8',
@@ -319,12 +331,13 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                                     py: 1,
                                     minWidth: 'auto',
                                     fontWeight: 'bold',
-                                    borderColor: '#1446A0',
-                                    color: '#1446A0',
+                                    borderColor: primaryColor,
+                                    color: primaryColor,
                                     '&:hover': {
-                                        borderColor: '#0f3a8a',
-                                        color: '#0f3a8a',
-                                        backgroundColor: 'rgba(20, 70, 160, 0.04)',
+                                        borderColor: `${primaryColor}dd`,
+                                        color: `${primaryColor}dd`,
+                                        backgroundColor: `${primaryColor}08`,
+                                        boxShadow: `0 2px 8px ${primaryColor}20`,
                                     },
                                 }}
                             >
@@ -345,7 +358,7 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
-                                        <SearchIcon sx={{ color: '#1446A0' }} />
+                                        <SearchIcon sx={{ color: primaryColor }} />
                                     </InputAdornment>
                                 ),
                             }}
@@ -353,16 +366,19 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                                 '& .MuiOutlinedInput-root': {
                                     borderRadius: '20px',
                                     backgroundColor: 'white',
+                                    boxShadow: `0 2px 8px ${primaryColor}15`,
                                     '& fieldset': {
                                         borderColor: '#e0e4e7',
                                         borderWidth: '2px',
                                     },
                                     '&:hover fieldset': {
-                                        borderColor: '#1446A0',
+                                        borderColor: primaryColor,
+                                        boxShadow: `0 0 0 3px ${primaryColor}20`,
                                     },
                                     '&.Mui-focused fieldset': {
-                                        borderColor: '#1446A0',
+                                        borderColor: primaryColor,
                                         borderWidth: '2px',
+                                        boxShadow: `0 0 0 3px ${primaryColor}20`,
                                     },
                                 },
                                 '& .MuiInputBase-input': {
@@ -388,9 +404,11 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                                     py: 1.2,
                                     fontWeight: 'bold',
                                     fontSize: '0.9rem',
-                                    backgroundColor: '#1446A0',
+                                    backgroundColor: primaryColor,
+                                    boxShadow: `0 2px 8px ${primaryColor}30`,
                                     '&:hover': {
-                                        backgroundColor: '#0f3a8a',
+                                        backgroundColor: `${primaryColor}dd`,
+                                        boxShadow: `0 4px 12px ${primaryColor}40`,
                                     },
                                     '&:disabled': {
                                         backgroundColor: '#94a3b8',
@@ -411,12 +429,13 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                                         minWidth: 'auto',
                                         fontWeight: 'bold',
                                         fontSize: '0.9rem',
-                                        borderColor: '#1446A0',
-                                        color: '#1446A0',
+                                        borderColor: primaryColor,
+                                        color: primaryColor,
                                         '&:hover': {
-                                            borderColor: '#0f3a8a',
-                                            color: '#0f3a8a',
-                                            backgroundColor: 'rgba(20, 70, 160, 0.04)',
+                                            borderColor: `${primaryColor}dd`,
+                                            color: `${primaryColor}dd`,
+                                            backgroundColor: `${primaryColor}08`,
+                                            boxShadow: `0 2px 8px ${primaryColor}20`,
                                         },
                                     }}
                                 >
@@ -429,8 +448,13 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                     {/* Indicador de búsqueda activa - Responsive */}
                     {searchQuery && (
                         <div className="mt-3 text-center">
-                            <span className="inline-block px-3 py-1.5 text-xs sm:text-sm font-medium text-blue-700 bg-blue-100 rounded-full border border-blue-200">
-                                🎯 Buscando: #{formatWithLeadingZeros(+searchQuery, raffle.totalNumbers || 0)}
+                            <span className="inline-block px-3 py-1.5 text-xs sm:text-sm font-medium text-white rounded-full border border-blue-200"
+                                style={{
+                                    backgroundColor: primaryColor,
+                                    borderColor: `${primaryColor}80`
+                                }}
+                            >
+                                Buscando: #{formatWithLeadingZeros(+searchQuery, raffle.totalNumbers || 0)}
                             </span>
                         </div>
                     )}
@@ -449,7 +473,12 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                         />
                     ))
                 ) : raffleNumbers && token && raffle.totalNumbers && raffleNumbers.raffleNumbers.length === 0 ? (
-                    <p className='text-xl font-bold col-span-full text-azul'>No hay resultados...</p>
+                    <p 
+                        className='text-xl font-bold col-span-full'
+                        style={{ color: primaryColor }}
+                    >
+                        No hay resultados...
+                    </p>
                 ) : (
                     raffleNumbers && raffleNumbers.raffleNumbers.map(raffleNumber => {
                         const isSelected = isNumberSelected(raffleNumber.id);
@@ -458,12 +487,21 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                         return (
                             <Chip
                                 key={raffleNumber.id}
-                                sx={getChipStyles(raffleNumber.status)}
+                                sx={{
+                                    ...getChipStyles(raffleNumber.status),
+                                    ...(isSelected && {
+                                        backgroundColor: primaryColor + ' !important',
+                                        color: 'white !important',
+                                        '&:hover': {
+                                            backgroundColor: `${primaryColor}dd !important`,
+                                        }
+                                    })
+                                }}
                                 label={formatWithLeadingZeros(raffleNumber.number, raffle.totalNumbers || 0)} 
                                 variant="filled" 
                                 size="small"
                                 disabled={!isAvailable}
-                                color={isSelected ? 'primary' : colorStatusRaffleNumber[raffleNumber.status]}
+                                color={isSelected ? undefined : colorStatusRaffleNumber[raffleNumber.status]}
                                 onClick={() => {
                                     if (isAvailable) {
                                         toggleSelectNumber(raffleNumber);
@@ -488,14 +526,20 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                             py: 1.5,
                             fontWeight: 'bold',
                             fontSize: '1rem',
-                            boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                            bgcolor: primaryColor,
+                            boxShadow: `0 8px 20px ${primaryColor}40`,
                             '&:hover': {
-                                boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-                            }
+                                bgcolor: `${primaryColor}dd`,
+                                boxShadow: `0 10px 25px ${primaryColor}50`,
+                                transform: 'scale(1.02)',
+                            },
+                            transition: 'all 0.2s ease-in-out',
                         }}
                     >
                         Apartar {selectedNumbers.length} número{selectedNumbers.length > 1 ? 's' : ''}
-                        <span className="ml-2 px-2 py-0.5 bg-white text-blue-600 rounded-full text-sm font-bold">
+                        <span className="ml-2 px-2 py-0.5 bg-white rounded-full text-sm font-bold"
+                            style={{ color: primaryColor }}
+                        >
                             {formatCurrencyCOP(+price * selectedNumbers.length)}
                         </span>
                     </Button>
@@ -505,12 +549,26 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
             <div className='flex justify-center my-5'>   
                 <Pagination  
                     count={raffleNumbers?.totalPages} 
-                    color="primary" 
                     onChange={handlePageChange} 
                     page={page}
                     siblingCount={1} 
                     boundaryCount={1}
                     size='small'
+                    sx={{
+                        '& .MuiPaginationItem-root': {
+                            color: primaryColor,
+                            '&.Mui-selected': {
+                                backgroundColor: primaryColor,
+                                color: 'white',
+                                '&:hover': {
+                                    backgroundColor: `${primaryColor}dd`,
+                                },
+                            },
+                            '&:hover': {
+                                backgroundColor: `${primaryColor}20`,
+                            },
+                        },
+                    }}
                 /> 
             </div>
 
@@ -523,6 +581,7 @@ function RaffleNumbersShared({ token, raffle, price, awards}: RaffleNumbersShare
                 raffleRefetch={handleRefetch}
                 selectedNumbers={selectedNumbers}
                 setSelectedNumbers={setSelectedNumbers}
+                raffleColor={raffleColor}
             />}
         </div>
     );

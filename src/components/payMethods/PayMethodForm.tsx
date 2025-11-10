@@ -35,8 +35,20 @@ function PayMethodForm({ control, errors, isSubmitting, isMobile }: PayMethodFor
                             variant="outlined"
                             sx={{
                                 '& .MuiOutlinedInput-root': {
-                                    borderRadius: 2
-                                }
+                                    borderRadius: 2,
+                                    '& fieldset': {
+                                        borderColor: '#1976d240',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#1976d2',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#1976d2',
+                                    },
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                    color: '#1976d2',
+                                },
                             }}
                         />
                     )}

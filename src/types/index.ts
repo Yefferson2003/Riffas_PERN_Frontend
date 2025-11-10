@@ -129,7 +129,7 @@ export const raffleSchema = z.object({
     price: z.string(),
     banerImgUrl: z.string(),
     banerMovileImgUrl: z.string(),
-    // color: z.string().nullable()
+    color: z.string().nullable().optional(),
 })
 
 export const raffleSchemaShared = raffleSchema.extend({
@@ -152,7 +152,8 @@ export const raffleByIdSchema = raffleSchema.extend({
         sold: z.number(),
         pending: z.number(),
         apartado: z.number()
-    }).optional()
+    }).optional(),
+    // color: z.string().nullable()
 })
 
 export const createRaffleSchema = raffleSchema.pick({
@@ -163,7 +164,7 @@ export const createRaffleSchema = raffleSchema.pick({
     nitResponsable: true,
     nameResponsable: true,
     banerMovileImgUrl: true,
-    // color: true
+    color: true
 })
 .extend({
     quantity: z.number(),
@@ -179,6 +180,7 @@ export const createRaffleSchema = raffleSchema.pick({
         .string()
         .nullable()
         .transform((date) => (date ? dayjs(date) : null)),
+    // color: z.string().optional().default('#1976d2'),
 });
 
 export const updateRaffleSchema = createRaffleSchema.pick({
@@ -191,6 +193,7 @@ export const updateRaffleSchema = createRaffleSchema.pick({
     playDate:true,
     editDate: true,
     banerMovileImgUrl: true,
+    color: true,
 })
 
 export const responseGetRafflesSchema = ResponsePaginationSchema.pick({

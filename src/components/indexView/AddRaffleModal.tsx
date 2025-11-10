@@ -1,4 +1,4 @@
-import { Box, Button, FormControl, Modal, Slider, TextField, Typography } from "@mui/material";
+import { Box, Button, FormControl, Modal, Slider, TextField, Typography, Popover } from "@mui/material";
 import { MobileDateTimePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
@@ -46,6 +46,7 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [selectedFileMobile, setSelectedFileMobile] = useState<File | null>(null); // Nuevo estado para la segunda imagen
+    const [colorPickerAnchor, setColorPickerAnchor] = useState<HTMLElement | null>(null);
 
     const initialValues: CreateRaffleForm   = {
         name: '',
@@ -58,7 +59,8 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
         price: '',
         banerImgUrl: '',
         quantity: 1000,
-        banerMovileImgUrl: ''
+        banerMovileImgUrl: '',
+        color: '#1976d2',
     }
 
     const {register, handleSubmit, setValue, watch, reset, formState: {errors}} = useForm({
@@ -174,6 +176,27 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
         });
     }
 
+    // Colores predefinidos populares para rifas
+    const presetColors = [
+        '#1976d2', // Azul MUI
+        '#d32f2f', // Rojo
+        '#388e3c', // Verde
+        '#f57c00', // Naranja
+        '#7b1fa2', // Púrpura
+        '#c2185b', // Rosa
+        '#00796b', // Teal
+        '#5d4037', // Marrón
+        '#455a64', // Gris azulado
+        '#e91e63', // Pink
+        '#9c27b0', // Purple
+        '#673ab7', // Deep Purple
+    ];
+
+    const handleColorSelect = (color: string) => {
+        setValue('color', color);
+        setColorPickerAnchor(null);
+    };
+
     return (
         <Modal
         open={show}
@@ -243,6 +266,128 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
                         })}
                         
                     />
+
+                    {/* Campo de color mejorado */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <TextField 
+                            id="color" 
+                            label="Color de la rifa" 
+                            variant="outlined" 
+                            value={watch('color')}
+                            error={!!errors.color}
+                            helperText={errors.color?.message || 'Selecciona el color principal de la rifa'}
+                            {...register('color', {required: 'Color Obligatorio'})}
+                            sx={{ flex: 1 }}
+                        />
+                        <Box sx={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            gap: 1 
+                        }}>
+                            <Box
+                                onClick={(e) => setColorPickerAnchor(e.currentTarget)}
+                                sx={{
+                                    width: '50px',
+                                    height: '50px',
+                                    backgroundColor: watch('color') || '#1976d2',
+                                    borderRadius: '12px',
+                                    cursor: 'pointer',
+                                    border: '3px solid #fff',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1)',
+                                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                    '&:hover': {
+                                        transform: 'scale(1.05)',
+                                        boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2), 0 3px 8px rgba(0, 0, 0, 0.15)',
+                                    },
+                                    '&:active': {
+                                        transform: 'scale(0.98)',
+                                    },
+                                }}
+                            />
+                            <Typography variant="caption" sx={{ color: '#666', fontSize: '0.7rem' }}>
+                                Elegir color
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    {/* Popover con selector de colores */}
+                    <Popover
+                        open={Boolean(colorPickerAnchor)}
+                        anchorEl={colorPickerAnchor}
+                        onClose={() => setColorPickerAnchor(null)}
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'center',
+                        }}
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'center',
+                        }}
+                        sx={{
+                            '& .MuiPopover-paper': {
+                                borderRadius: '16px',
+                                padding: '16px',
+                                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+                                border: '1px solid rgba(0, 0, 0, 0.05)',
+                            }
+                        }}
+                    >
+                        <Box sx={{ width: '280px' }}>
+                            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+                                Selecciona un color
+                            </Typography>
+                            
+                            {/* Colores predefinidos */}
+                            <Box sx={{ 
+                                display: 'grid', 
+                                gridTemplateColumns: 'repeat(6, 1fr)', 
+                                gap: 1.5, 
+                                mb: 3 
+                            }}>
+                                {presetColors.map((color) => (
+                                    <Box
+                                        key={color}
+                                        onClick={() => handleColorSelect(color)}
+                                        sx={{
+                                            width: '36px',
+                                            height: '36px',
+                                            backgroundColor: color,
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            border: watch('color') === color ? '3px solid #1976d2' : '2px solid #fff',
+                                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                            transition: 'all 0.2s ease',
+                                            '&:hover': {
+                                                transform: 'scale(1.1)',
+                                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                                            },
+                                        }}
+                                    />
+                                ))}
+                            </Box>
+
+                            {/* Input de color HTML5 más estilizado */}
+                            <Box sx={{ textAlign: 'center' }}>
+                                <Typography variant="body2" sx={{ mb: 1, color: '#666' }}>
+                                    O elige un color personalizado:
+                                </Typography>
+                                <input
+                                    type="color"
+                                    value={watch('color') || '#1976d2'}
+                                    onChange={(e) => setValue('color', e.target.value)}
+                                    style={{
+                                        width: '60px',
+                                        height: '40px',
+                                        border: '2px solid #e0e0e0',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        backgroundColor: 'transparent',
+                                    }}
+                                />
+                            </Box>
+                        </Box>
+                    </Popover>
 
                     <Box sx={{ width: '100%', px: 3}}>
                     <Typography id="input-slider" gutterBottom>

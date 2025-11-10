@@ -5,7 +5,7 @@ import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import { Box, CircularProgress, Collapse, IconButton, Modal, Paper, Table, TableBody, TableCell, tableCellClasses, TableContainer, TableHead, TableRow } from "@mui/material";
 import React, { useState } from "react";
 import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
-import { useUsersRaffle } from "../../hooks/useRaffle";
+import { useUsersRaffle, useRaffleById } from "../../hooks/useRaffle";
 import { User, UserItemByRaffle } from "../../types";
 import { formatDateTimeLarge } from "../../utils";
 import ButtonCloseModal from "../ButtonCloseModal";
@@ -28,9 +28,9 @@ const style = {
     
 };
 
-const StyledTableCell = styled(TableCell)(() => ({
+const StyledTableCell = styled(TableCell)<{ raffleColor?: string }>((props) => ({
     [`&.${tableCellClasses.head}`]: {
-        backgroundColor: '#1446A0',
+        backgroundColor: props.raffleColor || '#1446A0',
         color: 'white'
     },
     [`&.${tableCellClasses.body}`]: {
@@ -48,8 +48,8 @@ const StyledTableRow = styled(TableRow)(() => ({
     },
 }));
 
-function Row (props: { row : UserItemByRaffle, raffleId: number}) {
-    const { row, raffleId } = props;
+function Row (props: { row : UserItemByRaffle, raffleId: number, raffleColor: string}) {
+    const { row, raffleId, raffleColor } = props;
     const [open, setOpen] = useState(false);
 
 
@@ -93,19 +93,24 @@ function Row (props: { row : UserItemByRaffle, raffleId: number}) {
                 <div className="m-1 *:flex *:justify-between *:capitalize space-y-2">
                     <div>
                         <p>apellido</p> 
-                        <p className="text-azul">{row.user.lastName}</p>
+                        <p style={{ color: raffleColor || '#1976d2' }}>{row.user.lastName}</p>
                     </div>
                     <div>
                         <p>identificacion</p>
-                        <p className="text-azul">{row.user.identificationType + ':'+ row.user.identificationNumber}</p>
+                        <p style={{ color: raffleColor || '#1976d2' }}>{row.user.identificationType + ':'+ row.user.identificationNumber}</p>
                     </div>
                     <div>
                         <p>teléfono</p> 
-                        <p className="text-azul">{row.user.phone}</p>
+                        <p style={{ color: raffleColor || '#1976d2' }}>{row.user.phone}</p>
                     </div>
                     <div>
                         <p>Fecha de Asignación</p> 
-                        <p className="lowercase text-azul">{formatDateTimeLarge(row.assignedAt)}</p>
+                        <p 
+                            className="lowercase"
+                            style={{ color: raffleColor || '#1976d2' }}
+                        >
+                            {formatDateTimeLarge(row.assignedAt)}
+                        </p>
                     </div>
                     <div className="flex justify-between capitalize">
                         <p>acciones</p> 
@@ -123,10 +128,11 @@ function Row (props: { row : UserItemByRaffle, raffleId: number}) {
 }
 
 type ViewUsersOfRaffleModalProps = {
-    raffleId: number
+    raffleId: number,
+    raffleColor: string
 }
 
-function ViewUsersOfRaffleModal({raffleId} : ViewUsersOfRaffleModalProps) {
+function ViewUsersOfRaffleModal({raffleId, raffleColor} : ViewUsersOfRaffleModalProps) {
     const user : User = useOutletContext();
     // MODAL //
     const navigate = useNavigate(); 
@@ -136,6 +142,9 @@ function ViewUsersOfRaffleModal({raffleId} : ViewUsersOfRaffleModalProps) {
     const show = modalViewUsers ? true : false;
 
     const {data, isLoading} = useUsersRaffle(raffleId, show)
+    
+    // Obtener datos de la rifa para el color
+    const { data: raffle } = useRaffleById(raffleId);
 
     if (user.rol.name == 'admin' || user.rol.name == 'responsable') return (
         <Modal
@@ -148,7 +157,12 @@ function ViewUsersOfRaffleModal({raffleId} : ViewUsersOfRaffleModalProps) {
         >
             <Box sx={style}>
             <ButtonCloseModal/>
-            <h2 className="mb-5 text-2xl font-bold text-center text-azul">Usuarios de la Rifa</h2>
+            <h2 
+                className="mb-5 text-2xl font-bold text-center"
+                style={{ color: raffle?.color || '#1976d2' }}
+            >
+                Usuarios de la Rifa
+            </h2>
             <p className="mb-5 text-xl font-bold text-center">Podras visualizar, asignar y eliminar usuarios para esta rifa</p>
 
             <SelectAsingUser raffleId={raffleId} userRol={user.rol.name}/>
@@ -167,26 +181,26 @@ function ViewUsersOfRaffleModal({raffleId} : ViewUsersOfRaffleModalProps) {
                         >
                             <TableHead>
                             <TableRow>
-                                <StyledTableCell sx={{display: { xs: 'table-cell', md: 'none' }}}><TextSnippetIcon/></StyledTableCell>
-                                <StyledTableCell>
+                                <StyledTableCell raffleColor={raffleColor} sx={{display: { xs: 'table-cell', md: 'none' }}}><TextSnippetIcon/></StyledTableCell>
+                                <StyledTableCell raffleColor={raffleColor}>
                                     Nombre
                                 </StyledTableCell>
-                                <StyledTableCell sx={{display: { xs: 'none', md: 'table-cell' }}}>
+                                <StyledTableCell raffleColor={raffleColor} sx={{display: { xs: 'none', md: 'table-cell' }}}>
                                     Apellido
                                 </StyledTableCell>
-                                <StyledTableCell sx={{display: { xs: 'none', md: 'table-cell' }}}>
+                                <StyledTableCell raffleColor={raffleColor} sx={{display: { xs: 'none', md: 'table-cell' }}}>
                                     Identificación
                                 </StyledTableCell>
-                                <StyledTableCell sx={{display: { xs: 'none', md: 'table-cell' }}}>
+                                <StyledTableCell raffleColor={raffleColor} sx={{display: { xs: 'none', md: 'table-cell' }}}>
                                     Teléfono
                                 </StyledTableCell>
-                                <StyledTableCell sx={{display: { xs: 'none', md: 'table-cell' }}}>
+                                <StyledTableCell raffleColor={raffleColor} sx={{display: { xs: 'none', md: 'table-cell' }}}>
                                     Fecha de Asignación
                                 </StyledTableCell>
-                                <StyledTableCell sx={{MinWidth: {xs: 'auto', md: 300}}} >
+                                <StyledTableCell raffleColor={raffleColor} sx={{MinWidth: {xs: 'auto', md: 300}}} >
                                     Rol
                                 </StyledTableCell>
-                                <StyledTableCell align="center" sx={{display: { xs: 'none', md: 'table-cell' }}}>
+                                <StyledTableCell raffleColor={raffleColor} align="center" sx={{display: { xs: 'none', md: 'table-cell' }}}>
                                     Acciones
                                 </StyledTableCell>
                             </TableRow>
@@ -194,7 +208,7 @@ function ViewUsersOfRaffleModal({raffleId} : ViewUsersOfRaffleModalProps) {
                             <TableBody>
                             
                             {data && data.map((row) => (
-                                <Row key={row.id} row={row} raffleId={raffleId}/>
+                                <Row key={row.id} row={row} raffleId={raffleId} raffleColor={raffleColor}/>
                             ))}
                             
                             </TableBody>

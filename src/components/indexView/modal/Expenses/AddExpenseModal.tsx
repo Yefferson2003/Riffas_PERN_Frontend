@@ -4,8 +4,9 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from "react-router-dom";
 import { ExpenseFormType, ExpenseResponseType, ExpensesTotal } from '../../../../types';
 import ExpenseForm from './ExpenseForm';
-import { QueryObserverResult, RefetchOptions, useMutation } from '@tanstack/react-query';
+import { QueryObserverResult, RefetchOptions, useMutation, useQuery } from '@tanstack/react-query';
 import { addExpense } from '../../../../api/expensesApi';
+import { getRaffleById } from '../../../../api/raffleApi';
 import { toast } from 'react-toastify';
 
 const style = {
@@ -38,6 +39,13 @@ function AddExpenseModal( { refecht, refechtExpenseTotal, refechtExpenseTotalByU
     const queryParams = new URLSearchParams(location.search)
     const modalAddExpenses = queryParams.get('addExpense')
     const show = modalAddExpenses === 'true'
+
+    // Obtener datos de la rifa para el color
+    const { data: raffle } = useQuery({
+        queryKey: ['raffles', raffleId],
+        queryFn: () => getRaffleById(raffleId!),
+        enabled: show && !!raffleId,
+    });
 
     //Form
 
@@ -97,7 +105,12 @@ function AddExpenseModal( { refecht, refechtExpenseTotal, refechtExpenseTotalByU
                 </IconButton>
             </div>
 
-            <h2 className='mb-5 text-xl font-semibold text-center'>Agrega un gasto nuevo</h2>
+            <h2 
+                className='mb-5 text-xl font-semibold text-center'
+                style={{ color: raffle?.color || '#1976d2' }}
+            >
+                Agrega un gasto nuevo
+            </h2>
 
             <form 
                 className='flex flex-col gap-4'
@@ -113,6 +126,13 @@ function AddExpenseModal( { refecht, refechtExpenseTotal, refechtExpenseTotalByU
                     variant="contained"
                     fullWidth
                     disabled={isPending}
+                    sx={{
+                        backgroundColor: raffle?.color || '#1976d2',
+                        '&:hover': {
+                            backgroundColor: raffle?.color || '#1976d2',
+                            opacity: 0.9,
+                        },
+                    }}
                 >
                     Crear Gasto
                 </Button>

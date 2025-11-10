@@ -6,9 +6,10 @@ interface MobileSafePaginationProps {
     page: number;
     onChange: (event: React.ChangeEvent<unknown>, newPage: number) => void;
     isSmallDevice: boolean;
+    raffleColor?: string;
 }
 
-const MobileSafePagination = memo(({ count, page, onChange, isSmallDevice }: MobileSafePaginationProps) => {
+const MobileSafePagination = memo(({ count, page, onChange, isSmallDevice, raffleColor = '#1976d2' }: MobileSafePaginationProps) => {
     // Función wrapper para el onChange que incluye manejo de errores
     const handleChange = (event: React.ChangeEvent<unknown>, newPage: number) => {
         try {
@@ -44,86 +45,27 @@ const MobileSafePagination = memo(({ count, page, onChange, isSmallDevice }: Mob
                 showFirstButton={false}
                 showLastButton={false}
                 variant="outlined"
-
-                // sx={{
-                //     // Contenedor principal responsivo
-                //     minWidth: 'fit-content',
-                //     display: 'flex',
-                //     justifyContent: 'center',
-                    
-                //     '& .MuiPaginationItem-root': {
-                //         touchAction: 'manipulation',
-                //         userSelect: 'none',
-                //         flexShrink: 0,
-                        
-                //         // Tamaños base
-                //         fontSize: '0.875rem',
-                //         minWidth: '32px',
-                //         height: '32px',
-                //         margin: '0 1px',
-                        
-                //         // Mejoras para móviles
-                //         ...(isSmallDevice && {
-                //             fontSize: '0.8rem',
-                //             minWidth: '36px',
-                //             height: '36px',
-                //             padding: '4px 6px',
-                //         }),
-                        
-                //         // Media queries para diferentes tamaños
-                //         '@media (max-width: 480px)': {
-                //             fontSize: '0.75rem',
-                //             minWidth: '30px',
-                //             height: '30px',
-                //             margin: '0 0.5px',
-                //         },
-                        
-                //         '@media (max-width: 360px)': {
-                //             fontSize: '0.7rem',
-                //             minWidth: '28px',
-                //             height: '28px',
-                //             margin: '0',
-                //             padding: '2px 4px',
-                //         },
-                        
-                //         // Prevenir hover en móviles
-                //         '@media (hover: none)': {
-                //             '&:hover': {
-                //                 backgroundColor: 'transparent'
-                //             }
-                //         }
-                //     },
-                    
-                //     '& .MuiPaginationItem-ellipsis': {
-                //         fontSize: '1rem',
-                //         minWidth: '20px',
-                //         margin: '0 1px',
-                //         flexShrink: 0,
-                        
-                //         '@media (max-width: 480px)': {
-                //             fontSize: '0.9rem',
-                //             minWidth: '18px',
-                //         },
-                //     },
-                    
-                //     // Lista de paginación
-                //     '& .MuiPagination-ul': {
-                //         flexWrap: 'nowrap',
-                //         justifyContent: 'center',
-                //         alignItems: 'center',
-                //         gap: '1px',
-                        
-                //         ...(isSmallDevice && {
-                //             overflowX: 'auto',
-                //             scrollbarWidth: 'none',
-                //             '&::-webkit-scrollbar': {
-                //                 display: 'none'
-                //             }
-                //         })
-                //     }
-                // }}
-
-            /> 
+                sx={{
+                    '& .MuiPaginationItem-root': {
+                        color: raffleColor,
+                        borderColor: 'transparent',
+                        boxShadow: `0 2px 4px ${raffleColor}40`,
+                        '&:hover': {
+                            backgroundColor: `${raffleColor}10`,
+                            boxShadow: `0 4px 8px ${raffleColor}60`,
+                        },
+                        '&.Mui-selected': {
+                            backgroundColor: raffleColor,
+                            color: 'white',
+                            boxShadow: `0 4px 12px ${raffleColor}60`,
+                            '&:hover': {
+                                backgroundColor: raffleColor,
+                                opacity: 0.9,
+                            },
+                        },
+                    },
+                }}
+            />
         </div>
     );
 });

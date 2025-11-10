@@ -1,10 +1,10 @@
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { Box, Button, IconButton, Modal, TextField, Tooltip } from "@mui/material";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { createURLRaffle } from "../../../api/raffleApi";
+import { createURLRaffle, getRaffleById } from "../../../api/raffleApi";
 import ButtonCloseModal from "../../ButtonCloseModal";
 
 const style = {
@@ -32,6 +32,13 @@ function ShareURLRaffleModal() {
     const queryParams = new URLSearchParams(location.search);
     const modalShareURLRaffle = queryParams.get("viewShareURLRaffle");
     const show = modalShareURLRaffle === "true";
+
+    // Obtener datos de la rifa para el color
+    const { data: raffle } = useQuery({
+        queryKey: ['raffles', raffleId],
+        queryFn: () => getRaffleById(raffleId!),
+        enabled: show && !!raffleId,
+    });
 
     const { isPending, mutate } = useMutation({
         mutationFn: createURLRaffle,
@@ -64,16 +71,29 @@ function ShareURLRaffleModal() {
                 <ButtonCloseModal />
 
                 <div className="flex flex-col items-center">
-                    <h2 style={{ marginBottom: "20px", fontSize: "20px", fontWeight: "bold" }}>
+                    <h2 
+                        style={{ 
+                            marginBottom: "20px", 
+                            fontSize: "20px", 
+                            fontWeight: "bold",
+                            color: raffle?.color || '#1976d2'
+                        }}
+                    >
                         Compartir enlace de rifa
                     </h2>
 
                     <Button
                         variant="contained"
-                        color="primary"
                         onClick={() => mutate({raffleId: raffleId || '0'})}
                         disabled={isPending}
-                        sx={{ mb: 3 }}
+                        sx={{ 
+                            mb: 3,
+                            backgroundColor: raffle?.color || '#1976d2',
+                            '&:hover': {
+                                backgroundColor: raffle?.color || '#1976d2',
+                                opacity: 0.9,
+                            },
+                        }}
                     >
                         {isPending ? "Generando..." : "Generar URL"}
                     </Button>
@@ -84,9 +104,27 @@ function ShareURLRaffleModal() {
                                 value={URL}
                                 fullWidth
                                 size="small"
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '&:hover fieldset': {
+                                            borderColor: raffle?.color || '#1976d2',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: raffle?.color || '#1976d2',
+                                        },
+                                    },
+                                }}
                             />
                             <Tooltip title="Copiar">
-                                <IconButton onClick={handleCopy} color="primary">
+                                <IconButton 
+                                    onClick={handleCopy} 
+                                    sx={{ 
+                                        color: raffle?.color || '#1976d2',
+                                        '&:hover': {
+                                            backgroundColor: `${raffle?.color || '#1976d2'}14`,
+                                        },
+                                    }}
+                                >
                                     <ContentCopyIcon />
                                 </IconButton>
                             </Tooltip>

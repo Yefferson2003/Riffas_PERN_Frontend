@@ -89,8 +89,8 @@ function CreatePayMethodModal({ open, onClose}: CreatePayMethodModalProps) {
                 justifyContent: 'space-between'
             }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <PaymentIcon sx={{ color: 'primary.main', fontSize: 28 }} />
-                    <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
+                    <PaymentIcon sx={{ color: '#1976d2', fontSize: 28 }} />
+                    <Typography variant="h6" component="div" sx={{ fontWeight: 600, color: '#1976d2' }}>
                         Crear Método de Pago
                     </Typography>
                 </Box>
@@ -151,6 +151,10 @@ function CreatePayMethodModal({ open, onClose}: CreatePayMethodModalProps) {
                         borderRadius: 2,
                         textTransform: 'none',
                         fontWeight: 600,
+                        bgcolor: '#1976d2',
+                        '&:hover': {
+                            bgcolor: '#1565c0'
+                        },
                         order: { xs: 1, sm: 2 }
                     }}
                 >

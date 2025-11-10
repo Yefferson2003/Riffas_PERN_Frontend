@@ -28,9 +28,10 @@ const style = {
 type AddAwadModalProps = {
     refecht: (options?: RefetchOptions) => Promise<QueryObserverResult<AwardsResponseType | undefined, Error>>
     raffleDate: string | undefined
+    raffleColor?: string
 }
 
-function AddAwadModal( { refecht, raffleDate } : AddAwadModalProps) {
+function AddAwadModal( { refecht, raffleDate, raffleColor = '#1976d2' } : AddAwadModalProps) {
 
     const { raffleId } = useParams<{ raffleId: string }>();
     
@@ -98,7 +99,12 @@ function AddAwadModal( { refecht, raffleDate } : AddAwadModalProps) {
             <Box sx={style}>
             <ButtonCloseModal/>
 
-            <h2 className='mb-5 text-xl font-semibold text-center'>Agrega un premio nuevo</h2>
+            <h2 
+                className='mb-5 text-xl font-semibold text-center'
+                style={{ color: raffleColor }}
+            >
+                Agrega un premio nuevo
+            </h2>
 
             <form 
                 className='flex flex-col gap-4'
@@ -109,6 +115,7 @@ function AddAwadModal( { refecht, raffleDate } : AddAwadModalProps) {
                     errors={errors}
                     watch={watch}
                     setValue={setValue}
+                    raffleColor={raffleColor}
                 />
 
                 <Button
@@ -116,6 +123,13 @@ function AddAwadModal( { refecht, raffleDate } : AddAwadModalProps) {
                     variant="contained"
                     fullWidth
                     disabled={isPending}
+                    sx={{
+                        backgroundColor: raffleColor,
+                        '&:hover': {
+                            backgroundColor: raffleColor,
+                            opacity: 0.9,
+                        },
+                    }}
                 >
                     Crear Premio
                 </Button>

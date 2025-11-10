@@ -5,6 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { QueryObserverResult, RefetchOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { ExpenseFormType, ExpenseResponseType, ExpensesTotal } from "../../../../types";
 import { getExpensesById, updateExpense } from "../../../../api/expensesApi";
+import { getRaffleById } from "../../../../api/raffleApi";
 import { useForm } from "react-hook-form";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
@@ -45,6 +46,13 @@ function UpdateExpenseModal( { refecht, refechtExpenseTotal, refechtExpenseTotal
         queryFn: () => getExpensesById({raffleId: raffleId!, expenseId: expenseId.toString()}),
         enabled: show       
     })
+
+    // Obtener datos de la rifa para el color
+    const { data: raffle } = useQuery({
+        queryKey: ['raffles', raffleId],
+        queryFn: () => getRaffleById(raffleId!),
+        enabled: show && !!raffleId,
+    });
 
     //Form
     
@@ -117,7 +125,12 @@ function UpdateExpenseModal( { refecht, refechtExpenseTotal, refechtExpenseTotal
                 </IconButton>
             </div>
 
-            <h2 className='mb-5 text-xl font-semibold text-center'>Editar Gasto</h2>
+            <h2 
+                className='mb-5 text-xl font-semibold text-center'
+                style={{ color: raffle?.color || '#1976d2' }}
+            >
+                Editar Gasto
+            </h2>
 
             <form 
                 className='flex flex-col gap-4'
@@ -133,6 +146,13 @@ function UpdateExpenseModal( { refecht, refechtExpenseTotal, refechtExpenseTotal
                     variant="contained"
                     fullWidth
                     disabled={isPending}
+                    sx={{
+                        backgroundColor: raffle?.color || '#1976d2',
+                        '&:hover': {
+                            backgroundColor: raffle?.color || '#1976d2',
+                            opacity: 0.9,
+                        },
+                    }}
                 >
                     Editar Gasto
                 </Button>

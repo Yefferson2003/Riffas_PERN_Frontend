@@ -36,6 +36,7 @@ type ViewRaffleNumberSharedModalProps = {
     raffleRefetch: () => void
     selectedNumbers: SelectedNumber[]
     setSelectedNumbers: React.Dispatch<React.SetStateAction<SelectedNumber[]>>
+    raffleColor?: string
 }
 
 type SelectedNumber = {
@@ -51,7 +52,7 @@ type SelectedNumber = {
 //     isActive: boolean;
 // }
 
-function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raffleRefetch, selectedNumbers, setSelectedNumbers} : ViewRaffleNumberSharedModalProps) {
+function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raffleRefetch, selectedNumbers, setSelectedNumbers, raffleColor} : ViewRaffleNumberSharedModalProps) {
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -61,6 +62,8 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
 
     // Estados para métodos de pago
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<number | null>(null);
+
+    const primaryColor = raffleColor || '#1976d2';
 
     // Ya no necesitamos consultar un número específico
 
@@ -190,7 +193,10 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
 
                 {/* Título y números seleccionados */}
                 <div className="mb-6 text-center">
-                    <h2 className="mb-3 text-2xl font-bold text-azul">
+                    <h2 
+                        className="mb-3 text-2xl font-bold"
+                        style={{ color: primaryColor }}
+                    >
                         Apartar Boletas
                     </h2>
 
@@ -200,19 +206,27 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                             <Chip
                                 key={num.id}
                                 label={`#${formatWithLeadingZeros(num.number, totalNumbers)}`}
-                                color="primary"
-                                variant="filled"
-                                size="small"
+                                color={undefined}
                                 sx={{
+                                    backgroundColor: primaryColor,
+                                    color: 'white',
                                     fontWeight: 'bold',
                                     fontSize: '0.875rem'
                                 }}
+                                variant="filled"
+                                size="small"
                             />
                         ))}
                     </div>
 
-                    <div className="p-3 mb-4 rounded-lg bg-blue-50">
-                        <p className="text-lg font-semibold text-azul">
+                    <div 
+                        className="p-3 mb-4 rounded-lg"
+                        style={{ backgroundColor: `${primaryColor}15` }}
+                    >
+                        <p 
+                            className="text-lg font-semibold"
+                            style={{ color: primaryColor }}
+                        >
                             Valor Total: <span className="text-xl">{formatCurrencyCOP(+raffle.price * selectedNumbers.length)}</span>
                         </p>
                     </div>
@@ -222,14 +236,21 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                         <Button
                             variant="outlined"
                             size="small"
-                            color="error"
                             onClick={() => {
                                 setSelectedNumbers([]);
                                 setSelectedPaymentMethod(null);
                                 navigate(location.pathname, { replace: true });
                                 toast.info('Selección reiniciada');
                             }}
-                            sx={{ borderRadius: 2 }}
+                            sx={{ 
+                                borderRadius: 2,
+                                borderColor: '#dc2626',
+                                color: '#dc2626',
+                                '&:hover': {
+                                    borderColor: '#dc2626',
+                                    backgroundColor: '#dc262610'
+                                }
+                            }}
                         >
                             Reiniciar Selección
                         </Button>
@@ -238,7 +259,10 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
 
                 {/* Métodos de pago */}
                 <div className="mb-6">
-                    <h3 className="mb-4 text-lg font-semibold text-center text-azul">
+                    <h3 
+                        className="mb-4 text-lg font-semibold text-center"
+                        style={{ color: primaryColor }}
+                    >
                         Selecciona el método de pago
                     </h3>
                     
@@ -252,10 +276,29 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                                 className={`
                                     relative flex flex-col items-center justify-center p-4 transition-all duration-300 border-2 rounded-2xl min-w-[90px] max-w-[110px] group
                                     ${selectedPaymentMethod === method.id
-                                        ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 transform scale-110 ring-4 ring-blue-300 ring-opacity-30'
-                                        : 'border-gray-200 bg-white hover:border-blue-300 hover:transform hover:scale-105'
+                                        ? `border-2 transform scale-110 ring-4 ring-opacity-30`
+                                        : `border-gray-200 bg-white hover:transform hover:scale-105 hover:border-opacity-60`
                                     }
                                 `}
+                                style={selectedPaymentMethod === method.id ? {
+                                    borderColor: primaryColor,
+                                    boxShadow: `0 0 0 4px ${primaryColor}30`,
+                                    background: `linear-gradient(135deg, ${primaryColor}10, ${primaryColor}20)`
+                                } : {
+                                    borderColor: '#e5e7eb'
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (selectedPaymentMethod !== method.id) {
+                                        e.currentTarget.style.borderColor = primaryColor;
+                                        e.currentTarget.style.opacity = '0.8';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (selectedPaymentMethod !== method.id) {
+                                        e.currentTarget.style.borderColor = '#e5e7eb';
+                                        e.currentTarget.style.opacity = '1';
+                                    }
+                                }}
                             >
                                 {/* Icono del método de pago con overlay de selección */}
                                 <div className="relative flex items-center justify-center w-12 h-12 mb-3">
@@ -272,11 +315,19 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                                         <div className={`
                                             flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300
                                             ${selectedPaymentMethod === method.id ? 'bg-blue-200' : 'bg-gray-100'}
-                                        `}>
+                                        `}
+                                        style={selectedPaymentMethod === method.id ? {
+                                            backgroundColor: `${primaryColor}20`
+                                        } : {}}
+                                        >
                                             <span className={`
                                                 text-sm font-bold
-                                                ${selectedPaymentMethod === method.id ? 'text-blue-700' : 'text-gray-500'}
-                                            `}>$</span>
+                                                ${selectedPaymentMethod === method.id ? '' : 'text-gray-500'}
+                                            `}
+                                            style={selectedPaymentMethod === method.id ? {
+                                                color: primaryColor
+                                            } : {}}
+                                            >$</span>
                                         </div>
                                     )}
                                     
@@ -284,7 +335,7 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                                     {selectedPaymentMethod === method.id && (
                                         <div className="absolute flex items-center justify-center -top-1 -right-1 animate-bounce">
                                             <CheckCircle sx={{ 
-                                                color: '#22c55e', 
+                                                color: primaryColor, 
                                                 fontSize: '1.5rem',
                                                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
                                             }} />
@@ -295,8 +346,12 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                                 {/* Nombre del método */}
                                 <span className={`
                                     text-xs font-semibold text-center leading-tight transition-all duration-300
-                                    ${selectedPaymentMethod === method.id ? 'text-blue-700' : 'text-gray-700 group-hover:text-gray-900'}
-                                `}>
+                                    ${selectedPaymentMethod === method.id ? '' : 'text-gray-700'}
+                                `}
+                                style={selectedPaymentMethod === method.id ? {
+                                    color: primaryColor
+                                } : {}}
+                                >
                                     {capitalizeWords(method.payMethode?.name || '').length > 14 
                                         ? capitalizeWords(method.payMethode?.name || '').substring(0, 14) + '...'
                                         : capitalizeWords(method.payMethode?.name || '')
@@ -317,14 +372,22 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                     
                     {/* Información detallada del método seleccionado */}
                     {selectedPaymentMethod && payMethods && (
-                        <div className="p-4 mt-6 shadow-inner bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl">
+                        <div 
+                            className="p-4 mt-6 shadow-inner rounded-2xl"
+                            style={{
+                                background: `linear-gradient(to right, ${primaryColor}10, ${primaryColor}20)`
+                            }}
+                        >
                             {(() => {
                                 const selectedMethod = payMethods.find(m => m.id === selectedPaymentMethod);
                                 if (!selectedMethod) return null;
                                 
                                 return (
                                     <div className="text-center">
-                                        <h4 className="flex items-center justify-center gap-2 mb-3 text-lg font-bold text-azul">
+                                        <h4 
+                                            className="flex items-center justify-center gap-2 mb-3 text-lg font-bold"
+                                            style={{ color: primaryColor }}
+                                        >
                                             {selectedMethod.payMethode?.icon && (
                                                 <img 
                                                     src={selectedMethod.payMethode.icon} 
@@ -337,27 +400,32 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                                         
                                         <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                                             <div className="p-3 bg-white shadow-sm rounded-xl">
-                                                <p className="mb-1 font-semibold text-gray-700">Método</p>
-                                                <p className="font-bold text-azul">{capitalizeWords(selectedMethod.payMethode?.name || '')}</p>
+                                                <p className="mb-1 font-semibold" style={{ color: primaryColor }}>Método</p>
+                                                <p 
+                                                    className="font-bold"
+                                                    style={{ color: primaryColor }}
+                                                >
+                                                    {capitalizeWords(selectedMethod.payMethode?.name || '')}
+                                                </p>
                                             </div>
                                             
                                             {selectedMethod.bankName && (
                                                 <div className="p-3 bg-white shadow-sm rounded-xl">
-                                                    <p className="mb-1 font-semibold text-gray-700">Banco</p>
+                                                    <p className="mb-1 font-semibold" style={{ color: primaryColor }}>Banco</p>
                                                     <p className="font-medium text-gray-800">{capitalizeWords(selectedMethod.bankName)}</p>
                                                 </div>
                                             )}
                                             
                                             {selectedMethod.accountHolder && (
                                                 <div className="p-3 bg-white shadow-sm rounded-xl">
-                                                    <p className="mb-1 font-semibold text-gray-700">Titular</p>
+                                                    <p className="mb-1 font-semibold" style={{ color: primaryColor }}>Titular</p>
                                                     <p className="font-medium text-gray-800">{capitalizeWords(selectedMethod.accountHolder)}</p>
                                                 </div>
                                             )}
                                             
                                             {selectedMethod.accountNumber && (
                                                 <div className="p-3 bg-white shadow-sm rounded-xl">
-                                                    <p className="mb-1 font-semibold text-gray-700">Número de cuenta</p>
+                                                    <p className="mb-1 font-semibold" style={{ color: primaryColor }}>Número de cuenta</p>
                                                     <div className="flex flex-col items-center gap-2">
                                                         <p className="flex-1 font-mono text-lg font-bold text-gray-800">{selectedMethod.accountNumber}</p>
                                                         <Button
@@ -372,7 +440,13 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                                                                 px: 1.5,
                                                                 py: 0.5,
                                                                 fontSize: '0.75rem',
-                                                                borderRadius: 2
+                                                                borderRadius: 2,
+                                                                borderColor: primaryColor,
+                                                                color: primaryColor,
+                                                                '&:hover': {
+                                                                    borderColor: primaryColor,
+                                                                    backgroundColor: `${primaryColor}10`
+                                                                }
                                                             }}
                                                         >
                                                             📋 Copiar
@@ -404,6 +478,16 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                                 size="small"
                                 error={!!errors.firstName}
                                 helperText={errors.firstName?.message}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: primaryColor,
+                                        }
+                                    },
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                        color: primaryColor
+                                    }
+                                }}
                                 {...register('firstName', {required: 'Nombres Obligatorio'})}
                             />
                             <TextField
@@ -413,17 +497,28 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                                 size="small"
                                 error={!!errors.lastName}
                                 helperText={errors.lastName?.message}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: primaryColor,
+                                        }
+                                    },
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                        color: primaryColor
+                                    }
+                                }}
                                 {...register('lastName', {required: 'Apellidos Obligatorio'})}
                             />
                         </div>
 
                         <div>
-                            <p className="mb-2 text-sm font-medium text-gray-700">Número de teléfono</p>
+                            <p className="mb-2 text-sm font-medium" style={{ color: primaryColor }}>Número de teléfono</p>
                             <PhoneNumberInput
                                 value={phone}
                                 onChange={(value) => {
                                     setValue('phone', value);
                                 }}
+                                primaryColor={primaryColor}
                             />
                         </div>
 
@@ -434,6 +529,16 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                             size="small"
                             error={!!errors.address}
                             helperText={errors.address?.message}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: primaryColor,
+                                    }
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                    color: primaryColor
+                                }
+                            }}
                             {...register('address', {required: 'Dirección Obligatoria'})}
                         />
 
@@ -443,6 +548,16 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                             variant="outlined"
                             size="small"
                             placeholder="Ej: 123456"
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: primaryColor,
+                                    }
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                    color: primaryColor
+                                }
+                            }}
                             {...register('reference')}
                         />
 
@@ -456,7 +571,17 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                                 py: 1.5,
                                 borderRadius: 3,
                                 fontWeight: 'bold',
-                                fontSize: '1rem'
+                                fontSize: '1rem',
+                                backgroundColor: primaryColor,
+                                color: 'white',
+                                '&:hover': {
+                                    backgroundColor: primaryColor,
+                                    opacity: 0.8
+                                },
+                                '&:disabled': {
+                                    backgroundColor: '#ccc',
+                                    color: '#666'
+                                }
                             }}
                         >
                             {isPending ? 'Procesando...' : `Apartar ${selectedNumbers.length} Boleta${selectedNumbers.length > 1 ? 's' : ''}`}

@@ -225,7 +225,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                 }}>
                     <Typography variant="h4" sx={{ 
                         fontWeight: 'bold', 
-                        color: '#1e40af',
+                        color: raffle?.color || '#1976d2',
                         fontSize: { xs: '1.5rem', md: '2rem' }
                     }}>
                         Resumen de Compra
@@ -290,7 +290,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                     mb: 3, 
                     p: 3, 
                     bgcolor: '#f8fafc',
-                    border: '2px solid #1446A0', 
+                    border: `2px solid ${raffle?.color || '#1976d2'}`, 
                     borderRadius: 2,
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                 }}>
@@ -299,7 +299,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                             <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
                                 Rifa #:
                             </Typography>
-                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: raffle?.color || '#1976d2' }}>
                                 {raffle.id + '-' + raffle.nitResponsable}
                             </Typography>
                         </Box>
@@ -307,7 +307,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                             <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
                                 Descripción:
                             </Typography>
-                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: raffle?.color || '#1976d2' }}>
                                 {raffle.description}
                             </Typography>
                         </Box>
@@ -315,7 +315,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                             <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
                                 Fecha de Juego:
                             </Typography>
-                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: raffle?.color || '#1976d2' }}>
                                 {formatDateTimeLarge(raffle.playDate)}
                             </Typography>
                         </Box>
@@ -329,7 +329,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                             sx={{ 
                                 p: 3, 
                                 bgcolor: '#ffffff',
-                                border: "2px solid #1446A0", 
+                                border: `2px solid ${raffle?.color || '#1976d2'}`, 
                                 borderRadius: 2,
                                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                             }}
@@ -345,7 +345,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                     <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
                                         Número:
                                     </Typography>
-                                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: raffle?.color || '#1976d2' }}>
                                         {formatWithLeadingZeros(raffleNumber.number, totalNumbers)}
                                     </Typography>
                                 </Box>
@@ -353,7 +353,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                     <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
                                         Nombre:
                                     </Typography>
-                                    <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0', textTransform: 'capitalize' }}>
+                                    <Typography variant="body1" sx={{ fontWeight: 'bold', color: raffle?.color || '#1976d2', textTransform: 'capitalize' }}>
                                         {raffleNumber.firstName} {raffleNumber.lastName}
                                     </Typography>
                                 </Box>
@@ -361,7 +361,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                     <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
                                         Teléfono:
                                     </Typography>
-                                    <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                                    <Typography variant="body1" sx={{ fontWeight: 'bold', color: raffle?.color || '#1976d2' }}>
                                         {raffleNumber.phone}
                                     </Typography>
                                 </Box>
@@ -369,7 +369,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                     <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
                                         Dirección:
                                     </Typography>
-                                    <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0', textTransform: 'capitalize' }}>
+                                    <Typography variant="body1" sx={{ fontWeight: 'bold', color: raffle?.color || '#1976d2', textTransform: 'capitalize' }}>
                                         {raffleNumber.address}
                                     </Typography>
                                 </Box>
@@ -396,7 +396,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                 <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
                                     Fecha de Reserva:
                                 </Typography>
-                                <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                                <Typography variant="body1" sx={{ fontWeight: 'bold', color: raffle?.color || '#1976d2' }}>
                                     {formatDateTimeLarge(raffleNumber.reservedDate)}
                                 </Typography>
                             </Box>
@@ -406,11 +406,11 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                 sx={{
                                     p: 3,
                                     backgroundColor: "#f8fafc",
-                                    border: "2px dashed #1446A0",
+                                    border: `2px dashed ${raffle?.color || '#1976d2'}`,
                                     borderRadius: 2,
                                 }}
                             >
-                                <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, color: '#1e40af' }}>
+                                <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, color: raffle?.color || '#1976d2' }}>
                                     Historial de Pagos
                                 </Typography>
                                 {raffleNumber.payments.length > 0 ? (
@@ -443,7 +443,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                                         <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
                                                             Método:
                                                         </Typography>
-                                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0', textTransform: 'capitalize' }}>
+                                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: raffle?.color || '#1976d2', textTransform: 'capitalize' }}>
                                                             {payment.rafflePayMethode?.payMethode.name || 'No especificado'}
                                                         </Typography>
                                                     </Box>
@@ -451,7 +451,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                                         <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
                                                             Fecha:
                                                         </Typography>
-                                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: raffle?.color || '#1976d2' }}>
                                                             {!payment.paidAt ? 
                                                                 formatDateTimeLarge(payment.createdAt) : 
                                                                 formatDateTimeLargeIsNull(payment.paidAt)
@@ -462,7 +462,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                                         <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
                                                             Vendedor:
                                                         </Typography>
-                                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0', textTransform: 'capitalize' }}>
+                                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: raffle?.color || '#1976d2', textTransform: 'capitalize' }}>
                                                             {payment.user ? `${payment.user.firstName} ${payment.user.lastName}` : 'No registrado'}
                                                         </Typography>
                                                     </Box>
@@ -472,7 +472,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                                         <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
                                                             Identificación:
                                                         </Typography>
-                                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1446A0' }}>
+                                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: raffle?.color || '#1976d2' }}>
                                                             {payment.user.identificationNumber}
                                                         </Typography>
                                                     </Box>

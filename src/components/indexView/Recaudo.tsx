@@ -11,9 +11,10 @@ type RecaudoPros = {
     raffleId: number
     expenseTotal: ExpensesTotal
     expenseTotalByUser: ExpensesTotal
+    raffleColor?: string
 }
 
-function Recaudo({raffleId, expenseTotal, expenseTotalByUser}:RecaudoPros) {
+function Recaudo({raffleId, expenseTotal, expenseTotalByUser, raffleColor = '#1976d2'}:RecaudoPros) {
 
         const user : User = useOutletContext();
 
@@ -47,28 +48,28 @@ function Recaudo({raffleId, expenseTotal, expenseTotalByUser}:RecaudoPros) {
         <div className="grid items-center grid-cols-1 gap-3 text-xl font-bold text-center md:grid-cols-3 lg:grid-cols-5">
             <div>
             <p>Recaudado</p>
-            <p className="text-azul">{formatCurrencyCOP(data.totalRecaudado)}</p>
+            <p style={{ color: raffleColor }}>{formatCurrencyCOP(data.totalRecaudado)}</p>
             </div>
             <div>
             <p>Pagados</p>
-            <p className="text-azul">{formatCurrencyCOP(data.totalVendido)}</p>
+            <p style={{ color: raffleColor }}>{formatCurrencyCOP(data.totalVendido)}</p>
             </div>
             <div>
             <p>Por Cobrar</p>
-            <p className="text-azul">{formatCurrencyCOP(data.TotalCobrar)}</p>
+            <p style={{ color: raffleColor }}>{formatCurrencyCOP(data.TotalCobrar)}</p>
             </div>
             <div>
             <p>Rechazados</p>
-            <p className="text-azul">{formatCurrencyCOP(data.TotalCancelPays)}</p>
+            <p style={{ color: raffleColor }}>{formatCurrencyCOP(data.TotalCancelPays)}</p>
             </div>
             <div>
             <p>Gasto Total</p>
-            <p className="text-azul">{formatCurrencyCOP(expenseTotal.total)}</p>
+            <p style={{ color: raffleColor }}>{formatCurrencyCOP(expenseTotal.total)}</p>
             </div>
             {user.rol.name === 'responsable' &&
             <div>
             <p>Mi Gasto Total</p>
-            <p className="text-azul">{formatCurrencyCOP(expenseTotalByUser.total)}</p>
+            <p style={{ color: raffleColor }}>{formatCurrencyCOP(expenseTotalByUser.total)}</p>
             </div>
             }
         </div>

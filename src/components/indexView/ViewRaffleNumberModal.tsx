@@ -279,7 +279,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                         <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
                             <Typography variant="h4" sx={{ 
                                 fontWeight: 'bold', 
-                                color: '#1e40af',
+                                color: raffle?.color || '#1976d2',
                                 fontSize: { xs: '1.25rem', sm: '1.5rem', md: '2rem' }
                             }}>
                                 # {formatWithLeadingZeros(raffleNumber.number, totalNumbers)}
@@ -325,18 +325,31 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                     mb: 3, 
                     p: 3, 
                     bgcolor: '#f8fafc',
-                    border: '2px solid #1446A0', 
+                    border: `2px solid ${raffle?.color || '#1976d2'}`, 
                     borderRadius: 2,
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                 }}>
                     {raffleNumber.status === 'available' ? (
                         <Box sx={{ textAlign: 'center' }}>
-                            <Typography variant="h6" sx={{ color: '#1446A0', fontWeight: 'bold', mb: 2 }}>
+                            <Typography variant="h6" sx={{ color: raffle?.color || '#1976d2', fontWeight: 'bold', mb: 2 }}>
                                 Valor de la Rifa: {formatCurrencyCOP(+raffleNumber.paymentDue)}
                             </Typography>
                             <FormControlLabel  
                                 labelPlacement="bottom" 
-                                control={<Switch checked={priceEspecial} onChange={handleChange}/>} 
+                                control={
+                                    <Switch 
+                                        checked={priceEspecial} 
+                                        onChange={handleChange}
+                                        sx={{
+                                            '& .MuiSwitch-switchBase.Mui-checked': {
+                                                color: raffle?.color || '#1976d2',
+                                            },
+                                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                                backgroundColor: raffle?.color || '#1976d2',
+                                            },
+                                        }}
+                                    />
+                                } 
                                 label="Aplicar Precio Especial"
                                 sx={{ 
                                     '& .MuiFormControlLabel-label': { 
@@ -388,6 +401,22 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                             size="small"
                             error={!!errors.amount}
                             helperText={errors.amount?.message}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    '& fieldset': {
+                                        borderColor: `${raffle?.color || '#1976d2'}40`,
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: raffle?.color || '#1976d2',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: raffle?.color || '#1976d2',
+                                    },
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                    color: raffle?.color || '#1976d2',
+                                },
+                            }}
                             {...register('amount', {
                                 required: 'Monto obligatorio',
                                 pattern: {
@@ -403,7 +432,16 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
 
                         {raffleNumber.status != 'sold' && (
                             <FormControl error={!!errors.paymentMethod} size="small">
-                                <InputLabel id="paymentMethodLabel">Método de pago</InputLabel>
+                                <InputLabel 
+                                    id="paymentMethodLabel"
+                                    sx={{
+                                        '&.Mui-focused': {
+                                            color: raffle?.color || '#1976d2',
+                                        },
+                                    }}
+                                >
+                                    Método de pago
+                                </InputLabel>
                                 <Select
                                     labelId="paymentMethodLabel"
                                     id="paymentMethod"
@@ -417,6 +455,17 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                                     disabled={isLoadingPayMethods}
                                     ref={paymentMethodField.ref}
                                     name={paymentMethodField.name}
+                                    sx={{
+                                        '& .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: `${raffle?.color || '#1976d2'}40`,
+                                        },
+                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: raffle?.color || '#1976d2',
+                                        },
+                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: raffle?.color || '#1976d2',
+                                        },
+                                    }}
                                 >
                                     <MenuItem disabled value={''}>
                                         {isLoadingPayMethods ? 'Cargando métodos...' : 'Seleccione un método de pago'}
@@ -479,6 +528,22 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                                 variant="outlined" 
                                 size="small"
                                 placeholder="Ej: 123456"
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: `${raffle?.color || '#1976d2'}40`,
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: raffle?.color || '#1976d2',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: raffle?.color || '#1976d2',
+                                        },
+                                    },
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                        color: raffle?.color || '#1976d2',
+                                    },
+                                }}
                                 {...register('reference')}
                             />
                             
@@ -502,6 +567,22 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                             size="small"
                             error={!!errors.firstName}
                             helperText={errors.firstName?.message}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    '& fieldset': {
+                                        borderColor: `${raffle?.color || '#1976d2'}40`,
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: raffle?.color || '#1976d2',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: raffle?.color || '#1976d2',
+                                    },
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                    color: raffle?.color || '#1976d2',
+                                },
+                            }}
                             {...register('firstName', {required: 'Nombres Obligatorio'})}
                         />
                         <TextField 
@@ -511,6 +592,22 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                             size="small"
                             error={!!errors.lastName}
                             helperText={errors.lastName?.message}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    '& fieldset': {
+                                        borderColor: `${raffle?.color || '#1976d2'}40`,
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: raffle?.color || '#1976d2',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: raffle?.color || '#1976d2',
+                                    },
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                    color: raffle?.color || '#1976d2',
+                                },
+                            }}
                             {...register('lastName', {required: 'Apellidos Obligatorio'})}
                         />
                     </Box>
@@ -534,6 +631,22 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                         size="small"
                         error={!!errors.address}
                         helperText={errors.address?.message}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                '& fieldset': {
+                                    borderColor: `${raffle?.color || '#1976d2'}40`,
+                                },
+                                '&:hover fieldset': {
+                                    borderColor: raffle?.color || '#1976d2',
+                                },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: raffle?.color || '#1976d2',
+                                },
+                            },
+                            '& .MuiInputLabel-root.Mui-focused': {
+                                color: raffle?.color || '#1976d2',
+                            },
+                        }}
                         {...register('address', {required: 'Dirección Obligatoria'})}
                     />
 
@@ -542,8 +655,10 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                         variant="contained"
                         size="large"
                         sx={{ 
-                            bgcolor: '#1446A0', 
-                            '&:hover': { bgcolor: '#1e40af' },
+                            bgcolor: raffle?.color || '#1976d2', 
+                            '&:hover': { 
+                                bgcolor: raffle?.color ? `${raffle.color}dd` : '#1565c0' 
+                            },
                             py: 1.5,
                             fontWeight: 'bold'
                         }}
@@ -567,9 +682,12 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                                 variant="outlined"
                                 size="large"
                                 sx={{ 
-                                    borderColor: '#1446A0', 
-                                    color: '#1446A0',
-                                    '&:hover': { bgcolor: '#f0f4ff', borderColor: '#1e40af' },
+                                    borderColor: raffle?.color || '#1976d2', 
+                                    color: raffle?.color || '#1976d2',
+                                    '&:hover': { 
+                                        bgcolor: raffle?.color ? `${raffle.color}15` : '#f0f4ff', 
+                                        borderColor: raffle?.color || '#1565c0' 
+                                    },
                                     py: 1.5,
                                     fontWeight: 'bold'
                                 }}

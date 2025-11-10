@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import ButtonCloseModal from "../../../ButtonCloseModal";
 import { getExpensesByUser } from "../../../../api/expensesApi";
+import { getRaffleById } from "../../../../api/raffleApi";
 import TableExpenses from "./TableExpenses";
 import AddExpenseModal from "./AddExpenseModal";
 import UpdateExpenseModal from "./UpdateExpenseModal";
@@ -43,6 +44,13 @@ function ViewExpensesByUserModal( { refechtExpenseTotal, refechtExpenseTotalByUs
     const [page, setPage] = useState<number>(0);
     const [limit, setLimit] = useState<number>(4);
 
+    // Obtener datos de la rifa para el color
+    const { data: raffle } = useQuery({
+        queryKey: ['raffles', raffleId],
+        queryFn: () => getRaffleById(raffleId!),
+        enabled: show && !!raffleId,
+    });
+
     const { data, isLoading, refetch} = useQuery({
         queryKey: ['expensesByUser', raffleId, page, limit, user.id],
         queryFn: () => getExpensesByUser({raffleId: raffleId!, params: {page : page + 1, limit}}),
@@ -77,12 +85,26 @@ function ViewExpensesByUserModal( { refechtExpenseTotal, refechtExpenseTotalByUs
                 <ButtonCloseModal/>
                 
                 <div className="flex flex-col items-center justify-between gap-4 mt-5 md:flex-row ">
-                    <h2 className="text-3xl font-bold md:text-center ">Mis Gastos</h2>
+                    <h2 
+                        className="text-3xl font-bold md:text-center"
+                        style={{ color: raffle?.color || '#1976d2' }}
+                    >
+                        Mis Gastos
+                    </h2>
                     
                     <Button
                         variant="contained"
                         onClick={handleNewExpense}
-                    >Agregar Gasto</Button>
+                        sx={{
+                            backgroundColor: raffle?.color || '#1976d2',
+                            '&:hover': {
+                                backgroundColor: raffle?.color || '#1976d2',
+                                opacity: 0.9,
+                            },
+                        }}
+                    >
+                        Agregar Gasto
+                    </Button>
                 </div>
 
                 <div className="w-full h-1 my-3 bg-baclk"></div>

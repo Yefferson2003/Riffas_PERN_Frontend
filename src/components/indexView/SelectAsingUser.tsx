@@ -1,8 +1,9 @@
 import { Button, CircularProgress, MenuItem, Select, SelectChangeEvent } from "@mui/material"
 import { useUsersSelect } from "../../hooks/useUser"
 import { useState } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query"
 import { assingUser } from "../../api/raffleApi"
+import { getRaffleById } from "../../api/raffleApi"
 import { toast } from "react-toastify"
 
 type SelectAsingUserProps = {
@@ -15,6 +16,13 @@ function SelectAsingUser({raffleId, userRol} : SelectAsingUserProps) {
     const [userId, setUserId] = useState('')
     
     const {data, isLoading} = useUsersSelect()
+    
+    // Obtener datos de la rifa para el color
+    const { data: raffle } = useQuery({
+        queryKey: ['raffle', raffleId],
+        queryFn: () => getRaffleById(raffleId.toString()),
+        enabled: !!raffleId
+    });
     
     const handleChange = (e : SelectChangeEvent) => {
         setUserId(e.target.value as string);
@@ -52,7 +60,18 @@ function SelectAsingUser({raffleId, userRol} : SelectAsingUserProps) {
             
             {data && 
                 <>
-                    <Select sx={{width: {sx: 'auto',md: '100%',}}}
+                    <Select sx={{
+                        width: {sx: 'auto',md: '100%',},
+                        '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: raffle?.color || '#1976d2',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: raffle?.color || '#1976d2',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: raffle?.color || '#1976d2',
+                        }
+                    }}
                         value={userId}
                         onChange={handleChange}
                         disabled={userRol === 'vendedor'}
@@ -66,7 +85,13 @@ function SelectAsingUser({raffleId, userRol} : SelectAsingUserProps) {
                             </MenuItem>
                         ))}
                     </Select>
-                    <Button sx={{width: {sx: 'auto',md: '100%',}}} 
+                    <Button sx={{
+                        width: {sx: 'auto',md: '100%',},
+                        bgcolor: raffle?.color || '#1976d2',
+                        '&:hover': {
+                            bgcolor: raffle?.color ? `${raffle.color}dd` : '#1565c0'
+                        }
+                    }} 
                         variant="contained"
                         disabled={!userId || isPending}
                         onClick={handleAssingUser}

@@ -28,9 +28,10 @@ const style = {
 type UpdateAwadModalProps = {
     refecht: (options?: RefetchOptions) => Promise<QueryObserverResult<AwardsResponseType | undefined, Error>>
     raffleDate: string | undefined
+    raffleColor?: string
 }
 
-function UpdateAwadModal( { refecht, raffleDate } : UpdateAwadModalProps) {
+function UpdateAwadModal( { refecht, raffleDate, raffleColor = '#1976d2' } : UpdateAwadModalProps) {
 
     const { raffleId } = useParams<{ raffleId: string }>();
     const queryClient = useQueryClient()
@@ -108,7 +109,12 @@ function UpdateAwadModal( { refecht, raffleDate } : UpdateAwadModalProps) {
             <Box sx={style}>
             <ButtonCloseModal/>
 
-            <h2 className='mb-5 text-xl font-semibold text-center'>Actualiza el premio</h2>
+            <h2 
+                className='mb-5 text-xl font-semibold text-center'
+                style={{ color: raffleColor }}
+            >
+                Actualiza el premio
+            </h2>
 
             <form 
                 className='flex flex-col gap-4'
@@ -119,6 +125,7 @@ function UpdateAwadModal( { refecht, raffleDate } : UpdateAwadModalProps) {
                     errors={errors}
                     watch={watch}
                     setValue={setValue}
+                    raffleColor={raffleColor}
                 />
 
                 <Button
@@ -126,6 +133,13 @@ function UpdateAwadModal( { refecht, raffleDate } : UpdateAwadModalProps) {
                     variant="contained"
                     fullWidth
                     disabled={isPending}
+                    sx={{
+                        backgroundColor: raffleColor,
+                        '&:hover': {
+                            backgroundColor: raffleColor,
+                            opacity: 0.9,
+                        },
+                    }}
                 >
                     Actualizar Premio
                 </Button>

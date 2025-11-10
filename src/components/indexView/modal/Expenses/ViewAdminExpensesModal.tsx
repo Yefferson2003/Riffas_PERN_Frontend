@@ -3,6 +3,7 @@ import { useQueries } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getExpenses } from "../../../../api/expensesApi";
+import { getRaffleById } from "../../../../api/raffleApi";
 import { formatCurrencyCOP } from "../../../../utils";
 import ButtonCloseModal from "../../../ButtonCloseModal";
 import TableExpenses from "./TableExpenses";
@@ -41,17 +42,23 @@ function ViewAdminExpensesModal( { expensesTotal, isLoadingExpenseTotal } : View
     const [limit, setLimit] = useState<number>(4);
 
     // Ejecutar ambos queries en paralelo
-    const [expensesQuery] = useQueries({
+    const [expensesQuery, raffleQuery] = useQueries({
         queries: [
             {
                 queryKey: ['expensesByRaffler', raffleId, page, limit],
                 queryFn: () => getExpenses({ raffleId: raffleId!, params: { page: page + 1, limit } }),
                 enabled: show,
+            },
+            {
+                queryKey: ['raffles', raffleId],
+                queryFn: () => getRaffleById(raffleId!),
+                enabled: show && !!raffleId,
             }
         ],
     });
 
     const { data: expensesData, isLoading: isLoadingExpenses } = expensesQuery;
+    const { data: raffle } = raffleQuery;
     // const { data: expensesTotal, isLoading: isLoadingTotal } = expensesTotalQuery;
 
     const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,12 +82,22 @@ function ViewAdminExpensesModal( { expensesTotal, isLoadingExpenseTotal } : View
             <Box sx={style}>
                 <ButtonCloseModal />
 
-                <h2 className="text-2xl font-bold text-center">Gastos acumulados de la rifa</h2>
+                <h2 
+                    className="text-2xl font-bold text-center"
+                    style={{ color: raffle?.color || '#1976d2' }}
+                >
+                    Gastos acumulados de la rifa
+                </h2>
 
                 {expensesTotal && 
                     <div className="flex justify-between mt-5 text-xl ">
                         <h3>Gasto totales: </h3>
-                        <p className="font-bold text-rojo">{formatCurrencyCOP(expensesTotal.total)}</p>
+                        <p 
+                            className="font-bold"
+                            style={{ color: raffle?.color || '#d32f2f' }}
+                        >
+                            {formatCurrencyCOP(expensesTotal.total)}
+                        </p>
                     </div>
                 }
 

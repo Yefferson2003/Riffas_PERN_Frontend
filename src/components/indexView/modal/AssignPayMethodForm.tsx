@@ -20,6 +20,7 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { assignPayMethodToRaffle, getActivePayMethods } from '../../../api/payMethodeApi';
+import { getRaffleById } from '../../../api/raffleApi';
 import { AssignPayMethodToRaffleFormType } from '../../../types';
 import { capitalize } from '../../../utils';
 
@@ -56,6 +57,13 @@ type AssignPayMethodFormProps = {
 function AssignPayMethodForm({ raffleId, onSuccess }: AssignPayMethodFormProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const queryClient = useQueryClient();
+
+    // Obtener datos de la rifa para el color
+    const { data: raffle } = useQuery({
+        queryKey: ['raffles', raffleId],
+        queryFn: () => getRaffleById(raffleId),
+        enabled: !!raffleId,
+    });
 
     const { 
         data: payMethods, 
@@ -135,10 +143,10 @@ function AssignPayMethodForm({ raffleId, onSuccess }: AssignPayMethodFormProps) 
                 <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     sx={{
-                        bgcolor: 'primary.main',
-                        color: 'primary.contrastText',
+                        bgcolor: raffle?.color || '#1976d2',
+                        color: 'white',
                         '&:hover': {
-                            bgcolor: 'primary.dark',
+                            bgcolor: raffle?.color ? `${raffle.color}dd` : '#1565c0',
                         },
                         '& .MuiAccordionSummary-content': {
                             alignItems: 'center'
@@ -176,7 +184,15 @@ function AssignPayMethodForm({ raffleId, onSuccess }: AssignPayMethodFormProps) 
                             error={!!errors.payMethodeId}
                             sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
                         >
-                            <InputLabel>Método de Pago *</InputLabel>
+                            <InputLabel
+                                sx={{
+                                    '&.Mui-focused': {
+                                        color: raffle?.color || '#1976d2',
+                                    },
+                                }}
+                            >
+                                Método de Pago *
+                            </InputLabel>
                             <Controller
                                 name="payMethodeId"
                                 control={control}
@@ -197,6 +213,17 @@ function AssignPayMethodForm({ raffleId, onSuccess }: AssignPayMethodFormProps) 
                                         value={field.value || ''}
                                         onChange={(e) => field.onChange(Number(e.target.value))}
                                         error={!!errors.payMethodeId}
+                                        sx={{
+                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: `${raffle?.color || '#1976d2'}40`,
+                                            },
+                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: raffle?.color || '#1976d2',
+                                            },
+                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: raffle?.color || '#1976d2',
+                                            },
+                                        }}
                                     >
                                         <MenuItem value="" disabled>
                                             <em>Seleccione un método de pago</em>
@@ -236,6 +263,22 @@ function AssignPayMethodForm({ raffleId, onSuccess }: AssignPayMethodFormProps) 
                                     helperText={errors.accountNumber?.message}
                                     disabled={isPending}
                                     placeholder="Ej: 1234567890"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: `${raffle?.color || '#1976d2'}40`,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: raffle?.color || '#1976d2',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: raffle?.color || '#1976d2',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: raffle?.color || '#1976d2',
+                                        },
+                                    }}
                                 />
                             )}
                         />
@@ -252,7 +295,23 @@ function AssignPayMethodForm({ raffleId, onSuccess }: AssignPayMethodFormProps) 
                                     error={!!errors.accountHolder}
                                     helperText={errors.accountHolder?.message}
                                     disabled={isPending}
-                                    placeholder="Nombre del titular"
+                                    placeholder="Ej: Juan Pérez"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: `${raffle?.color || '#1976d2'}40`,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: raffle?.color || '#1976d2',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: raffle?.color || '#1976d2',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: raffle?.color || '#1976d2',
+                                        },
+                                    }}
                                 />
                             )}
                         />
@@ -270,7 +329,23 @@ function AssignPayMethodForm({ raffleId, onSuccess }: AssignPayMethodFormProps) 
                                     helperText={errors.bankName?.message}
                                     disabled={isPending}
                                     placeholder="Ej: Banco de Bogotá"
-                                    sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
+                                    sx={{ 
+                                        gridColumn: { xs: '1', sm: '1 / -1' },
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: `${raffle?.color || '#1976d2'}40`,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: raffle?.color || '#1976d2',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: raffle?.color || '#1976d2',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: raffle?.color || '#1976d2',
+                                        },
+                                    }}
                                 />
                             )}
                         />
@@ -293,6 +368,14 @@ function AssignPayMethodForm({ raffleId, onSuccess }: AssignPayMethodFormProps) 
                                     setIsExpanded(false);
                                 }}
                                 disabled={isPending}
+                                sx={{
+                                    borderColor: raffle?.color || '#1976d2',
+                                    color: raffle?.color || '#1976d2',
+                                    '&:hover': {
+                                        borderColor: raffle?.color || '#1976d2',
+                                        bgcolor: raffle?.color ? `${raffle.color}15` : '#1976d215',
+                                    },
+                                }}
                             >
                                 Cancelar
                             </Button>
@@ -304,6 +387,12 @@ function AssignPayMethodForm({ raffleId, onSuccess }: AssignPayMethodFormProps) 
                                     <CircularProgress size={16} /> : 
                                     <AddIcon />
                                 }
+                                sx={{
+                                    bgcolor: raffle?.color || '#1976d2',
+                                    '&:hover': {
+                                        bgcolor: raffle?.color ? `${raffle.color}dd` : '#1565c0',
+                                    },
+                                }}
                             >
                                 {isPending ? 'Asignando...' : 'Asignar Método'}
                             </Button>

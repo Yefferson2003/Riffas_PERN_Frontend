@@ -15,10 +15,11 @@ type AwardsProps = {
     awards?: AwardType[]
     refecht: (options?: RefetchOptions) => Promise<QueryObserverResult<AwardsResponseType | undefined, Error>>
     raffleDate: string | undefined
+    raffleColor?: string
 }
 
 // Añadir estilos y renderizar premios
-function Awards({ awards, refecht, raffleDate }: AwardsProps) {
+function Awards({ awards, refecht, raffleDate, raffleColor = '#1976d2' }: AwardsProps) {
 
     const navigate = useNavigate()
     const { raffleId } = useParams<{ raffleId: string }>();
@@ -51,11 +52,17 @@ function Awards({ awards, refecht, raffleDate }: AwardsProps) {
 
     return (
         <div className="awards-container">
-            <h3 className="mb-4 text-xl font-bold">Premios</h3>
+            <h3 
+                className="mb-4 text-xl font-bold"
+                style={{ color: raffleColor }}
+            >
+                Premios
+            </h3>
 
             {user.rol.name === 'admin' && <button
                 onClick={handleNewAwardModal}
-                className="px-4 py-2 mb-4 text-white rounded bg-azul hover:bg-blue-700"
+                className="px-4 py-2 mb-4 text-white transition-opacity rounded hover:opacity-90"
+                style={{ backgroundColor: raffleColor }}
             >
                 Nuevo Premio
             </button>}
@@ -63,9 +70,22 @@ function Awards({ awards, refecht, raffleDate }: AwardsProps) {
             {!awards || awards.length === 0 && <p className="text-center ">No hay premios secundarios disponibles.</p>}
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {awards?.map((award, index) => (
-                    <li key={index} className="p-4 bg-white border rounded-lg shadow-md award-item">
-                        <h4 className="text-lg font-semibold text-azul">{award.name}</h4>
-                        <p className="font-bold text-azul text-md">Juega: <span className="text-baclk ">{formatDateTimeLargeIsNull(award.playDate)}</span></p>
+                    <li 
+                        key={index} 
+                        className="p-4 bg-white rounded-lg shadow-md award-item"
+                    >
+                        <h4 
+                            className="text-lg font-semibold"
+                            style={{ color: raffleColor }}
+                        >
+                            {award.name}
+                        </h4>
+                        <p 
+                            className="font-bold text-md"
+                            style={{ color: raffleColor }}
+                        >
+                            Juega: <span className="text-black">{formatDateTimeLargeIsNull(award.playDate)}</span>
+                        </p>
 
                         {user.rol.name === 'admin' && (
                             <>
@@ -96,11 +116,13 @@ function Awards({ awards, refecht, raffleDate }: AwardsProps) {
             <UpdateAwadModal
                 refecht={refecht}
                 raffleDate={raffleDate}
+                raffleColor={raffleColor}
             />
 
             <AddAwadModal 
                 refecht={refecht}
                 raffleDate={raffleDate}
+                raffleColor={raffleColor}
             />
         </div>
     );

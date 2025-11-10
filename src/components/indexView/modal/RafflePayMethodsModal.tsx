@@ -26,6 +26,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getRafflePayMethods, toggleRafflePayMethodStatus } from '../../../api/payMethodeApi';
+import { getRaffleById } from '../../../api/raffleApi';
 import { capitalize } from '../../../utils';
 import AssignPayMethodForm from './AssignPayMethodForm';
 
@@ -79,6 +80,13 @@ function RafflePayMethodsModal({ raffleId }: RafflePayMethodsModalProps) {
 
     const searchParams = new URLSearchParams(location.search);
     const viewPayMethodesRaffle = searchParams.get('viewPayMethodesRaffle');
+
+    // Obtener datos de la rifa para el color
+    const { data: raffle } = useQuery({
+        queryKey: ['raffles', raffleId],
+        queryFn: () => getRaffleById(raffleId),
+        enabled: isOpen,
+    });
 
     const { 
         data: rafflePayMethods, 
@@ -170,8 +178,12 @@ function RafflePayMethodsModal({ raffleId }: RafflePayMethodsModalProps) {
                 }}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <PaymentIcon color="primary" />
-                    <Typography variant="h6" component="span">
+                    <PaymentIcon sx={{ color: raffle?.color || '#1976d2' }} />
+                    <Typography 
+                        variant="h6" 
+                        component="span"
+                        sx={{ color: raffle?.color || '#1976d2' }}
+                    >
                         Métodos de Pago
                     </Typography>
                 </Box>
@@ -328,10 +340,20 @@ function RafflePayMethodsModal({ raffleId }: RafflePayMethodsModalProps) {
                                                             sx={{
                                                                 cursor: 'pointer',
                                                                 transition: 'all 0.2s ease',
-                                                                '&:hover': {
-                                                                    backgroundColor: payMethod.isActive ? 'success.dark' : 'grey.400',
-                                                                    transform: 'scale(1.05)',
-                                                                },
+                                                                ...(payMethod.isActive && {
+                                                                    backgroundColor: raffle?.color || '#4caf50',
+                                                                    '&:hover': {
+                                                                        backgroundColor: raffle?.color || '#4caf50',
+                                                                        opacity: 0.8,
+                                                                        transform: 'scale(1.05)',
+                                                                    },
+                                                                }),
+                                                                ...(!payMethod.isActive && {
+                                                                    '&:hover': {
+                                                                        backgroundColor: 'grey.400',
+                                                                        transform: 'scale(1.05)',
+                                                                    },
+                                                                }),
                                                                 '&:disabled': {
                                                                     opacity: 0.6,
                                                                     cursor: 'not-allowed'

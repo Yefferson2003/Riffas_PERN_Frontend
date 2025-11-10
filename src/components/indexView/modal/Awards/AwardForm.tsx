@@ -10,9 +10,10 @@ type AwardFormProps = {
     errors: FieldErrors<AwardFormType>
     watch: UseFormWatch<AwardFormType>
     setValue: UseFormSetValue<AwardFormType>
+    raffleColor?: string
 }
 
-function AwardForm( {errors, register, watch, setValue} : AwardFormProps) {
+function AwardForm( {errors, register, watch, setValue, raffleColor = '#1976d2'} : AwardFormProps) {
 
     const playDate = watch('playDate')
 
@@ -26,6 +27,16 @@ function AwardForm( {errors, register, watch, setValue} : AwardFormProps) {
                 {...register("name", { required: "El nombre del premio es obligatorio" })}
                 error={!!errors.name}
                 helperText={errors.name?.message}
+                sx={{
+                    '& .MuiOutlinedInput-root': {
+                        '&.Mui-focused fieldset': {
+                            borderColor: raffleColor,
+                        },
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                        color: raffleColor,
+                    },
+                }}
             />
 
             <LocalizationProvider dateAdapter={AdapterDayjs}>

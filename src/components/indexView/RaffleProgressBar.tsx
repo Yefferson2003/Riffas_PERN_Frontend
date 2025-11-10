@@ -10,15 +10,19 @@ interface RaffleProgressBarProps {
     };
     totalNumbers: number;
     variant?: 'default' | 'shared'; // Nueva prop para cambiar el estilo
+    raffleColor?: string; // Nueva prop para el color de la rifa
 }
 
-function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default' }: RaffleProgressBarProps) {
+function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default', raffleColor }: RaffleProgressBarProps) {
     if (!numbersByStatus || totalNumbers === 0) return null;
 
     const { available, sold, pending, apartado } = numbersByStatus;
 
     // Para la versión shared, combinamos todos los valores excepto disponibles
     const isSharedVersion = variant === 'shared';
+    
+    // Usar el color de la rifa o el color por defecto
+    const primaryColor = raffleColor || '#1976d2';
     
     if (isSharedVersion) {
         // En shared: combinamos sold + pending + apartado vs available
@@ -32,9 +36,9 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default' 
                 maxWidth: '100%',
                 mx: 'auto', 
                 p: { xs: 2, sm: 3 },
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // Gradiente llamativo
+                background: `linear-gradient(135deg, ${primaryColor}ee, ${primaryColor}aa)`, // Usa el color de la rifa
                 borderRadius: 3, // Más redondeado
-                boxShadow: '0 8px 32px rgba(102, 126, 234, 0.25), 0 4px 16px rgba(118, 75, 162, 0.15)', // Sombras más llamativas
+                boxShadow: `0 8px 32px ${primaryColor}40, 0 4px 16px ${primaryColor}25`, // Sombras con el color de la rifa
                 border: '2px solid rgba(255, 255, 255, 0.2)', // Borde sutil
                 position: 'relative',
                 overflow: 'hidden',
@@ -88,12 +92,12 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default' 
                                 top: 0,
                                 width: `${combinedPercentage}%`,
                                 height: '100%',
-                                background: 'linear-gradient(45deg, #ff6b6b 0%, #feca57 25%, #48dbfb 50%, #ff9ff3 75%, #54a0ff 100%)', // Gradiente arcoíris
+                                background: `linear-gradient(45deg, ${primaryColor} 0%, ${primaryColor}dd 25%, ${primaryColor}aa 50%, ${primaryColor}cc 75%, ${primaryColor} 100%)`, // Gradiente con el color de la rifa
                                 borderRadius: combinedPercentage === 100 ? { xs: 8, sm: 10, md: 12 } : { xs: '8px 0 0 8px', sm: '10px 0 0 10px', md: '12px 0 0 12px' },
                                 transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)', // Transición más suave
                                 backgroundSize: '200% 100%',
                                 animation: 'gradientShift 4s ease-in-out infinite', // Animación del gradiente
-                                boxShadow: '0 2px 8px rgba(255, 107, 107, 0.4)', // Sombra colorida
+                                boxShadow: `0 2px 8px ${primaryColor}60`, // Sombra colorida con el color de la rifa
                                 '@keyframes gradientShift': {
                                     '0%, 100%': { backgroundPosition: '0% 50%' },
                                     '50%': { backgroundPosition: '100% 50%' }
@@ -219,7 +223,7 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default' 
             <Typography variant="h6" sx={{ 
                 textAlign: 'center', 
                 mb: { xs: 1.5, sm: 2 }, 
-                color: '#1446A0',
+                color: primaryColor,
                 fontWeight: 'bold',
                 fontSize: { xs: '1.1rem', sm: '1.25rem' }
             }}>

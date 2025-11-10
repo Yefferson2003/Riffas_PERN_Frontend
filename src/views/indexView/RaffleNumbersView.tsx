@@ -431,7 +431,12 @@ function RaffleNumbersView() {
             <div className="space-y-3">
                 <div className="flex flex-col items-center lg:justify-between lg:flex-row">
                     <div className="flex flex-col items-center lg:flex-row">
-                        <h2 className="text-2xl font-bold lg:text-start lg:text-3xl text-azul">{raffle?.name}</h2>
+                        <h2 
+                            className="text-2xl font-bold lg:text-start lg:text-3xl"
+                            style={{ color: raffle?.color || '#1976d2' }}
+                        >
+                            {raffle?.name}
+                        </h2>
                     </div>
 
                     <div className="text-xl">
@@ -446,6 +451,15 @@ function RaffleNumbersView() {
                     awards={awards}
                     refecht={refechtAwards}
                     raffleDate={raffle?.playDate}
+                    raffleColor={raffle?.color || '#1976d2'}
+                />
+
+                {/* Línea divisoria estilizada */}
+                <div 
+                    className="w-full h-px mx-auto my-6"
+                    style={{ 
+                        background: `linear-gradient(to right, transparent, ${raffle?.color || '#1976d2'}, transparent)` 
+                    }}
                 />
                 
                 {/* Fechas importantes */}
@@ -482,6 +496,7 @@ function RaffleNumbersView() {
                             raffleId={+raffleId}
                             expenseTotal={expenseTotal!}
                             expenseTotalByUser={expenseTotalByUser! || 0}
+                            raffleColor={raffle?.color || '#1976d2'}
                         />
                     </div>
                 }
@@ -490,6 +505,7 @@ function RaffleNumbersView() {
                         <RecaudoByVendedor 
                             raffleId={+raffleId}
                             expenseTotalByUser={expenseTotalByUser!}
+                            raffleColor={raffle?.color || '#1976d2'}
                         />
                     </div>
                 }
@@ -501,17 +517,21 @@ function RaffleNumbersView() {
                 />
             </div>
 
-            {/* Componente de progreso de la rifa */}
+                            {/* Componente de progreso de la rifa */}
             {raffle && raffle.totalNumbers && (
                 <RaffleProgressBar 
                     numbersByStatus={raffle.numbersByStatus}
                     totalNumbers={raffle.totalNumbers}
+                    raffleColor={raffle.color || '#1976d2'}
                 />
             )}
 
             <div>
-                <div className="flex items-center justify-center gap-2 text-2xl font-bold text-azul">
-                    <LocalActivityIcon/>
+                <div 
+                    className="flex items-center justify-center gap-2 text-2xl font-bold"
+                    style={{ color: raffle?.color || '#1976d2' }}
+                >
+                    <LocalActivityIcon style={{ color: raffle?.color || '#1976d2' }} />
                     <h2>Comprar Boletas</h2>
                 </div>
                 
@@ -519,7 +539,10 @@ function RaffleNumbersView() {
                     {/* Precio de la rifa */}
                     {raffle && (
                         <div className="text-center">
-                            <h3 className='text-2xl font-bold text-azul sm:text-3xl'>
+                            <h3 
+                                className='text-2xl font-bold sm:text-3xl'
+                                style={{ color: raffle?.color || '#1976d2' }}
+                            >
                                 {formatCurrencyCOP(+raffle.price)}
                             </h3>
                             <p className="text-sm text-gray-600 sm:text-base">Precio por boleta</p>
@@ -531,7 +554,20 @@ function RaffleNumbersView() {
                         <FormControl size="small"
                             variant='filled'
                             fullWidth
-                            sx={styleForm}
+                            sx={{
+                                ...styleForm,
+                                '& .MuiFilledInput-root': {
+                                    '&:hover:not(.Mui-disabled):before': {
+                                        borderBottomColor: raffle?.color || '#1976d2',
+                                    },
+                                    '&.Mui-focused:after': {
+                                        borderBottomColor: raffle?.color || '#1976d2',
+                                    },
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                    color: raffle?.color || '#1976d2',
+                                },
+                            }}
                         >
                             <Select
                                 labelId="demo-simple-select-label"
@@ -625,6 +661,19 @@ function RaffleNumbersView() {
                                 value={inputValues.search}
                                 onChange={handleChangeSearchParams}
                                 className="min-w-0"
+                                sx={{
+                                    '& .MuiFilledInput-root': {
+                                        '&:hover:not(.Mui-disabled):before': {
+                                            borderBottomColor: raffle?.color || '#1976d2',
+                                        },
+                                        '&.Mui-focused:after': {
+                                            borderBottomColor: raffle?.color || '#1976d2',
+                                        },
+                                    },
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                        color: raffle?.color || '#1976d2',
+                                    },
+                                }}
                             />
                             
                             {filter.pending === true && (
@@ -638,6 +687,19 @@ function RaffleNumbersView() {
                                     value={inputValues.searchAmount}
                                     onChange={handleChangeSearchParams}
                                     className="min-w-0"
+                                    sx={{
+                                        '& .MuiFilledInput-root': {
+                                            '&:hover:not(.Mui-disabled):before': {
+                                                borderBottomColor: raffle?.color || '#1976d2',
+                                            },
+                                            '&.Mui-focused:after': {
+                                                borderBottomColor: raffle?.color || '#1976d2',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: raffle?.color || '#1976d2',
+                                        },
+                                    }}
                                 />
                             )}
 
@@ -654,7 +716,20 @@ function RaffleNumbersView() {
                                                     size: 'small',
                                                     variant: 'filled',
                                                     fullWidth: true,
-                                                    className: "min-w-0"
+                                                    className: "min-w-0",
+                                                    sx: {
+                                                        '& .MuiFilledInput-root': {
+                                                            '&:hover:not(.Mui-disabled):before': {
+                                                                borderBottomColor: raffle?.color || '#1976d2',
+                                                            },
+                                                            '&.Mui-focused:after': {
+                                                                borderBottomColor: raffle?.color || '#1976d2',
+                                                            },
+                                                        },
+                                                        '& .MuiInputLabel-root.Mui-focused': {
+                                                            color: raffle?.color || '#1976d2',
+                                                        },
+                                                    }
                                                 }
                                             }}
                                         />
@@ -669,7 +744,20 @@ function RaffleNumbersView() {
                                                     size: 'small',
                                                     variant: 'filled',
                                                     fullWidth: true,
-                                                    className: "min-w-0"
+                                                    className: "min-w-0",
+                                                    sx: {
+                                                        '& .MuiFilledInput-root': {
+                                                            '&:hover:not(.Mui-disabled):before': {
+                                                                borderBottomColor: raffle?.color || '#1976d2',
+                                                            },
+                                                            '&.Mui-focused:after': {
+                                                                borderBottomColor: raffle?.color || '#1976d2',
+                                                            },
+                                                        },
+                                                        '& .MuiInputLabel-root.Mui-focused': {
+                                                            color: raffle?.color || '#1976d2',
+                                                        },
+                                                    }
                                                 }
                                             }}
                                         />
@@ -682,7 +770,11 @@ function RaffleNumbersView() {
                                 <button
                                     type="button"
                                     onClick={handleResetFilters}
-                                    className="px-4 py-2 text-sm font-medium transition-all duration-200 bg-gray-500 rounded-lg text-azul hover:bg-gray-600 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-4 py-2 text-sm font-medium text-white transition-all duration-200 rounded-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    style={{
+                                        backgroundColor: raffle?.color || '#1976d2',
+                                        boxShadow: `0 4px 8px ${raffle?.color || '#1976d2'}40`,
+                                    }}
                                     disabled={
                                         Object.keys(filter).length === 0 && 
                                         !paymentMethodFilter && 
@@ -705,7 +797,10 @@ function RaffleNumbersView() {
                         raffleNumbers && (
                             <div className="flex flex-col w-full max-w-4xl gap-3 mt-4 sm:flex-row sm:justify-center sm:gap-4">
                                 <button
-                                    className="flex-1 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 rounded-lg sm:flex-none sm:px-6 bg-azul hover:bg-blue-600 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                    className="flex-1 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 rounded-lg sm:flex-none sm:px-6 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2"
+                                    style={{ 
+                                        backgroundColor: raffle?.color || '#1976d2'
+                                    }}
                                     onClick={() => {
                                         toast.info('Descargando archivo...', { autoClose: 2000 });
                                         // const selectedMethod = payMethods?.find(method => method.payMethode.id.toString() === paymentMethodFilter);
@@ -731,7 +826,10 @@ function RaffleNumbersView() {
                                     </span>
                                 </button>
                                 <button
-                                    className="flex-1 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 rounded-lg sm:flex-none sm:px-6 bg-azul hover:bg-blue-600 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                    className="flex-1 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 rounded-lg sm:flex-none sm:px-6 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2"
+                                    style={{ 
+                                        backgroundColor: raffle?.color || '#1976d2',
+                                    }}
                                     onClick={() => {
                                         toast.info('Descargando archivo...', { autoClose: 2000 });
                                         exelRaffleNumbersFilter(
@@ -760,7 +858,10 @@ function RaffleNumbersView() {
                     {(user.rol.name == 'vendedor' && userFilter) &&
                         <div className="flex flex-col w-full max-w-4xl gap-3 mt-4 sm:flex-row sm:justify-center sm:gap-4">
                             <button
-                                className="flex-1 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 rounded-lg sm:flex-none sm:px-6 bg-azul hover:bg-blue-600 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                className="flex-1 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 rounded-lg sm:flex-none sm:px-6 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2"
+                                style={{ 
+                                    backgroundColor: raffle?.color || '#1976d2',
+                                }}
                                 onClick={() => {
                                     toast.info('Descargando archivo...', { autoClose: 2000 });
                                     // const selectedMethod = payMethods?.find(method => method.payMethode.id.toString() === paymentMethodFilter);
@@ -786,7 +887,10 @@ function RaffleNumbersView() {
                                 </span>
                             </button>
                             <button
-                                className="flex-1 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 rounded-lg sm:flex-none sm:px-6 bg-azul hover:bg-blue-600 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                className="flex-1 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 rounded-lg sm:flex-none sm:px-6 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2"
+                                style={{ 
+                                    backgroundColor: raffle?.color || '#1976d2'
+                                }}
                                 onClick={() => {
                                     toast.info('Descargando archivo...', { autoClose: 2000 });
                                     exelRaffleNumbersFilter(
@@ -817,7 +921,17 @@ function RaffleNumbersView() {
                                 <Switch 
                                     checked={optionSeleted} 
                                     onChange={handleSwitchChange}
-                                    color="primary"
+                                    sx={{
+                                        '& .MuiSwitch-switchBase.Mui-checked': {
+                                            color: raffle?.color || '#1976d2',
+                                            '&:hover': {
+                                                backgroundColor: `${raffle?.color || '#1976d2'}14`,
+                                            },
+                                        },
+                                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                            backgroundColor: raffle?.color || '#1976d2',
+                                        },
+                                    }}
                                 />
                             } 
                             label={
@@ -832,9 +946,10 @@ function RaffleNumbersView() {
                 
                 {(raffleNumbers && raffle) &&
                     <NumbersSeleted 
-                    numbersSeleted={numbersSeleted} 
-                    setNumbersSeleted={setNumbersSeleted}
-                    totalNumbers={raffle.totalNumbers || 0}
+                        numbersSeleted={numbersSeleted} 
+                        setNumbersSeleted={setNumbersSeleted}
+                        totalNumbers={raffle.totalNumbers || 0}
+                        raffleColor={raffle?.color || '#1976d2'}
                     />
                 }
                 
@@ -856,7 +971,12 @@ function RaffleNumbersView() {
 
                     {!isLoadingRaffleNumbers && raffleNumbers && raffle && (raffle?.totalNumbers || 0) &&
                         raffleNumbers.raffleNumbers.length === 0 ? (
-                        <p className='text-xl font-bold col-span-full text-azul'>No hay resultados...</p>
+                        <p 
+                            className='text-xl font-bold col-span-full'
+                            style={{ color: raffle?.color || '#1976d2' }}
+                        >
+                            No hay resultados...
+                        </p>
                         ) : (
                         raffleNumbers?.raffleNumbers.map(raffleNumber => {
                             const handleChipClick = optionSeleted ? 
@@ -916,9 +1036,10 @@ function RaffleNumbersView() {
                     page={page}
                     onChange={handlePageChange}
                     isSmallDevice={isSmallDevice}
+                    raffleColor={raffle?.color || '#1976d2'}
                 />
             </div>
-        {raffle && <ViewUsersOfRaffleModal raffleId={raffle.id}/>}
+        {raffle && <ViewUsersOfRaffleModal raffleColor={raffle.color || '#1976d2'} raffleId={raffle.id} />}
         {raffle && <UpdateRaffleModal 
             raffle={raffle} 
             refechtRaffle={refechtRaffle}

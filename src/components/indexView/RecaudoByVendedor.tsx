@@ -9,9 +9,10 @@ import { formatCurrencyCOP } from "../../utils";
 type RecaudoPros = {
     raffleId: number
     expenseTotalByUser: ExpensesTotal
+    raffleColor?: string
 }
 
-function RecaudoByVendedor({raffleId, expenseTotalByUser}:RecaudoPros) {
+function RecaudoByVendedor({raffleId, expenseTotalByUser, raffleColor = '#1976d2'}:RecaudoPros) {
 
 
     const {data, refetch} = useQuery({
@@ -44,27 +45,27 @@ function RecaudoByVendedor({raffleId, expenseTotalByUser}:RecaudoPros) {
         <div className="grid items-center grid-cols-1 gap-3 text-xl font-bold text-center md:grid-cols-3 lg:grid-cols-5">
             <div>
             <p>Números vendidos</p>
-            <p className=" text-azul">{(data.totalRaffleNumber[0])}</p>
+            <p style={{ color: raffleColor }}>{(data.totalRaffleNumber[0])}</p>
             </div>
             <div>
             <p>Números Pendientes</p>
-            <p className=" text-azul">{(data.totalRaffleNumber[1])}</p>
+            <p style={{ color: raffleColor }}>{(data.totalRaffleNumber[1])}</p>
             </div>
             <div>
             <p>Recaudado</p>
-            <p className=" text-azul">{formatCurrencyCOP(data.totalRecaudado)}</p>
+            <p style={{ color: raffleColor }}>{formatCurrencyCOP(data.totalRecaudado)}</p>
             </div>
             <div>
             <p>Por Cobrar</p>
-            <p className=" text-azul">{formatCurrencyCOP(data.totalCobrar)}</p>
+            <p style={{ color: raffleColor }}>{formatCurrencyCOP(data.totalCobrar)}</p>
             </div>
             <div>
             <p>Rechazados</p>
-            <p className=" text-azul">{formatCurrencyCOP(data.totalCancelado)}</p>
+            <p style={{ color: raffleColor }}>{formatCurrencyCOP(data.totalCancelado)}</p>
             </div>
             <div>
             <p>Mi Gasto Total</p>
-            <p className="text-azul">{formatCurrencyCOP(expenseTotalByUser.total)}</p>
+            <p style={{ color: raffleColor }}>{formatCurrencyCOP(expenseTotalByUser.total)}</p>
             </div>
         </div>
     );
