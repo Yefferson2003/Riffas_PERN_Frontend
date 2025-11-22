@@ -3,6 +3,37 @@ import jsPDF from 'jspdf';
 import { PaymentSellNumbersModalProps } from "../components/indexView/PaymentSellNumbersModal";
 import { InfoRaffleType } from "../components/indexView/ViewRaffleNumberData";
 import { AwardType, StatusRaffleNumbersType } from "../types";
+// interface PDFDataEntry {
+//     number: number;
+//     firstName?: string;
+//     lastName?: string;
+//     phone?: string;
+//     address?: string;
+//     paymentAmount: number;
+//     paymentDue: number;
+//     reservedDate?: string;
+//     payments: {
+//         amount: string;
+//         isValid: boolean;
+//         user?: {
+//             firstName?: string;
+//         };
+//     }[];
+// }
+
+// interface MultiplePDFData {
+//     data: PDFDataEntry[];
+//     customerName: string;
+// }
+
+// interface RaffleData {
+//     name: string;
+//     description: string;
+//     nameResponsable: string;
+//     nitResponsable: string;
+//     playDate: string;
+//     price: string;
+// }
 export const azul = '#1446A0'
 
 /**
@@ -191,42 +222,34 @@ El equipo de *${raffleName}* 🎟️
     window.open(whatsappUrl, '_blank');
 };
 
-
-
-export const redirectToWhatsApp = ({
+// 📋 Función para generar mensaje de compra de rifa
+export const generateRafflePurchaseMessage = ({
     totalNumbers,
     amount,
     abonosPendientes,
     infoRaffle,
     name,
-    phone,
     numbers,
     payments,
     statusRaffleNumber,
     awards,
     reservedDate,
-}: redirectToWhatsAppType): string => {
-    if (!phone) return "";
-
+}: Omit<redirectToWhatsAppType, 'phone'>): string => {
     const rafflePrice = +infoRaffle.amountRaffle;
     let deuda = 0;
 
     if (statusRaffleNumber === "pending" && payments) {
-        // console.log('----entro 1');
-        
         const abonosValidos = payments
             .filter(p => p.isValid)
             .reduce((acc, p) => acc + Number(p.amount), 0);
         deuda = Math.max((rafflePrice * numbers.length) - abonosValidos, 0);
     } else if (payments && payments.length > 0) {
-        // console.log('----entro 2');
         const abonosValidos = payments
             .filter(p => p.isValid)
             .reduce((acc, p) => acc + Number(p.amount), 0);
         const totalAbonado = abonosValidos + amount;
         deuda = Math.max((rafflePrice * numbers.length) - totalAbonado, 0);
     } else {
-        // console.log('----entro 3');
         deuda = amount === rafflePrice ? 0 : ( Math.max((rafflePrice * numbers.length) - (amount + (abonosPendientes || 0) ), 0));
     }
 
@@ -235,15 +258,15 @@ export const redirectToWhatsApp = ({
         const abonosValidos = payments
             .filter(p => p.isValid)
             .reduce((acc, p) => acc + Number(p.amount), 0);
-        paymentTypeMessage = `Has realizado abonos por un total de *${formatCurrencyCOP(abonosValidos)}* para la rifa *“${infoRaffle.name}”* 💸`;
+        paymentTypeMessage = `Has realizado abonos por un total de *${formatCurrencyCOP(abonosValidos)}* para la rifa *"${infoRaffle.name}"* 💸`;
     } else if (amount === 0) {
-        paymentTypeMessage = `Has apartado el/los número(s) en la rifa *“${infoRaffle.name.trim()}”* 🎟`;
+        paymentTypeMessage = `Has apartado el/los número(s) en la rifa *"${infoRaffle.name.trim()}"* 🎟`;
     } else if (amount < rafflePrice) {
-        paymentTypeMessage = `Has realizado un abono de *${formatCurrencyCOP(amount)}* para la rifa *“${infoRaffle.name}”* 💵`;
+        paymentTypeMessage = `Has realizado un abono de *${formatCurrencyCOP(amount)}* para la rifa *"${infoRaffle.name}"* 💵`;
     } else if (amount === rafflePrice) {
-        paymentTypeMessage = `Has realizado el pago completo de *${formatCurrencyCOP(amount)}* para la rifa *“${infoRaffle.name}”* ✅`;
+        paymentTypeMessage = `Has realizado el pago completo de *${formatCurrencyCOP(amount)}* para la rifa *"${infoRaffle.name}"* ✅`;
     } else {
-        paymentTypeMessage = `Has realizado un pago de *${formatCurrencyCOP(amount)}* para la rifa *“${infoRaffle.name}”* 💰`;
+        paymentTypeMessage = `Has realizado un pago de *${formatCurrencyCOP(amount)}* para la rifa *"${infoRaffle.name}"* 💰`;
     }
 
     const numbersList = numbers
@@ -253,7 +276,6 @@ export const redirectToWhatsApp = ({
     const premios = awards?.length
         ? awards.map(a => `• ${a.name} (${formatDateTimeLarge(a.playDate)})`).join("\n")
         : "Sin premios registrados";
-
 
     const message = `
 ✨ Hola *${name.trim()}*
@@ -277,9 +299,41 @@ Saludos,
 *${infoRaffle.responsable.trim()}*
 `.trim();
 
+    return message;
+};
+
+export const redirectToWhatsApp = ({
+    totalNumbers,
+    amount,
+    abonosPendientes,
+    infoRaffle,
+    name,
+    phone,
+    numbers,
+    payments,
+    statusRaffleNumber,
+    awards,
+    reservedDate,
+}: redirectToWhatsAppType): string => {
+    if (!phone) return "";
+
+    const message = generateRafflePurchaseMessage({
+        totalNumbers,
+        amount,
+        abonosPendientes,
+        infoRaffle,
+        name,
+        numbers,
+        payments,
+        statusRaffleNumber,
+        awards,
+        reservedDate,
+    });
+
     const encodedMessage = encodeURIComponent(message);
     return `https://wa.me/${phone}?text=${encodedMessage}`;
 };
+
 
 export const sendPaymentReminderWhatsApp = ({
     totalNumbers,
@@ -352,40 +406,13 @@ const downloadPDF = (blob: Blob, filename: string) => {
     URL.revokeObjectURL(link.href);
 };
 
-const addMultilineText = (
-    doc: jsPDF,
-    text: string,
-    x: number,
-    y: number,
-    maxWidth: number,
-    lineHeight: number,
-    alignCenter: 'center' | undefined
-) => {
-
-
-    const lines = doc.splitTextToSize(text, maxWidth);
-    lines.forEach((line: string) => {
-        doc.text(line, x, y, alignCenter ? 
-            { align: 'center'}
-            : { align: undefined}
-        );
-        y += lineHeight;
-    });
-    return y;
-};
-
-
-export const handleDownloadPDF = async ({
+// Función separada para generar solo el blob del PDF sin descargarlo
+export const generatePDFBlob = ({
     raffle,
     awards,
     pdfData,
-    userName,
-    userLastName,
     totalNumbers
-}: Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "pdfData" | 'totalNumbers'> & {
-    userName?: string;
-    userLastName?: string;
-}) => {
+}: Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "pdfData" | 'totalNumbers'>) => {
     const doc = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -399,7 +426,6 @@ export const handleDownloadPDF = async ({
         if (index > 0) doc.addPage([80, 150]);
         let y = 10;
 
-    
         // 🧾 Encabezado
         doc.setFont("courier", "bold");
         doc.setFontSize(11);
@@ -421,14 +447,12 @@ export const handleDownloadPDF = async ({
         doc.text(`NIT: ${raffle.nitResponsable}`, 40, y, { align: "center" });
         y += SECTION_SPACING;
         
-        
         const cleanDescription = raffle.description.trim();
         // Descripción multilínea (centrada y ajustada)
         doc.setFont("courier", "italic");
         doc.setFontSize(9);
         y = addMultilineText(doc, `"${cleanDescription}"`, 40, y, 70, LINE_SPACING, "center");
         y += SECTION_SPACING;
-
 
         doc.setDrawColor(0);
         doc.setLineWidth(0.2);
@@ -453,12 +477,6 @@ export const handleDownloadPDF = async ({
         doc.setFont("courier", "bold");
         doc.text(`${entry.firstName ?? ""} ${entry.lastName ?? ""}`, 30, y);
         y += LINE_SPACING;
-
-        // doc.setFont("courier", "normal");
-        // doc.text("ID:", 5, y);
-        // doc.setFont("courier", "bold");
-        // doc.text(`${entry.identificationType ?? ""} ${entry.identificationNumber ?? ""}`, 30, y);
-        // y += LINE_SPACING;
 
         doc.setFont("courier", "normal");
         doc.text("Teléfono:", 5, y);
@@ -507,7 +525,7 @@ export const handleDownloadPDF = async ({
                 y = addMultilineText(doc, `${formatDateTimeLarge(award.playDate)}`, 10, y, 65, LINE_SPACING, undefined);
                 y += SECTION_SPACING;
             });
-        }else {
+        } else {
             doc.setFont("courier", "italic");
             doc.text("Sin premios registrados", 40, y, { align: "center" });
             y += SECTION_SPACING;
@@ -576,29 +594,58 @@ export const handleDownloadPDF = async ({
         doc.text(`Página ${index + 1}`, 75, 145, { align: "right" });
     });
 
-    // 📥 Descargar PDF directamente
+    // ✅ Retornar solo el blob, sin descargar
+    return doc.output('blob');
+};
+
+const addMultilineText = (
+    doc: jsPDF,
+    text: string,
+    x: number,
+    y: number,
+    maxWidth: number,
+    lineHeight: number,
+    alignCenter: 'center' | undefined
+) => {
+
+
+    const lines = doc.splitTextToSize(text, maxWidth);
+    lines.forEach((line: string) => {
+        doc.text(line, x, y, alignCenter ? 
+            { align: 'center'}
+            : { align: undefined}
+        );
+        y += lineHeight;
+    });
+    return y;
+};
+
+
+export const handleDownloadPDF = async ({
+    raffle,
+    awards,
+    pdfData,
+    userName,
+    userLastName,
+    totalNumbers
+}: Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "pdfData" | 'totalNumbers'> & {
+    userName?: string;
+    userLastName?: string;
+}) => {
+    // 📥 Generar blob usando la función separada
+    const pdfBlob = generatePDFBlob({
+        raffle,
+        awards,
+        pdfData,
+        totalNumbers
+    });
+
+    // 📥 Crear nombre del archivo y descargar
     const todayDate = dayjs().format('DDMMYYYY');
     const filename = `Resumen_Rifa_${userLastName || 'responsable'}_${userName || ''}_${todayDate}.pdf`;
 
-    // ✅ Generar blob y descargar
-    const pdfBlob = doc.output('blob');
-
-    // 🧠 Compatibilidad móvil: usar saveAs si está disponible
+    // 🧠 Descargar PDF
     downloadPDF(pdfBlob, filename);
-    // try {
-    //     saveAs(pdfBlob, filename);
-    // } catch (error) {
-    //     console.log(error);
-        
-    //     // Fallback para navegadores que no soportan saveAs (muy raro)
-    //     const link = document.createElement('a');
-    //     link.href = URL.createObjectURL(pdfBlob);
-    //     link.download = filename;
-    //     document.body.appendChild(link);
-    //     link.click();
-    //     document.body.removeChild(link);
-    // }
-
 };
 
 export const handleDownloadReservationPDF = async ({
@@ -995,3 +1042,150 @@ export const handleViewAndDownloadPDF = async ({
 
 
 };
+
+// 📤 Función para subir PDF a tmpfiles.org (6 horas de disponibilidad)
+const uploadPDFToTmpFiles = async (pdfBlob: Blob, filename: string): Promise<string> => {
+    try {
+        const formData = new FormData();
+        formData.append('file', pdfBlob, filename);
+        
+        const response = await fetch('https://tmpfiles.org/api/v1/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        // tmpfiles.org devuelve { status: "success", data: { url: "https://tmpfiles.org/12345" } }
+        if (result.status === 'success' && result.data?.url) {
+            // Convertir URL de visualización a URL de descarga directa
+            const downloadUrl = result.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+            return downloadUrl;
+        }
+        
+        throw new Error('Respuesta inválida del servidor');
+    } catch (error) {
+        console.error('❌ Error al subir PDF a tmpfiles.org:', error);
+        throw error;
+    }
+};
+
+// 💌 Función para enviar mensaje de WhatsApp CON PDF descargable
+export const handleSendMessageToWhatsApp = async ({
+    raffle,
+    awards,
+    pdfData,
+    totalNumbers,
+    phoneNumber,
+    customMessage,
+    uploadToCloudinary = true
+}: Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "pdfData" | 'totalNumbers'> & {
+    phoneNumber: string;
+    customMessage?: string;
+    uploadToCloudinary?: boolean;
+}) => {
+    try {
+        // 📄 Generar PDF blob
+        const pdfBlob = generatePDFBlob({
+            raffle,
+            awards,
+            pdfData,
+            totalNumbers
+        });
+
+
+        let pdfUrl: string | undefined;
+        
+        if (uploadToCloudinary) {
+            // Crear nombre de archivo único
+            const timestamp = Date.now();
+            const numbersText = pdfData.map(entry => 
+                formatWithLeadingZeros(entry.number, totalNumbers)
+            ).join('_');
+            const filename = `recibo_${raffle.name.replace(/\s+/g, '_')}_${numbersText}_${timestamp}.pdf`;
+            
+            try {
+                // � Importar función de subida de PDF
+                // 📤 Subir PDF a transfer.sh (disponible por 14 días)
+                pdfUrl = await uploadPDFToTmpFiles(pdfBlob, filename);
+                
+                console.log('🎉 PDF subido exitosamente a tmpfiles.org:', {
+                    url: pdfUrl,
+                    size: `${(pdfBlob.size / 1024).toFixed(2)} KB`,
+                    validez: '6 horas'
+                });
+                
+            } catch (uploadError) {
+                console.warn('⚠️ Error al subir PDF a tmpfiles.org:', uploadError);
+                // Continúa sin archivo si falla la subida
+            }
+        }
+
+        // 📱 Generar mensaje de WhatsApp usando generateRafflePurchaseMessage
+        let defaultMessage = '';
+        
+        if (pdfData.length > 0) {
+            const firstEntry = pdfData[0];
+            
+            // Generar mensaje similar al de redirectToWhatsApp
+            defaultMessage = generateRafflePurchaseMessage({
+                totalNumbers,
+                amount: Number(firstEntry.paymentAmount),
+                infoRaffle: {
+                    name: raffle.name,
+                    description: raffle.description,
+                    amountRaffle: raffle.price,
+                    playDate: raffle.playDate,
+                    responsable: raffle.nameResponsable,
+                } as InfoRaffleType,
+                name: `${firstEntry.firstName ?? ''} ${firstEntry.lastName ?? ''}`.trim() || 'Cliente',
+                numbers: pdfData.map(entry => ({ 
+                    numberId: entry.number, 
+                    number: entry.number 
+                })),
+                payments: firstEntry.payments,
+                statusRaffleNumber: Number(firstEntry.paymentAmount) >= Number(raffle.price) ? 'sold' : 'pending',
+                awards: awards,
+                reservedDate: firstEntry.reservedDate ?? null,
+            });
+        }
+        
+        if (pdfUrl) {
+            // � Agregar enlace del PDF descargable
+            defaultMessage += `\n\n📄 *Recibo Digital Disponible*`;
+            defaultMessage += `\n🔗 Descarga aquí: ${pdfUrl}`;
+            defaultMessage += `\n⏰ Disponible por *6 horas*`;
+            defaultMessage += `\n💡 _Haz clic en el enlace para descargar tu recibo en PDF_`;
+        }
+        
+        const message = customMessage || defaultMessage;
+        const encodedMessage = encodeURIComponent(message);
+        const cleanPhoneNumber = phoneNumber.replace(/[^0-9+]/g, '');
+        const whatsappUrl = `https://wa.me/${cleanPhoneNumber}?text=${encodedMessage}`;
+
+        window.open(whatsappUrl, '_blank');
+        
+        
+        return {
+            success: true,
+            pdfBlob,
+            pdfUrl,
+            whatsappUrl,
+            message: pdfUrl 
+                ? '✅ PDF generado, subido a tmpfiles.org (6 horas) y WhatsApp abierto'
+                : '✅ PDF generado y WhatsApp abierto (sin subida externa)'
+        };
+        
+    } catch (error) {
+        console.error('❌ Error al generar PDF para WhatsApp:', error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Error desconocido'
+        };
+    }
+};
+

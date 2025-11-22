@@ -207,6 +207,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
         setPaymentsSellNumbersModal(false)
         setPdfData(undefined)
     }
+    
     return (
         <Modal
             open={paymentsSellNumbersModal}

@@ -24,13 +24,13 @@ type ButtonsRaffleModalProps = {
     awards: AwardType[]
     raffleId: number
     raffleNumberId: number
-    refect: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
+    refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
     raffleNumberStatus: RaffleNumber['status']
     handleToWasap: () => void
     handleSendPaymentReminderWhatsApp: () => void
 }
 
-function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfData, raffle, raffleId, raffleNumberId, refect, handleToWasap, raffleNumberStatus, handleSendPaymentReminderWhatsApp} : ButtonsRaffleModalProps) {
+function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfData, raffle, raffleId, raffleNumberId, refetch, handleToWasap, raffleNumberStatus, handleSendPaymentReminderWhatsApp} : ButtonsRaffleModalProps) {
     const navigate = useNavigate()
 
     const queryClient = useQueryClient()
@@ -43,7 +43,7 @@ function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfD
             queryClient.invalidateQueries({queryKey: ['raffleNumber', raffleId, raffleNumberId]})
             toast.success(data)
             navigate(location.pathname, {replace: true})
-            refect()
+            refetch()
         },
     })
 

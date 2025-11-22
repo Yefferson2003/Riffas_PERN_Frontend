@@ -413,7 +413,7 @@ export const raffleNumberSharedSchema = RaffleNumberSchema.pick({
 //     raffleNumbers: z.array(RaffleNumberSchema),
 // });
     
-export const RafflePayResponseSchema = z.array(RaffleNumberSchema)
+export const RafflePayResponseSchema = z.array(RaffleNumberSchema) // PDF Data
     
 export const raffleNumberSchema  = z.object({
     id: z.number(),
@@ -584,7 +584,7 @@ export const raffleNumbersExelFilterSchema = z.object({
 export type RaffleNumberPayments = z.infer<typeof PaymentSchema>
 export type RaffleNumberUpdateForm = z.infer<typeof updateRaffleNumberCustomer>
 export type RaffleNumber = z.infer<typeof RaffleNumberSchema> //
-export type RaffleNumbersPayments = z.infer<typeof RafflePayResponseSchema>
+export type RaffleNumbersPayments = z.infer<typeof RafflePayResponseSchema> //PDF data
 export type PayNumbersForm = z.infer<typeof payNumbersSchema> & { amount?: number}
 export type PayNumberForm = z.infer<typeof payNumberSchema>
 

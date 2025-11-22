@@ -8,7 +8,7 @@ import { getActiveRafflePayMethods } from "../../api/payMethodeApi";
 import { getRaffleNumbersPending, sellNumbers } from "../../api/raffleNumbersApi";
 import { getRaffleById } from "../../api/raffleApi";
 import { AwardType, PayNumbersForm, RaffleNumbersPayments } from "../../types";
-import { capitalize, formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp } from "../../utils";
+import { capitalize, formatCurrencyCOP, formatWithLeadingZeros, handleSendMessageToWhatsApp, redirectToWhatsApp } from "../../utils";
 import { NumbersSelectedType } from "../../views/indexView/RaffleNumbersView";
 import ButtonCloseModal from "../ButtonCloseModal";
 import PhoneNumberInput from "../PhoneNumberInput";
@@ -247,6 +247,16 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
             queryClient.invalidateQueries({queryKey: ['recaudo', raffleId]})
             queryClient.invalidateQueries({queryKey: ['recaudoByVendedor', raffleId]})
             toast.success('Rifas Compradas')
+            if (raffle) {
+                handleSendMessageToWhatsApp({
+                    awards, 
+                    totalNumbers, 
+                    uploadToCloudinary: true, 
+                    pdfData: data || [], 
+                    phoneNumber: watch('phone'), 
+                    raffle
+                })
+            }
             reset({
                 raffleNumbersIds: [],
                 firstName: '',

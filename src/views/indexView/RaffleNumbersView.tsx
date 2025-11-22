@@ -1074,7 +1074,7 @@ function RaffleNumbersView() {
             infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description, responsable: raffle.nameResponsable}}
             setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
             setPdfData={setPdfData}
-            refect={refetch}
+            refetch={refetch}
             setUrlWasap={setUrlWasap}
             // refectRaffle={{ search, raffleId, filter, page, limit : rowsPerPage}}
         />}

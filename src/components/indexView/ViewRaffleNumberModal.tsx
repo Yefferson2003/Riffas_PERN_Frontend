@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import { getActiveRafflePayMethods } from "../../api/payMethodeApi";
 import { amountNumber, updateNumber } from "../../api/raffleNumbersApi";
 import { AwardType, PayNumberForm, Raffle, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types";
-import { capitalize, formatCurrencyCOP, formatWithLeadingZeros, redirectToWhatsApp, sendPaymentReminderWhatsApp } from "../../utils";
+import { capitalize, formatCurrencyCOP, formatWithLeadingZeros, handleSendMessageToWhatsApp, redirectToWhatsApp, sendPaymentReminderWhatsApp } from "../../utils";
 import PhoneNumberInput from "../PhoneNumberInput";
 import ButtonsRaffleModal from "./raffleNumber/ButtonsRaffleModal";
 import RaflleNumberPaymentsHistory from "./RaflleNumberPaymentsHistory";
@@ -38,11 +38,11 @@ type ViewRaffleNumberModalProps = {
     raffleNumber: RaffleNumber
     setPaymentsSellNumbersModal: React.Dispatch<React.SetStateAction<boolean>>
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
-    refect: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
+    refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
     setUrlWasap: React.Dispatch<React.SetStateAction<string>>
 }
 
-function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaffle, raffleNumber,setPaymentsSellNumbersModal, setPdfData, refect, setUrlWasap} : ViewRaffleNumberModalProps) {
+function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaffle, raffleNumber,setPaymentsSellNumbersModal, setPdfData, refetch, setUrlWasap} : ViewRaffleNumberModalProps) {
     const navigate = useNavigate(); 
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -113,12 +113,21 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
             toast.error(error.message)
         },
         onSuccess(data) {
+
             queryClient.invalidateQueries({queryKey: ['raffleNumber', raffleId, raffleNumberId]})
             queryClient.invalidateQueries({queryKey: ['recaudo', raffleId]})
             queryClient.invalidateQueries({queryKey: ['recaudoByVendedor', raffleId]})
-            toast.success('Pago Completado')
+            toast.success('Pago realizado')
+            handleSendMessageToWhatsApp({
+                awards, 
+                totalNumbers, 
+                uploadToCloudinary: true, 
+                pdfData: data || [], 
+                phoneNumber: watch('phone'), 
+                raffle
+            })
             reset()
-            refect()
+            refetch()
             navigate(location.pathname, {replace: true})
             setPaymentsSellNumbersModal(true)
             setPdfData(data)
@@ -312,7 +321,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                             raffle={raffle}
                             raffleId={raffleId} 
                             raffleNumberId={raffleNumberId}
-                            refect={refect}
+                            refetch={refetch}
                             raffleNumberStatus={raffleNumber.status}
                             handleToWasap={handleToWasap}
                             handleSendPaymentReminderWhatsApp={handleSendPaymentReminderWhatsApp}
