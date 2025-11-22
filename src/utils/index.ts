@@ -215,7 +215,9 @@ Atentamente,
 El equipo de *${raffleName}* 🎟️
 `;
 
-    const encodedMessage = encodeURIComponent(message);
+    // Normalizar Unicode para compatibilidad con iOS
+    const normalizedMessage = message.normalize('NFC');
+    const encodedMessage = encodeURIComponent(normalizedMessage);
     
     const whatsappUrl = `https://wa.me/${telefono}?text=${encodedMessage}`;
     
@@ -330,7 +332,9 @@ export const redirectToWhatsApp = ({
         reservedDate,
     });
 
-    const encodedMessage = encodeURIComponent(message);
+    // Normalizar Unicode para compatibilidad con iOS
+    const normalizedMessage = message.normalize('NFC');
+    const encodedMessage = encodeURIComponent(normalizedMessage);
     return `https://wa.me/${phone}?text=${encodedMessage}`;
 };
 
@@ -387,7 +391,9 @@ Por favor realiza tu abono o pago para asegurar tu participación ✅
 *${infoRaffle.name.trim()}*
 `.trim();
 
-    const encodedMessage = encodeURIComponent(message);
+    // Normalizar Unicode para compatibilidad con iOS
+    const normalizedMessage = message.normalize('NFC');
+    const encodedMessage = encodeURIComponent(normalizedMessage);
     return `https://wa.me/${phone}?text=${encodedMessage}`;
 };
 
@@ -1112,29 +1118,32 @@ export const handleSendMessageToWhatsApp = async ({
                 // � Importar función de subida de PDF
                 // 📤 Subir PDF a transfer.sh (disponible por 14 días)
                 pdfUrl = await uploadPDFToTmpFiles(pdfBlob, filename);
-                
-                console.log('🎉 PDF subido exitosamente a tmpfiles.org:', {
-                    url: pdfUrl,
-                    size: `${(pdfBlob.size / 1024).toFixed(2)} KB`,
-                    validez: '6 horas'
-                });
-                
             } catch (uploadError) {
                 console.warn('⚠️ Error al subir PDF a tmpfiles.org:', uploadError);
                 // Continúa sin archivo si falla la subida
             }
         }
 
-        // 📱 Generar mensaje de WhatsApp usando generateRafflePurchaseMessage
+        //Generar mensaje de WhatsApp usando generateRafflePurchaseMessage
         let defaultMessage = '';
         
         if (pdfData.length > 0) {
             const firstEntry = pdfData[0];
             
+            //Calcular totales cuando hay múltiples números
+            const totalAmount = pdfData.reduce((sum, entry) => sum + Number(entry.paymentAmount), 0);
+            
+            //Consolidar todos los pagos de todos los números
+            const allPayments = pdfData.flatMap(entry => entry.payments);
+            
+            //Determinar el status: si TODOS los números están pagados = 'sold', si no = 'pending'
+            const allPaid = pdfData.every(entry => Number(entry.paymentDue) === 0);
+            const statusRaffleNumber = allPaid ? 'sold' : 'pending';
+            
             // Generar mensaje similar al de redirectToWhatsApp
             defaultMessage = generateRafflePurchaseMessage({
                 totalNumbers,
-                amount: Number(firstEntry.paymentAmount),
+                amount: totalAmount, // ✅ Suma de todos los montos pagados
                 infoRaffle: {
                     name: raffle.name,
                     description: raffle.description,
@@ -1147,8 +1156,8 @@ export const handleSendMessageToWhatsApp = async ({
                     numberId: entry.number, 
                     number: entry.number 
                 })),
-                payments: firstEntry.payments,
-                statusRaffleNumber: Number(firstEntry.paymentAmount) >= Number(raffle.price) ? 'sold' : 'pending',
+                payments: allPayments, // ✅ Todos los pagos de todos los números
+                statusRaffleNumber: statusRaffleNumber,
                 awards: awards,
                 reservedDate: firstEntry.reservedDate ?? null,
             });
@@ -1163,7 +1172,9 @@ export const handleSendMessageToWhatsApp = async ({
         }
         
         const message = customMessage || defaultMessage;
-        const encodedMessage = encodeURIComponent(message);
+        // Codificación compatible con iOS: normalizar Unicode antes de codificar
+        const normalizedMessage = message.normalize('NFC');
+        const encodedMessage = encodeURIComponent(normalizedMessage);
         const cleanPhoneNumber = phoneNumber.replace(/[^0-9+]/g, '');
         const whatsappUrl = `https://wa.me/${cleanPhoneNumber}?text=${encodedMessage}`;
 
