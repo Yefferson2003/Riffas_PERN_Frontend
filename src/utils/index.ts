@@ -252,7 +252,10 @@ export const generateRafflePurchaseMessage = ({
         const totalAbonado = abonosValidos + amount;
         deuda = Math.max((rafflePrice * numbers.length) - totalAbonado, 0);
     } else {
-        deuda = amount === rafflePrice ? 0 : ( Math.max((rafflePrice * numbers.length) - (amount + (abonosPendientes || 0) ), 0));
+        // Calcular deuda considerando múltiples números
+        const totalCost = rafflePrice * numbers.length;
+        const totalPaid = amount + (abonosPendientes || 0);
+        deuda = Math.max(totalCost - totalPaid, 0);
     }
 
     let paymentTypeMessage = "";
@@ -265,7 +268,8 @@ export const generateRafflePurchaseMessage = ({
         paymentTypeMessage = `Has apartado el/los número(s) en la rifa *"${infoRaffle.name.trim()}"* 🎟`;
     } else if (amount < rafflePrice) {
         paymentTypeMessage = `Has realizado un abono de *${formatCurrencyCOP(amount)}* para la rifa *"${infoRaffle.name}"* 💵`;
-    } else if (amount === rafflePrice) {
+    } else if (amount === rafflePrice * numbers.length) {
+        // Pago completo solo si cubre TODOS los números
         paymentTypeMessage = `Has realizado el pago completo de *${formatCurrencyCOP(amount)}* para la rifa *"${infoRaffle.name}"* ✅`;
     } else {
         paymentTypeMessage = `Has realizado un pago de *${formatCurrencyCOP(amount)}* para la rifa *"${infoRaffle.name}"* 💰`;
