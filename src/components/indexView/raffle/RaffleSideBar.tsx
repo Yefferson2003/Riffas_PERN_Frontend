@@ -1,4 +1,5 @@
 import DescriptionIcon from '@mui/icons-material/Description';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import EditIcon from '@mui/icons-material/Edit';
 import GroupIcon from '@mui/icons-material/Group';
 import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
@@ -30,6 +31,7 @@ function RaffleSideBar({ raffleId, raffle, totalNumbers }: RaffleSideBarProps) {
     const handleNavigateExpensesByRaffle = () => navigate('?viewExpensesByRaffle=true');
     const handleNavigateShareURLRaffle = () => navigate('?viewShareURLRaffle=true');
     const handleNavigatePayMethodesRaffle = () => navigate('?viewPayMethodesRaffle=true');
+    const handleNavigateViewOffersRaffle = () => navigate('?viewOffersRaffle=true'); 
 
     const canManage = user.rol.name === 'responsable' || user.rol.name === 'admin';
     const canCollaborate = user.rol.name === 'responsable' || user.rol.name === 'admin';
@@ -75,6 +77,11 @@ function RaffleSideBar({ raffleId, raffle, totalNumbers }: RaffleSideBarProps) {
             {/* Opciones extra para responsables y admins */}
             {canCollaborate && (
             <>
+                <IconButton onClick={handleNavigateViewOffersRaffle}>
+                    <Tooltip title="Ofertas de la rifa" placement="bottom-start">
+                        <LocalOfferIcon />
+                    </Tooltip>
+                </IconButton>
                 <IconButton onClick={handleNavigateViewUsers}>
                 <Tooltip title="Colaboradores">
                     <GroupIcon />
@@ -108,6 +115,7 @@ function RaffleSideBar({ raffleId, raffle, totalNumbers }: RaffleSideBarProps) {
             </>
             )}
         </div>
+        {/* Modal de ofertas de la rifa */}
         </div>
     );
 }

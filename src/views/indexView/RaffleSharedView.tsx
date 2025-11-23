@@ -3,13 +3,14 @@ import { getRaffleShared } from "../../api/raffleApi";
 import { getAwardsShared } from "../../api/awardsApi";
 import { Navigate, useParams } from "react-router-dom";
 import LoaderView from "../LoaderView";
-import { capitalize, formatDateTimeLarge } from "../../utils";
+import { capitalize, formatDateTimeLarge, formatCurrencyCOP } from "../../utils";
 import { useMediaQuery } from "react-responsive";
 import { Box, Fab, Tooltip } from "@mui/material";
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import AwardsShared from "../../components/shared/AwardsShared";
 import RaffleNumbersShared from "../../components/shared/RaffleNumbersShared";
 import RaffleProgressBar from "../../components/indexView/RaffleProgressBar";
+import RaffleOffersPublic from "../../components/shared/RaffleOffersPublic";
 
 function RaffleSharedView() {
     const { token } = useParams<{ token: string }>();
@@ -92,6 +93,14 @@ function RaffleSharedView() {
                                     }}
                                 ></div>
                             </div>
+                            {/* Precio de la rifa */}
+                            <div className="mt-4 mb-2 text-center">
+                                <span className="text-lg font-semibold sm:text-xl" style={{ color: raffle?.color || '#1976d2' }}>
+                                    Precio por boleta: {raffle?.price ? formatCurrencyCOP(+raffle.price) : '--'}
+                                </span>
+                            </div>
+                            {/* Ofertas públicas */}
+                            <RaffleOffersPublic raffleId={raffle?.id ?? ''} raffleColor={raffle?.color ?? ''} />
                         </div>
 
                         {/* DESCRIPCIÓN */}

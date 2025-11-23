@@ -8,6 +8,9 @@ import { useNavigate } from 'react-router-dom';
 import { getRaffleNumersShared, getRandomAvailableNumberShared } from "../../api/raffleNumbersApi";
 import { colorStatusRaffleNumber, formatCurrencyCOP, formatWithLeadingZeros, getChipStyles } from "../../utils";
 import ViewRaffleNumberSharedModal from './ViewRaffleNumberSharedModal';
+import RaffleOffersPublic from './RaffleOffersPublic';
+import { getRaffleOffers } from '../../api/raffleOfferApi';
+import { useQuery as useQueryRQ } from '@tanstack/react-query';
 import { AwardType, RaffleSharedType } from '../../types';
 
 type RaffleNumbersSharedProps = {
@@ -19,6 +22,26 @@ type RaffleNumbersSharedProps = {
 }
 
 function RaffleNumbersShared({ token, raffle, price, awards, raffleColor}: RaffleNumbersSharedProps) {
+    // Obtener ofertas activas de la rifa
+    const { data: offers } = useQueryRQ({
+        queryKey: ['raffleOffersForCalc', raffle.id],
+        queryFn: () => getRaffleOffers(raffle.id),
+        enabled: !!raffle.id
+    });
+
+    // Función para calcular el precio total según ofertas
+    function getTotalWithOffers(selectedCount: number): { total: number, unitPrice: number } {
+        if (!offers || offers.length === 0) {
+            return { total: +price * selectedCount, unitPrice: +price };
+        }
+        // Buscar la mejor oferta aplicable
+        const sorted = [...offers].sort((a, b) => b.minQuantity - a.minQuantity);
+        const offer = sorted.find(o => selectedCount >= o.minQuantity);
+        if (offer) {
+            return { total: +offer.discountedPrice * selectedCount, unitPrice: +offer.discountedPrice };
+        }
+        return { total: +price * selectedCount, unitPrice: +price };
+    }
 
     const navigate = useNavigate()
 
@@ -155,14 +178,19 @@ function RaffleNumbersShared({ token, raffle, price, awards, raffleColor}: Raffl
     return (
         <div>
             <div 
-                className="flex flex-col items-center justify-center gap-3 mb-5 text-2xl font-bold"
+                className="flex flex-col items-center justify-center gap-2 mb-4 text-2xl font-bold"
                 style={{ color: primaryColor }}
             >
                 <div className='flex items-center gap-2'>
                     <LocalActivityIcon/>
                     <h2>Apartar Boletas</h2>
                 </div>
-                
+
+                {/* Ofertas públicas debajo del título con menos espaciado */}
+                <div className="w-full">
+                    <RaffleOffersPublic raffleId={raffle.id} raffleColor={primaryColor} />
+                </div>
+
                 {/* Botón de número aleatorio */}
                 <Tooltip title="Elegir un número aleatorio disponible" arrow>
                     <Button
@@ -201,6 +229,32 @@ function RaffleNumbersShared({ token, raffle, price, awards, raffleColor}: Raffl
                     </Button>
                 </Tooltip>
 
+                <div
+                    className="flex flex-col items-center justify-center w-full"
+                    style={{
+                        background: `${primaryColor}10`,
+                        borderRadius: '18px',
+                        boxShadow: `0 2px 8px ${primaryColor}22`,
+                        padding: '10px 0',
+                        margin: '8px 0',
+                        width: '100%',
+                        minWidth: '0',
+                        maxWidth: '100%',
+                    }}
+                >
+                    <span className="text-base font-semibold" style={{ color: primaryColor }}>
+                        Precio por boleta
+                    </span>
+                    <span className="text-3xl font-bold" style={{ color: primaryColor }}>
+                        {formatCurrencyCOP(getTotalWithOffers(selectedNumbers.length > 0 ? selectedNumbers.length : 1).unitPrice)}
+                    </span>
+                    {offers && offers.length > 0 && selectedNumbers.length > 0 && getTotalWithOffers(selectedNumbers.length).unitPrice !== +price && (
+                        <span className="block mt-1 text-xs font-medium" style={{ color: primaryColor }}>
+                            ¡Oferta activa!
+                        </span>
+                    )}
+                </div>
+
                 {/* Mostrar números seleccionados */}
                 {selectedNumbers.length > 0 && (
                     <div className="w-full max-w-2xl">
@@ -235,16 +289,19 @@ function RaffleNumbersShared({ token, raffle, price, awards, raffleColor}: Raffl
                                 />
                             ))}
                         </div>
-                        <div className="mt-2 text-center">
+                        {/* <div className="mt-2 text-center">
                             <span className="text-sm font-bold" style={{ color: primaryColor }}>
-                                Total: {formatCurrencyCOP(+price * selectedNumbers.length)}
+                                Total: {formatCurrencyCOP(getTotalWithOffers(selectedNumbers.length).total)}
                             </span>
-                        </div>
+                            {selectedNumbers.length > 0 && offers && offers.length > 0 && (
+                                <span className="block mt-1 text-xs font-medium" style={{ color: primaryColor }}>
+                                    Precio unitario: {formatCurrencyCOP(getTotalWithOffers(selectedNumbers.length).unitPrice)}
+                                </span>
+                            )}
+                        </div> */}
                     </div>
                 )}
-                
-                <h3 className='text-xl font-bold'>{formatCurrencyCOP(+price)}</h3>
-                <p className="text-sm" style={{ color: primaryColor }}>Precio por boleta</p>
+
             </div>
 
             {/* Input de búsqueda con botones - Responsive */}
@@ -540,7 +597,7 @@ function RaffleNumbersShared({ token, raffle, price, awards, raffleColor}: Raffl
                         <span className="ml-2 px-2 py-0.5 bg-white rounded-full text-sm font-bold"
                             style={{ color: primaryColor }}
                         >
-                            {formatCurrencyCOP(+price * selectedNumbers.length)}
+                            {formatCurrencyCOP(getTotalWithOffers(selectedNumbers.length).total)}
                         </span>
                     </Button>
                 </div>
@@ -582,6 +639,8 @@ function RaffleNumbersShared({ token, raffle, price, awards, raffleColor}: Raffl
                 selectedNumbers={selectedNumbers}
                 setSelectedNumbers={setSelectedNumbers}
                 raffleColor={raffleColor}
+                offers={offers}
+                getTotalWithOffers={getTotalWithOffers}
             />}
         </div>
     );

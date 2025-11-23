@@ -130,6 +130,8 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
             refetch()
             navigate(location.pathname, {replace: true})
             setPaymentsSellNumbersModal(true)
+            
+            
             setPdfData(data)
             setPriceEspecial(false)
         },
@@ -177,7 +179,8 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                         payments: raffleNumber.payments, 
                         totalNumbers, 
                         awards, 
-                        reservedDate: pdfData[0].reservedDate
+                        reservedDate: pdfData[0].reservedDate,
+                        priceRaffleNumber: priceEspecial ? 0 : +raffleNumber.paymentDue + +raffleNumber.paymentAmount
                     }))
                 }
             }
@@ -200,7 +203,8 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                 statusRaffleNumber: raffleNumber.status,
                 totalNumbers,
                 awards, 
-                reservedDate: pdfData[0].reservedDate
+                reservedDate: pdfData[0].reservedDate,
+                priceRaffleNumber: priceEspecial ? 0 : +raffleNumber.paymentDue + +raffleNumber.paymentAmount
             });
             setUrlWasap(url);
 
@@ -403,41 +407,43 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                 {/* Formulario de pago/actualización */}
                 <Box component="form" onSubmit={handleSubmit(handlePayNumber)} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-                        <TextField 
-                            id="amount" 
-                            label="Monto" 
-                            variant="outlined" 
-                            size="small"
-                            error={!!errors.amount}
-                            helperText={errors.amount?.message}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    '& fieldset': {
-                                        borderColor: `${raffle?.color || '#1976d2'}40`,
+                        {raffleNumber.status !== 'sold' && (
+                            <TextField 
+                                id="amount" 
+                                label="Monto" 
+                                variant="outlined" 
+                                size="small"
+                                error={!!errors.amount}
+                                helperText={errors.amount?.message}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: `${raffle?.color || '#1976d2'}40`,
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: raffle?.color || '#1976d2',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: raffle?.color || '#1976d2',
+                                        },
                                     },
-                                    '&:hover fieldset': {
-                                        borderColor: raffle?.color || '#1976d2',
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                        color: raffle?.color || '#1976d2',
                                     },
-                                    '&.Mui-focused fieldset': {
-                                        borderColor: raffle?.color || '#1976d2',
+                                }}
+                                {...register('amount', {
+                                    required: 'Monto obligatorio',
+                                    pattern: {
+                                        value: /^[0-9]+(?:\.[0-9]{1,2})?$/,
+                                        message: 'El monto debe ser numérico (puede incluir decimales con hasta dos cifras, solo punto)',
                                     },
-                                },
-                                '& .MuiInputLabel-root.Mui-focused': {
-                                    color: raffle?.color || '#1976d2',
-                                },
-                            }}
-                            {...register('amount', {
-                                required: 'Monto obligatorio',
-                                pattern: {
-                                    value: /^[0-9]+(?:\.[0-9]{1,2})?$/,
-                                    message: 'El monto debe ser numérico (puede incluir decimales con hasta dos cifras, solo punto)',
-                                },
-                                validate: {
-                                    maxValue: (value) =>
-                                    Number(value) <= +raffleNumber.paymentDue || `El monto no puede superar los ${formatCurrencyCOP(+raffleNumber.paymentDue)}`,
-                                },
-                            })}
-                        />
+                                    validate: {
+                                        maxValue: (value) =>
+                                        Number(value) <= +raffleNumber.paymentDue || `El monto no puede superar los ${formatCurrencyCOP(+raffleNumber.paymentDue)}`,
+                                    },
+                                })}
+                            />
+                        )}
 
                         {raffleNumber.status != 'sold' && (
                             <FormControl error={!!errors.paymentMethod} size="small">

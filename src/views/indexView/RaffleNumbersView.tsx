@@ -32,6 +32,7 @@ import ShareURLRaffleModal from '../../components/indexView/modal/ShareURLRaffle
 import RafflePayMethodsModal from '../../components/indexView/modal/RafflePayMethodsModal';
 import Awards from '../../components/indexView/raffle/Awards';
 import RaffleSideBar from '../../components/indexView/raffle/RaffleSideBar';
+import RaffleOffersModal from '../../components/indexView/modal/RaffleOffersModal';
 import RaffleProgressBar from '../../components/indexView/RaffleProgressBar';
 import MobileErrorBoundary from '../../components/shared/MobileErrorBoundary';
 import MobileSafePagination from '../../components/shared/MobileSafePagination';
@@ -303,12 +304,15 @@ function RaffleNumbersView() {
     const { data: payMethods, isLoading: isLoadingPayMethods} = payMethodsData
     
     const handleNavigateViewRaffleNumber = (raffleNumberId: number) => {
-        navigate(`?viewRaffleNumber=${raffleNumberId}`)
+        const params = new URLSearchParams(window.location.search);
+        params.set('viewRaffleNumber', String(raffleNumberId));
+        navigate({ search: params.toString() });
     }
+
 
     const MAX_SELECTED_NUMBERS = 20; 
     const toggleSelectNumber = (raffleNumberId: number, raffleNumberStatus: RaffleNumber['status'], raffleNumber: number, firstName: string, lastName: string) => {
-        if (raffleNumberStatus !== 'available' && raffleNumberStatus !== 'pending') return;
+        if (raffleNumberStatus !== 'available' && raffleNumberStatus !== 'pending' && raffleNumberStatus !== 'apartado') return;
 
         let nameValidate = ''
 
@@ -333,7 +337,7 @@ function RaffleNumbersView() {
         user.rol.name === 'vendedor' && rafflePayments.some(payment => (payment.userId ?? undefined) !== user.id && payment.isValid === true);
 
     const isOptionSelectedNumber= (raffleNumberStatus: RaffleNumber['status']) => {
-        return optionSeleted && (raffleNumberStatus === 'available' || raffleNumberStatus === 'pending');
+        return optionSeleted && (raffleNumberStatus === 'available' || raffleNumberStatus === 'pending' || raffleNumberStatus === 'apartado');
     }
 
     //handle refecth
@@ -419,7 +423,6 @@ function RaffleNumbersView() {
     
     return (
         <section className={`flex flex-col-reverse w-full pb-10 text-center lg:flex-col *:bg-white *:p-2 gap-5 *:rounded-xl mobile-safe ${isSmallDevice ? 'mobile-device' : ''}`}>
-            
             {raffle &&
                 <RaffleSideBar 
                     raffleId={raffleId!} 
@@ -427,7 +430,6 @@ function RaffleNumbersView() {
                     totalNumbers={raffle.totalNumbers || 0}
                 />
             }
-            
             <div className="space-y-3">
                 <div className="flex flex-col items-center lg:justify-between lg:flex-row">
                     <div className="flex flex-col items-center lg:flex-row">
@@ -1039,67 +1041,67 @@ function RaffleNumbersView() {
                     raffleColor={raffle?.color || '#1976d2'}
                 />
             </div>
-        {raffle && <ViewUsersOfRaffleModal raffleColor={raffle.color || '#1976d2'} raffleId={raffle.id} />}
-        {raffle && <UpdateRaffleModal 
-            raffle={raffle} 
-            refechtRaffle={refechtRaffle}
-        />}
-        {raffle && raffleNumbers && awards && <PayNumbersModal
-            refetch={handleRefetch}
-            awards={awards}
-            totalNumbers={raffle.totalNumbers || 0}
-            infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description, responsable: raffle.nameResponsable}}
-            numbersSeleted={numbersSeleted} 
-            raffleId={raffle.id}
-            rafflePrice={raffle.price}
-            setNumbersSeleted={setNumbersSeleted}
-            setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
-            setPdfData={setPdfData}
-            setUrlWasap={setUrlWasap}
-        />}
-        {raffle && raffleNumbers && pdfData && awards && <PaymentSellNumbersModal
-            totalNumbers={raffle.totalNumbers || 0}
-            raffle={raffle}
-            awards={awards}
-            setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
-            setPdfData={setPdfData}
-            paymentsSellNumbersModal={paymentsSellNumbersModal}
-            pdfData={pdfData}
-            urlWasap={urlWasap}
-        />}
-        {raffle && raffleNumbers && awards && <ViewRaffleNumberData
-            totalNumbers={raffle.totalNumbers || 0}
-            raffle={raffle}
-            awards={awards}
-            infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description, responsable: raffle.nameResponsable}}
-            setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
-            setPdfData={setPdfData}
-            refetch={refetch}
-            setUrlWasap={setUrlWasap}
-            // refectRaffle={{ search, raffleId, filter, page, limit : rowsPerPage}}
-        />}
-        {/* {raffle && raffleNumbers && <ViewNumbersSoldModal/>} */}
-
-        
-        {raffle &&
-            <>
-            <ViewAdminExpensesModal
-                expensesTotal={expenseTotal}
-                isLoadingExpenseTotal={isLoadingExpenseTotal}
-            />
-            <ViewExpensesByUserModal
-                refechtExpenseTotal={refechtExpenseTotal}
-                refechtExpenseTotalByUser={refechtExpenseTotalByUser}
-            />
-            <ShareURLRaffleModal
-            />
-            <RafflePayMethodsModal
-                raffleId={raffleId!}
-            />
-            </>
-            
-        }
-
+            {raffle && <ViewUsersOfRaffleModal raffleColor={raffle.color || '#1976d2'} raffleId={raffle.id} />}
+            {raffle && <UpdateRaffleModal 
+                raffle={raffle} 
+                refechtRaffle={refechtRaffle}
+            />}
+            {raffle && raffleNumbers && awards && <PayNumbersModal
+                refetch={handleRefetch}
+                awards={awards}
+                totalNumbers={raffle.totalNumbers || 0}
+                infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description, responsable: raffle.nameResponsable}}
+                numbersSeleted={numbersSeleted} 
+                raffleId={raffle.id}
+                rafflePrice={raffle.price}
+                setNumbersSeleted={setNumbersSeleted}
+                setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
+                setPdfData={setPdfData}
+                setUrlWasap={setUrlWasap}
+            />}
+            {raffle && raffleNumbers && pdfData && awards && <PaymentSellNumbersModal
+                totalNumbers={raffle.totalNumbers || 0}
+                raffle={raffle}
+                awards={awards}
+                setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
+                setPdfData={setPdfData}
+                paymentsSellNumbersModal={paymentsSellNumbersModal}
+                pdfData={pdfData}
+                urlWasap={urlWasap}
+            />}
+            {raffle && raffleNumbers && awards && <ViewRaffleNumberData
+                totalNumbers={raffle.totalNumbers || 0}
+                raffle={raffle}
+                awards={awards}
+                infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description, responsable: raffle.nameResponsable}}
+                setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
+                setPdfData={setPdfData}
+                refetch={refetch}
+                setUrlWasap={setUrlWasap}
+                // refectRaffle={{ search, raffleId, filter, page, limit : rowsPerPage}}
+            />}
+            {/* {raffle && raffleNumbers && <ViewNumbersSoldModal/>} */}
+            {raffle &&
+                <>
+                <ViewAdminExpensesModal
+                    expensesTotal={expenseTotal}
+                    isLoadingExpenseTotal={isLoadingExpenseTotal}
+                />
+                <ViewExpensesByUserModal
+                    refechtExpenseTotal={refechtExpenseTotal}
+                    refechtExpenseTotalByUser={refechtExpenseTotalByUser}
+                />
+                <ShareURLRaffleModal
+                />
+                <RafflePayMethodsModal
+                    raffleId={raffleId!}
+                />
+                <RaffleOffersModal
+                    raffleId={raffleId!}
+                    rafflePrice={+raffle.price}
+                />
+                </>
+            }
         {/* Botón de debug para móviles */}
         {/* <MobileDebugButton /> */}
 
@@ -1107,4 +1109,4 @@ function RaffleNumbersView() {
     )
 }
 
-export default RaffleNumbersView
+export default RaffleNumbersView;

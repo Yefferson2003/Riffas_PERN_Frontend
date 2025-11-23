@@ -202,7 +202,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
     // doc.save(`tickets_rifa_${raffle.id}.pdf`);
     // };
 
-
+    
     const handleCloseModal = () => {
         setPaymentsSellNumbersModal(false)
         setPdfData(undefined)
@@ -429,7 +429,7 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                             >
                                                 <Box sx={{ 
                                                     display: 'grid', 
-                                                    gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, 
+                                                    gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr 1fr' }, 
                                                     gap: 2 
                                                 }}>
                                                     <Box>
@@ -446,6 +446,14 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                                         </Typography>
                                                         <Typography variant="body1" sx={{ fontWeight: 'bold', color: raffle?.color || '#1976d2', textTransform: 'capitalize' }}>
                                                             {payment.rafflePayMethode?.payMethode.name || 'No especificado'}
+                                                        </Typography>
+                                                    </Box>
+                                                    <Box>
+                                                        <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                                            Referencia:
+                                                        </Typography>
+                                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#0ea5e9' }}>
+                                                            {payment.reference || 'No registrada'}
                                                         </Typography>
                                                     </Box>
                                                     <Box>
@@ -476,6 +484,33 @@ function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNum
                                                         <Typography variant="body1" sx={{ fontWeight: 'bold', color: raffle?.color || '#1976d2' }}>
                                                             {payment.user.identificationNumber}
                                                         </Typography>
+                                                    </Box>
+                                                )}
+                                                {payment.rafflePayMethode && (
+                                                    <Box sx={{ mt: 2, p: 2, bgcolor: '#f1f5f9', borderRadius: 2 }}>
+                                                        <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 600, mb: 1 }}>
+                                                            Detalles del método de pago
+                                                        </Typography>
+                                                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr 1fr' }, gap: 2 }}>
+                                                            <Box>
+                                                                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>Cuenta:</Typography>
+                                                                <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#0ea5e9' }}>{payment.rafflePayMethode.accountNumber || 'No registrada'}</Typography>
+                                                            </Box>
+                                                            <Box>
+                                                                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>Titular:</Typography>
+                                                                <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#0ea5e9' }}>{payment.rafflePayMethode.accountHolder || 'No registrado'}</Typography>
+                                                            </Box>
+                                                            <Box>
+                                                                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>Banco:</Typography>
+                                                                <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#0ea5e9' }}>{payment.rafflePayMethode.bankName || 'No registrado'}</Typography>
+                                                            </Box>
+                                                            <Box>
+                                                                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>Activo:</Typography>
+                                                                <Typography variant="body1" sx={{ fontWeight: 'bold', color: payment.rafflePayMethode.payMethode.isActive ? '#059669' : '#dc2626' }}>
+                                                                    {payment.rafflePayMethode.payMethode.isActive ? 'Sí' : 'No'}
+                                                                </Typography>
+                                                            </Box>
+                                                        </Box>
                                                     </Box>
                                                 )}
                                             </Box>

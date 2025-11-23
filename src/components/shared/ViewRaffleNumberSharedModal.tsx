@@ -32,11 +32,12 @@ type ViewRaffleNumberSharedModalProps = {
     awards: AwardType[]
     raffle: Raffle
     token: string,
-    // raffleRefetch: 
     raffleRefetch: () => void
     selectedNumbers: SelectedNumber[]
     setSelectedNumbers: React.Dispatch<React.SetStateAction<SelectedNumber[]>>
     raffleColor?: string
+    offers?: Array<{ id: number, minQuantity: number, discountedPrice: string }>
+    getTotalWithOffers?: (selectedCount: number) => { total: number, unitPrice: number }
 }
 
 type SelectedNumber = {
@@ -52,7 +53,7 @@ type SelectedNumber = {
 //     isActive: boolean;
 // }
 
-function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raffleRefetch, selectedNumbers, setSelectedNumbers, raffleColor} : ViewRaffleNumberSharedModalProps) {
+function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raffleRefetch, selectedNumbers, setSelectedNumbers, raffleColor, getTotalWithOffers } : ViewRaffleNumberSharedModalProps) {
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -95,7 +96,7 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
         onError(error) {
             toast.error(error.message)
         },
-        onSuccess(_, variables) {
+        onSuccess(data) {
             toast.success("Números apartados exitosamente");
             raffleRefetch();
             setSelectedNumbers([]);
@@ -103,19 +104,19 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
             navigate(location.pathname, { replace: true });
 
             // Generar PDF para todos los números seleccionados
-            if (selectedNumbers.length > 0) {
-                const reservations = selectedNumbers.map(num => ({
-                    number: num.number,
-                    address: variables.formData.address || "",
-                    firstName: variables.formData.firstName || "",
-                    lastName: variables.formData.lastName || "",
-                    phone: variables.formData.phone || "",
-                    reservedDate: new Date().toISOString(),
-                }));
+            if (selectedNumbers.length > 0 && data && data.length > 0) {
+                // const reservations = selectedNumbers.map(num => ({
+                //     number: num.number,
+                //     address: variables.formData.address || "",
+                //     firstName: variables.formData.firstName || "",
+                //     lastName: variables.formData.lastName || "",
+                //     phone: variables.formData.phone || "",
+                //     reservedDate: new Date().toISOString(),
+                // }));
 
                 handleDownloadReservationPDF({
                     awards,
-                    reservations,
+                    pdfData: data,
                     raffle,
                     totalNumbers,
                 });
@@ -227,8 +228,17 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                             className="text-lg font-semibold"
                             style={{ color: primaryColor }}
                         >
-                            Valor Total: <span className="text-xl">{formatCurrencyCOP(+raffle.price * selectedNumbers.length)}</span>
+                            Valor Total: <span className="text-xl">
+                                {getTotalWithOffers
+                                    ? formatCurrencyCOP(getTotalWithOffers(selectedNumbers.length).total)
+                                    : formatCurrencyCOP(+raffle.price * selectedNumbers.length)}
+                            </span>
                         </p>
+                        {selectedNumbers.length > 0 && getTotalWithOffers && (
+                            <span className="block mt-1 text-xs font-medium" style={{ color: primaryColor }}>
+                                Precio unitario: {formatCurrencyCOP(getTotalWithOffers(selectedNumbers.length).unitPrice)}
+                            </span>
+                        )}
                     </div>
 
                     {/* Botón para reiniciar selección */}

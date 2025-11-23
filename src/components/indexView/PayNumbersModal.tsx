@@ -1,3 +1,4 @@
+import CircularProgress from '@mui/material/CircularProgress';
 import { Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Modal, Select, SelectChangeEvent, Switch, TextField } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
@@ -73,7 +74,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
 
     const numbersIds = numbersSeleted.map(num => num.numberId);
 
-    const shouldQueryPending = show && numbersIds.length > 0 && numbersSeleted.length > 0 && numbersSeleted[0].status === 'pending'
+    const shouldQueryPending = show && numbersIds.length > 0 && numbersSeleted.length > 0 && (numbersSeleted[0].status === 'pending' || numbersSeleted[0].status === 'apartado');
     
     const { data: pendingNumbers, isLoading: isLoadingPending } = useQuery({
         queryKey: ['raffleNumbersPending', numbersIds],
@@ -226,9 +227,17 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
         setIsInitialized(false); // También resetear cuando se abre/cierra el modal
     }, [show, reset]);
     
+    
     // Calcular el precio actual por rifa y el total
-    const currentRafflePrice = priceEspecial && amount ? +amount : +rafflePrice;
+    const ValueRaffleNumber = pendingNumbers && pendingNumbers.length > 0 
+        ? (+pendingNumbers[0].paymentAmount + +pendingNumbers[0].paymentDue) 
+        : +rafflePrice;
+    const currentRafflePrice = (priceEspecial && amount)
+        ? +amount
+        : (isReadOnlyMode ? totalDebtToPay : +rafflePrice);
     const totalToPay = isReadOnlyMode ? totalDebtToPay : numbersSeleted.length * currentRafflePrice;
+
+    
     // Calcular precio original cuando hay números pendientes
     const originalPrice = pendingNumbers && pendingNumbers.length > 0 
         ? (Number(pendingNumbers[0].paymentAmount) || 0) + (Number(pendingNumbers[0].paymentDue) || 0)
@@ -327,6 +336,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                             infoRaffle: {...infoRaffle, amountRaffle: isReadOnlyMode ? String(originalPrice) : (priceEspecial ? Data.amount?.toString() || 'NO HAY' : infoRaffle.amountRaffle)},
                             awards, 
                             reservedDate,
+                            priceRaffleNumber: originalPrice,
                             abonosPendientes: (isReadOnlyMode && totalAbonado > 0) ? totalAbonado : undefined
                         })
                     )
@@ -348,93 +358,145 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
             <Box sx={style}>
             <ButtonCloseModal/>
             
-            <h2 
-                className="mb-5 text-2xl font-bold text-center"
-                style={{ color: raffle?.color || '#1976d2' }}
-            >
-                Comprar Numeros
-            </h2>
-            <p 
-                className="mb-5 text-xl font-bold text-center"
-                style={{ color: raffle?.color || '#1976d2' }}
-            >
-                LLena este formulario para comprar los numeros seleccionados
-            </p>
-            <p 
-                className="text-center"
-                style={{ color: raffle?.color || '#1976d2' }}
+            <div className="flex flex-col items-center w-full mb-6">
+                <h2
+                    className="mb-2 text-3xl font-extrabold tracking-tight text-center drop-shadow-sm"
+                    style={raffle?.color ? { color: raffle.color } : {}}
+                >
+                    Comprar Números
+                </h2>
+                <p
+                    className="mb-1 text-lg font-semibold text-center"
+                    style={raffle?.color ? { color: raffle.color } : {}}
+                >
+                    Llena este formulario para comprar los números seleccionados
+                </p>
+                <div className="w-16 h-1 rounded-full" style={raffle?.color ? { background: raffle.color } : { background: '#1976d2' }}></div>
+            </div>
+            <p
+                className="mb-2 text-base font-semibold tracking-wide text-center"
+                style={raffle?.color ? { color: raffle.color } : {}}
             >
                 Números seleccionados
             </p>
-            <p 
-                className="font-bold text-center text-wrap"
-                style={{ color: raffle?.color || '#1976d2' }}
-            > {
-                numbersSeleted.length > 0
-                ? `${numbersSeleted
-                    .map((num) => formatWithLeadingZeros(num.number, totalNumbers))
-                    .join(" | ")}`
-                : "No hay números seleccionados."}
-            </p>
+            {isLoadingPending ? (
+                <div className="flex items-center justify-center mb-4">
+                    <CircularProgress style={{ color: raffle?.color || '#1976d2' }} />
+                </div>
+            ) : (
+                <div className="flex flex-wrap justify-center gap-3 mb-4">
+                    {numbersSeleted.length > 0
+                        ? numbersSeleted.map((num) => (
+                            <span
+                                key={num.numberId}
+                                className={`rounded-xl px-4 py-2 text-lg font-bold shadow border transition-all duration-200 ${raffle?.color ? '' : 'bg-blue-50 border-blue-400 text-blue-700'}`}
+                                style={raffle?.color ? { borderColor: raffle.color, color: raffle.color, background: `${raffle.color}15` } : {}}
+                            >
+                                {formatWithLeadingZeros(num.number, totalNumbers)}
+                            </span>
+                        ))
+                        : <span className="text-base text-slate-500">No hay números seleccionados.</span>
+                    }
+                </div>
+            )}
 
-            {!isReadOnlyMode ? 
-                <p className="text-center">
-                    Valor de la Rifa:
-                    <span 
-                        className="font-bold" 
-                        style={{ color: raffle?.color || '#1976d2' }}
+
+            {/* Sección de resumen financiero estilizada con Tailwind */}
+            {(isReadOnlyMode && pendingNumbers && pendingNumbers.length > 0) ? (
+                <div className="flex flex-col items-center gap-2 my-5 w-full max-w-[480px] mx-auto">
+                    <div
+                        className="w-full px-6 py-4 text-center border rounded-lg shadow-sm"
+                        style={raffle?.color ? { borderColor: raffle.color, background: `${raffle.color}15` } : {}}
                     >
-                        {" "}{formatCurrencyCOP(currentRafflePrice)}
-                    </span>
-                </p> : null}
-
-            {isReadOnlyMode &&   
-                <p className="text-center">
-                    Valor abonado:
-                    <span 
-                        className="font-bold" 
-                        style={{ color: raffle?.color || '#1976d2' }}
-                    >
-                        {" "}{formatCurrencyCOP(totalAbonado)}
-                    </span>
-                </p>}
-
-            <p className="my-5 text-center">
-                Total a pagar: 
-                <span 
-                    className="font-bold" 
-                    style={{ color: raffle?.color || '#1976d2' }}
-                >
-                    {formatCurrencyCOP(totalToPay)}
-                </span>
-            </p>
-
-
-            <div className="text-center ">
-                <FormControlLabel 
-                    labelPlacement="end" 
-                    control={
-                        <Switch 
-                            checked={priceEspecial} 
-                            onChange={handleChangePriceSpecial}
-                            disabled={isReadOnlyMode}
-                            sx={{
-                                '& .MuiSwitch-switchBase.Mui-checked': {
-                                    color: raffle?.color || '#1976d2',
-                                },
-                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                    backgroundColor: raffle?.color || '#1976d2',
-                                }
+                        <div className="mb-1 text-base font-bold" style={raffle?.color ? { color: raffle.color } : {}}>
+                            Valor del número
+                        </div>
+                        <div className="text-xl font-bold" style={raffle?.color ? { color: raffle.color } : {}}>
+                            {formatCurrencyCOP(ValueRaffleNumber)}
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap justify-center w-full gap-4 mt-2">
+                        <div
+                            className="rounded-md px-4 py-2 min-w-[100px] text-center flex-1 border"
+                            style={{
+                                background: '#e6f9ed',
+                                borderColor: '#34a853',
                             }}
-                        />
-                    }
-                    label={
-                        <span style={{ color: raffle?.color || '#1976d2', fontWeight: 'bold' }}>
-                            Aplicar Precio Especial
-                        </span>
-                    }
-                />
+                        >
+                            <div className="text-xs font-bold" style={{ color: '#34a853' }}>Abonado</div>
+                            <div className="text-lg font-bold" style={{ color: '#34a853' }}>{formatCurrencyCOP(totalAbonado)}</div>
+                        </div>
+                        <div
+                            className="rounded-md px-4 py-2 min-w-[100px] text-center flex-1 border"
+                            style={{
+                                background: '#fde8e8',
+                                borderColor: '#ea4335',
+                            }}
+                        >
+                            <div className="text-xs font-bold" style={{ color: '#ea4335' }}>Pendiente</div>
+                            <div className="text-lg font-bold" style={{ color: '#ea4335' }}>{formatCurrencyCOP(totalDebtToPay)}</div>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div className="w-full max-w-[480px] mx-auto">
+                    <div
+                        className="px-6 py-4 text-center border rounded-lg shadow-sm"
+                        style={raffle?.color ? { borderColor: raffle.color, background: `${raffle.color}15` } : {}}
+                    >
+                        <div className="mb-1 text-base font-bold" style={raffle?.color ? { color: raffle.color } : {}}>
+                            Valor del número
+                        </div>
+                        <div className="text-xl font-bold" style={raffle?.color ? { color: raffle.color } : {}}>
+                            {formatCurrencyCOP(ValueRaffleNumber)}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Total a pagar siempre visible, tamaño reducido */}
+            <div className="flex justify-center w-full my-4">
+                <div
+                    className={`w-full rounded-2xl shadow-lg px-0 py-4 text-center font-bold border text-2xl tracking-wide ${raffle?.color ? '' : 'bg-blue-50 border-blue-400 text-blue-700'}`}
+                    style={raffle?.color ? { borderColor: raffle.color, color: raffle.color, background: `${raffle.color}10` } : {}}
+                >
+                    <span className="block mb-1 text-base font-bold" style={raffle?.color ? { color: raffle.color } : {}}>
+                        Total a pagar
+                    </span>
+                    <span className="block text-3xl font-extrabold" style={raffle?.color ? { color: raffle.color } : {}}>
+                        {formatCurrencyCOP(totalToPay)}
+                    </span>
+                </div>
             </div>
+
+
+            {!pendingNumbers &&
+                <div className="text-center ">
+                    <FormControlLabel 
+                        labelPlacement="end" 
+                        control={
+                            <Switch 
+                                checked={priceEspecial} 
+                                onChange={handleChangePriceSpecial}
+                                disabled={isReadOnlyMode}
+                                sx={{
+                                    '& .MuiSwitch-switchBase.Mui-checked': {
+                                        color: raffle?.color || '#1976d2',
+                                    },
+                                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                        backgroundColor: raffle?.color || '#1976d2',
+                                    }
+                                }}
+                            />
+                        }
+                        label={
+                            <span style={{ color: raffle?.color || '#1976d2', fontWeight: 'bold' }}>
+                                Aplicar Precio Especial
+                            </span>
+                        }
+                    />
+                </div>
+            }
         
             <form 
                 onSubmit={handleSubmit(handleFormSubmit)}
@@ -484,91 +546,97 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                     )}
                     
 
-                    <Controller
-                    name="paymentMethod"
-                    control={control}
-                    rules={{ required: 'Seleccione un método de pago' }}
-                    render={({ field }) => (
-                        <FormControl fullWidth error={!!errors.paymentMethod}>
-                        <InputLabel 
-                            id="paymentMethodLabel"
-                            sx={{
-                                '&.Mui-focused': {
-                                    color: raffle?.color || '#1976d2',
-                                },
-                            }}
-                        >
-                            Método de pago
-                        </InputLabel>
-                        <Select
-                            {...field}
-                            labelId="paymentMethodLabel"
-                            label="Método de pago"
-                            value={field.value || ''}
-                            onChange={(e) => {
-                                const selectedValue = Number(e.target.value);
-                                field.onChange(selectedValue);
-                            }}
-                            disabled={isLoadingPayMethods}
-                            sx={{
-                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: raffle?.color || '#1976d2',
-                                },
-                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: raffle?.color || '#1976d2',
-                                },
-                            }}
-                        >
-                            <MenuItem disabled value="">
-                                {isLoadingPayMethods ? 'Cargando métodos...' : 'Seleccione un método de pago'}
-                            </MenuItem>
-                            {isErrorPayMethods ? (
-                                <MenuItem disabled value={'error'}>
-                                    Error al cargar métodos de pago
+                    {isLoadingPayMethods ? (
+                        <div className="flex items-center justify-center py-4">
+                            <CircularProgress style={{ color: raffle?.color || '#1976d2' }} />
+                        </div>
+                    ) : (
+                        <Controller
+                        name="paymentMethod"
+                        control={control}
+                        rules={{ required: 'Seleccione un método de pago' }}
+                        render={({ field }) => (
+                            <FormControl fullWidth error={!!errors.paymentMethod}>
+                            <InputLabel 
+                                id="paymentMethodLabel"
+                                sx={{
+                                    '&.Mui-focused': {
+                                        color: raffle?.color || '#1976d2',
+                                    },
+                                }}
+                            >
+                                Método de pago
+                            </InputLabel>
+                            <Select
+                                {...field}
+                                labelId="paymentMethodLabel"
+                                label="Método de pago"
+                                value={field.value || ''}
+                                onChange={(e) => {
+                                    const selectedValue = Number(e.target.value);
+                                    field.onChange(selectedValue);
+                                }}
+                                disabled={isLoadingPayMethods}
+                                sx={{
+                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: raffle?.color || '#1976d2',
+                                    },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: raffle?.color || '#1976d2',
+                                    },
+                                }}
+                            >
+                                <MenuItem disabled value="">
+                                    Seleccione un método de pago
                                 </MenuItem>
-                            ) : (
-                                rafflePayMethods?.map((payMethod) => {
-                                    const hasExtraData = payMethod.accountNumber || payMethod.accountHolder || payMethod.bankName;
-                                    
-                                    return (
-                                        <MenuItem key={payMethod.id} value={payMethod.id}>
-                                            {hasExtraData ? (
-                                                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                                {isErrorPayMethods ? (
+                                    <MenuItem disabled value={'error'}>
+                                        Error al cargar métodos de pago
+                                    </MenuItem>
+                                ) : (
+                                    rafflePayMethods?.map((payMethod) => {
+                                        const hasExtraData = payMethod.accountNumber || payMethod.accountHolder || payMethod.bankName;
+                                        
+                                        return (
+                                            <MenuItem key={payMethod.id} value={payMethod.id}>
+                                                {hasExtraData ? (
+                                                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>
+                                                            {capitalize(payMethod.payMethode.name)}
+                                                        </Box>
+                                                        <Box sx={{ fontSize: '0.75rem', color: 'text.secondary', mt: 0.5 }}>
+                                                            {payMethod.accountNumber && (
+                                                                <Box component="span">Cuenta: {payMethod.accountNumber}</Box>
+                                                            )}
+                                                            {payMethod.accountHolder && (
+                                                                <Box component="span" sx={{ ml: payMethod.accountNumber ? 1 : 0 }}>
+                                                                    {payMethod.accountNumber && ' | '}Titular: {payMethod.accountHolder}
+                                                                </Box>
+                                                            )}
+                                                            {payMethod.bankName && (
+                                                                <Box component="span" sx={{ display: 'block', mt: 0.25 }}>
+                                                                    Banco: {payMethod.bankName}
+                                                                </Box>
+                                                            )}
+                                                        </Box>
+                                                    </Box>
+                                                ) : (
                                                     <Box sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>
                                                         {capitalize(payMethod.payMethode.name)}
                                                     </Box>
-                                                    <Box sx={{ fontSize: '0.75rem', color: 'text.secondary', mt: 0.5 }}>
-                                                        {payMethod.accountNumber && (
-                                                            <Box component="span">Cuenta: {payMethod.accountNumber}</Box>
-                                                        )}
-                                                        {payMethod.accountHolder && (
-                                                            <Box component="span" sx={{ ml: payMethod.accountNumber ? 1 : 0 }}>
-                                                                {payMethod.accountNumber && ' | '}Titular: {payMethod.accountHolder}
-                                                            </Box>
-                                                        )}
-                                                        {payMethod.bankName && (
-                                                            <Box component="span" sx={{ display: 'block', mt: 0.25 }}>
-                                                                Banco: {payMethod.bankName}
-                                                            </Box>
-                                                        )}
-                                                    </Box>
-                                                </Box>
-                                            ) : (
-                                                <Box sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>
-                                                    {capitalize(payMethod.payMethode.name)}
-                                                </Box>
-                                            )}
-                                        </MenuItem>
-                                    );
-                                })
+                                                )}
+                                            </MenuItem>
+                                        );
+                                    })
+                                )}
+                            </Select>
+                            {errors.paymentMethod && (
+                                <p className="mt-1 text-sm text-red-500">{errors.paymentMethod.message}</p>
                             )}
-                        </Select>
-                        {errors.paymentMethod && (
-                            <p className="mt-1 text-sm text-red-500">{errors.paymentMethod.message}</p>
+                            </FormControl>
                         )}
-                        </FormControl>
+                        />
                     )}
-                    />
 
                     {!isLoadingPayMethods && rafflePayMethods && rafflePayMethods.length === 0 && (
                         <div className="p-3 text-sm text-yellow-800 bg-yellow-100 border border-yellow-400 rounded-md">

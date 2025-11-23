@@ -731,3 +731,15 @@ export const ramdomNumberSchema = z.object({
     number: z.number(),
     status: z.enum(statusRaffleNumbersEnum)
 })
+
+export const RaffleOffersSchema = z.object({
+    id: z.number(),
+    minQuantity: z.number(),
+    discountedPrice: z.string(),
+    isActive: z.boolean()
+})
+
+export const responseRaffleOffersSchema = z.array(RaffleOffersSchema)
+
+export type RaffleOfferType = z.infer<typeof RaffleOffersSchema>
+export type RaffleOfferFormType = Pick<RaffleOfferType, 'minQuantity'> & { discountedPrice: number }
