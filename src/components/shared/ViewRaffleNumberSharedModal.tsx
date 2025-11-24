@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { getActiveRafflePayMethods } from "../../api/payMethodeApi";
 import { amountNumberShared } from "../../api/raffleNumbersApi";
 import { AwardType, PayNumbersSharedFormType, Raffle } from "../../types";
-import { capitalizeWords, formatCurrencyCOP, formatWithLeadingZeros, handleDownloadReservationPDF } from "../../utils";
+import { capitalizeWords, formatCurrencyCOP, formatWithLeadingZeros } from "../../utils";
 import ButtonCloseModal from "../ButtonCloseModal";
 import PhoneNumberInput from "../PhoneNumberInput";
 
@@ -103,22 +103,32 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
             setSelectedPaymentMethod(null);
             navigate(location.pathname, { replace: true });
 
-            // Generar PDF para todos los números seleccionados
+            // Avisar al propietario por WhatsApp con PDF subido
             if (selectedNumbers.length > 0 && data && data.length > 0) {
-                // const reservations = selectedNumbers.map(num => ({
-                //     number: num.number,
-                //     address: variables.formData.address || "",
-                //     firstName: variables.formData.firstName || "",
-                //     lastName: variables.formData.lastName || "",
-                //     phone: variables.formData.phone || "",
-                //     reservedDate: new Date().toISOString(),
-                // }));
-
-                handleDownloadReservationPDF({
-                    awards,
-                    pdfData: data,
-                    raffle,
-                    totalNumbers,
+                import('../../utils').then(async (utils) => {
+                    await utils.handleSendReservationToOwnerWhatsApp({
+                        raffle: {
+                            id: raffle.id,
+                            name: raffle.name,
+                            nitResponsable: raffle.nitResponsable,
+                            nameResponsable: raffle.nameResponsable,
+                            description: raffle.description,
+                            startDate: raffle.startDate,
+                            playDate: raffle.playDate,
+                            editDate: raffle.editDate,
+                            price: raffle.price,
+                            banerImgUrl: raffle.banerImgUrl,
+                            banerMovileImgUrl: raffle.banerMovileImgUrl,
+                            color: raffle.color,
+                            contactRifero: raffle.contactRifero ?? undefined,
+                            responsable: raffle.nameResponsable,
+                            amountRaffle: (+data[0].paymentAmount + +data[0].paymentDue).toString(),
+                        },
+                        awards,
+                        pdfData: data,
+                        totalNumbers,
+                        buyerName: `${data[0].firstName} ${data[0].lastName}`,
+                    });
                 });
             }
         },

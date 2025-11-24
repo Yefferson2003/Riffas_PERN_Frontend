@@ -559,7 +559,7 @@ export const generatePDFBlob = ({
         doc.setFont("courier", "bold");
         doc.setFontSize(11);
         doc.text("Valor:", 5, y);
-        doc.text(`${formatCurrencyCOP(+entry.paymentAmount)}`, 30, y);
+        doc.text(`${formatCurrencyCOP(+entry.paymentAmount + +entry.paymentDue)}`, 30, y);
         doc.setFont("courier", "normal");
         doc.setFontSize(9);
         y += LINE_SPACING;
@@ -1072,3 +1072,119 @@ export const handleSendMessageToWhatsApp = async ({
     }
 };
 
+// Función para redirigir al propietario al WhatsApp tras compra exitosa
+export const redirectOwnerToWhatsApp = ({
+    raffle,
+    selectedNumbers,
+    buyerName,
+    totalNumbers,
+}: {
+    raffle: InfoRaffleType,
+    selectedNumbers: number[],
+    buyerName: string,
+    totalNumbers: number,
+}) => {
+    if (!raffle?.contactRifero) return;
+    // Formatear números con ceros a la izquierda
+    const numbersList = selectedNumbers.map(n => formatWithLeadingZeros(n, totalNumbers)).join(", ");
+    // Valor por unidad
+    const valorUnidad = formatCurrencyCOP(Number(raffle.amountRaffle));
+    const message = `
+Hola,
+
+Se han apartado los siguientes números en la rifa *${raffle.name}*:
+🔢 Números: *${numbersList}*
+💵 Valor por unidad: *${valorUnidad}*
+👤 Cliente: *${buyerName}*
+
+Por favor confirma la reservación y contacta al cliente si es necesario.
+
+Saludos,
+Sistema de Rifas
+`;
+    const encodedMessage = encodeURIComponent(message.trim());
+    const whatsappUrl = `https://wa.me/${raffle.contactRifero}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+};
+
+export const handleSendReservationToOwnerWhatsApp = async ({
+    raffle,
+    awards,
+    pdfData,
+    totalNumbers,
+    buyerName,
+}:  Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "pdfData" | 'totalNumbers'>  & {
+    raffle: InfoRaffleType,
+    buyerName: string,
+}) => {
+    try {
+        // Generar PDF blob
+        const pdfBlob = generatePDFBlob({
+            raffle,
+            awards,
+            pdfData,
+            totalNumbers
+        });
+
+        // Subir PDF a tmpfiles.org
+        const timestamp = Date.now();
+        const numbersText = pdfData.map(entry => formatWithLeadingZeros(entry.number, totalNumbers)).join('_');
+        const filename = `apartado_${raffle.name.replace(/\s+/g, '_')}_${numbersText}_${timestamp}.pdf`;
+        let pdfUrl = '';
+        try {
+            pdfUrl = await uploadPDFToTmpFiles(pdfBlob, filename);
+        } catch (err) {
+            console.warn('No se pudo subir el PDF:', err);
+        }
+
+        // Si no hay número de contacto, solo descargar el PDF
+        if (!raffle.contactRifero) {
+            downloadPDF(pdfBlob, filename);
+            return {
+                success: true,
+                pdfBlob,
+                pdfUrl,
+                whatsappUrl: undefined,
+                message: 'PDF descargado localmente (sin WhatsApp)',
+            };
+        }
+
+        // Formatear números reservados
+        const numbersList = pdfData.map(entry => formatWithLeadingZeros(entry.number, totalNumbers)).join(", ");
+        // Valor por unidad
+        const valorUnidad = formatCurrencyCOP(Number(raffle.amountRaffle));
+        // Mensaje para el propietario
+        let message = `
+Hola,
+
+Se han apartado los siguientes números en la rifa *${raffle.name}*:
+🔢 Números: *${numbersList}*
+💵 Valor por unidad: *${valorUnidad}*
+👤 Cliente: *${buyerName}*
+
+Por favor confirma la reservación y contacta al cliente si es necesario.
+`;
+        if (pdfUrl) {
+            message += `\n📄 Recibo PDF: ${pdfUrl}\n⏰ Disponible por 6 horas`;
+        }
+        message += `\nSaludos,\nSistema de Rifas`;
+
+        const encodedMessage = encodeURIComponent(message.trim());
+        const whatsappUrl = `https://wa.me/${raffle.contactRifero}?text=${encodedMessage}`;
+        window.open(whatsappUrl, '_blank');
+
+        return {
+            success: true,
+            pdfBlob,
+            pdfUrl,
+            whatsappUrl,
+            message,
+        };
+    } catch (error) {
+        console.error('Error al enviar aviso al propietario:', error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Error desconocido'
+        };
+    }
+};

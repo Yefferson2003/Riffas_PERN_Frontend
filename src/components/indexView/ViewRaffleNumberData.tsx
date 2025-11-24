@@ -10,6 +10,7 @@ export type InfoRaffleType = {
     playDate: string;
     description: string;
     responsable: string
+    contactRifero?: string
 }
 
 type ViewRaffleNumberDataProps = {

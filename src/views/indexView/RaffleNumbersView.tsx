@@ -64,6 +64,7 @@ const styleForm = {
 }
 
 function RaffleNumbersView() {
+        
     const navigate = useNavigate()
 
     const isSmallDevice = useMediaQuery({ maxWidth: 768 });
@@ -308,6 +309,13 @@ function RaffleNumbersView() {
         params.set('viewRaffleNumber', String(raffleNumberId));
         navigate({ search: params.toString() });
     }
+
+    // Ejemplo de uso en onSuccess de compra (debes llamarla en el lugar correcto):
+    // redirectOwnerToWhatsApp({
+    //     raffle,
+    //     selectedNumbers: numbersSeleted,
+    //     buyerName: `${formData.firstName} ${formData.lastName}`,
+    // });
 
 
     const MAX_SELECTED_NUMBERS = 20; 
