@@ -559,7 +559,7 @@ export const generatePDFBlob = ({
         doc.setFont("courier", "bold");
         doc.setFontSize(11);
         doc.text("Valor:", 5, y);
-        doc.text(`${formatCurrencyCOP(+entry.paymentAmount + +entry.paymentDue)}`, 30, y);
+        doc.text(`${formatCurrencyCOP(+entry.paymentAmount)}`, 30, y);
         doc.setFont("courier", "normal");
         doc.setFontSize(9);
         y += LINE_SPACING;
@@ -1157,12 +1157,12 @@ export const handleSendReservationToOwnerWhatsApp = async ({
         let message = `
 Hola,
 
-Se han apartado los siguientes números en la rifa *${raffle.name}*:
+He apartado los siguientes números en la rifa *${raffle.name}*:
 🔢 Números: *${numbersList}*
 💵 Valor por unidad: *${valorUnidad}*
-👤 Cliente: *${buyerName}*
+👤 Mi nombre: *${buyerName}*
 
-Por favor confirma la reservación y contacta al cliente si es necesario.
+Por favor confirma la reservación y contáctame si es necesario.
 `;
         if (pdfUrl) {
             message += `\n📄 Recibo PDF: ${pdfUrl}\n⏰ Disponible por 6 horas`;

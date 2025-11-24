@@ -120,8 +120,22 @@ function RaffleSharedView() {
                                         style={{ backgroundColor: raffle?.color || '#1976d2' }}
                                     ></span>
                                 </h2>
-                                <p className="max-w-4xl mx-auto text-sm leading-relaxed text-justify text-gray-700 sm:text-base">
-                                    {raffle.description}
+                                <p
+                                    className="max-w-4xl mx-auto text-base italic font-medium leading-relaxed text-center text-gray-800 sm:text-lg"
+                                    style={{
+                                        background: `linear-gradient(90deg, ${raffle?.color || '#1976d2'}22, #fff 60%, ${raffle?.color || '#1976d2'}22)`,
+                                        borderRadius: '1rem',
+                                        padding: '1rem',
+                                        boxShadow: `0 2px 8px ${raffle?.color || '#1976d2'}15`,
+                                        letterSpacing: '0.5px',
+                                        fontFamily: 'serif',
+                                        fontWeight: 500,
+                                        border: `1px solid ${raffle?.color || '#1976d2'}33`,
+                                    }}
+                                >
+                                    <span style={{ fontSize: '1.15em', color: raffle?.color || '#1976d2', fontWeight: 600 }}>
+                                        “{raffle.description}”
+                                    </span>
                                 </p>
                             </div>
                         </div>
@@ -175,7 +189,7 @@ function RaffleSharedView() {
 
                     {/* Barra de progreso para versión compartida */}
                     {raffle && raffle.numbersByStatus && raffle.totalNumbers && (
-                        <div className="px-4 pb-6 sm:px-6 md:px-8">
+                        <div className="px-4 pt-2 pb-2 sm:px-6 md:px-8">
                             <RaffleProgressBar 
                                 numbersByStatus={raffle.numbersByStatus}
                                 totalNumbers={raffle.totalNumbers}
