@@ -11,6 +11,7 @@ import AwardsShared from "../../components/shared/AwardsShared";
 import RaffleNumbersShared from "../../components/shared/RaffleNumbersShared";
 import RaffleProgressBar from "../../components/indexView/RaffleProgressBar";
 import RaffleOffersPublic from "../../components/shared/RaffleOffersPublic";
+import { ToastContainer } from "react-toastify";
 
 function RaffleSharedView() {
     const { token } = useParams<{ token: string }>();
@@ -341,6 +342,7 @@ function RaffleSharedView() {
                     </Fab>
                 </Tooltip>
             )}
+            <ToastContainer position="top-right" autoClose={4000} />
         </Box>
     );
 }
