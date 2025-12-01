@@ -384,13 +384,12 @@ export const sendPaymentReminderWhatsApp = ({
 
     let premioInfo = "";
     if (award) {
-        premioInfo = `,se viene nuestro premioespecial que se juega el *${formatDateTimeLarge(award.playDate).trim()}* y es *${award.name.trim()}*`;
+        premioInfo = `, se viene nuestro proximo especial que se juega el *${formatDateTimeLarge(award.playDate).trim()}* y es *${award.name.trim()}*`;
     }
 
     const message = `
-✨ Hola *${name.trim()}*,
+✨ Hola *${name.trim()}*, Recuerda que apartaste el número(s) *${numbersList}* en la rifa *“${infoRaffle.name.trim()}”*${premioInfo}
 
-Recuerda que apartaste el número(s) *${numbersList}* en la rifa *“${infoRaffle.name.trim()}”* ${premioInfo}
 📌 Detalles
 💵 Valor pendiente: *${formatCurrencyCOP(valorPendiente)}*
 🗓 Fecha de la reservación: *${formatDateTimeLarge(reservedDate)}*
