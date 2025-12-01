@@ -1,4 +1,10 @@
-import { Box, IconButton, Tooltip } from "@mui/material"
+    // Función para saber si la fecha del premio ya venció
+    const isAwardExpired = (playDate: string) => {
+        const now = new Date();
+        const date = new Date(playDate);
+        return date < now;
+    };
+import { Box, IconButton, ListItemText, Menu, MenuItem, Tooltip } from "@mui/material"
 import { useNavigate } from "react-router-dom"
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -7,11 +13,12 @@ import { deleteNumberClient } from "../../../api/raffleNumbersApi";
 import { toast } from "react-toastify";
 import { AwardType, Raffle, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../../types";
 import ButtoToWasap from "./ButtoToWasap";
-import { handleDownloadPDF, handleMessageToWhatsAppAviso, handleViewAndDownloadPDF } from "../../../utils";
+import { formatDateTimeLarge, handleDownloadPDF, handleMessageToWhatsAppAviso, handleViewAndDownloadPDF } from "../../../utils";
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import AdfScannerIcon from '@mui/icons-material/AdfScanner';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import { useState } from "react";
 
 
 type ButtonsRaffleModalProps = {
@@ -27,7 +34,11 @@ type ButtonsRaffleModalProps = {
     refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
     raffleNumberStatus: RaffleNumber['status']
     handleToWasap: () => void
-    handleSendPaymentReminderWhatsApp: () => void
+    handleSendPaymentReminderWhatsApp: (award: {
+        id: number;
+        name: string;
+        playDate: string;
+    } | undefined) => void
 }
 
 function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfData, raffle, raffleId, raffleNumberId, refetch, handleToWasap, raffleNumberStatus, handleSendPaymentReminderWhatsApp} : ButtonsRaffleModalProps) {
@@ -51,6 +62,17 @@ function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfD
         mutate({raffleId, raffleNumberId})
     }
     
+    // Para el menú desplegable de premios
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+    const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
+
+
     return (
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             <IconButton
@@ -67,7 +89,7 @@ function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfD
                     <DeleteIcon sx={{ color: isPending ? '#9ca3af' : '#dc2626' }}/>
                 </Tooltip>
             </IconButton>
-            
+
             {raffleNumberStatus !== 'available' && (
                 <IconButton
                     onClick={() => handleMessageToWhatsAppAviso({ telefono, number, totalNumbers, name, raffleName: raffle.name })}
@@ -86,7 +108,7 @@ function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfD
             {raffleNumberStatus !== 'available' && (
                 <>
                     <ButtoToWasap handleToWasap={handleToWasap} />
-                    
+
                     <IconButton
                         onClick={(e) => {
                             e.preventDefault();
@@ -122,21 +144,95 @@ function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfD
             )}
 
             {(raffleNumberStatus == 'apartado' || raffleNumberStatus == 'pending') && (
-                <IconButton
-                    onClick={(e) => {
-                        e.preventDefault();
-                        handleSendPaymentReminderWhatsApp()
-                    }}
-                    sx={{ 
-                        bgcolor: '#dcfce7',
-                        '&:hover': { bgcolor: '#bbf7d0' },
-                        borderRadius: 2
-                    }}
-                >
-                    <Tooltip title='Recordar Pago'>
-                        <AttachMoneyIcon sx={{ color: '#059669' }}/>
-                    </Tooltip>
-                </IconButton>
+                <>
+                    <IconButton
+                        onClick={handleMenuClick}
+                        sx={{ 
+                            bgcolor: '#dcfce7',
+                            '&:hover': { bgcolor: '#bbf7d0' },
+                            borderRadius: 2
+                        }}
+                    >
+                        <Tooltip title='Recordar Pago'>
+                            <AttachMoneyIcon sx={{ color: '#059669' }}/>
+                        </Tooltip>
+                    </IconButton>
+
+                    {/* Menú desplegable de premios */}
+                    <Menu
+                        anchorEl={anchorEl}
+                        open={open}
+                        onClose={handleMenuClose}
+                        PaperProps={{
+                            sx: {
+                                width: 400,
+                                maxWidth: '90vw',
+                                boxSizing: 'border-box',
+                                borderRadius: 3,
+                                boxShadow: 4,
+                                p: 1,
+                            }
+                        }}
+                        transformOrigin={{ horizontal: 'center', vertical: 'top' }}
+                        anchorOrigin={{ horizontal: 'center', vertical: 'bottom' }}
+                    >
+                        {awards.length === 0 ? (
+                            <MenuItem
+                                onClick={() => {
+                                    handleSendPaymentReminderWhatsApp(undefined);
+                                    handleMenuClose();
+                                }}
+                                sx={{ width: '100%', borderRadius: 2, mb: 0.5 }}
+                            >
+                                <ListItemText
+                                    primary={<span style={{fontWeight: 500, color: '#1e293b'}}>Recordar pago (sin premio)</span>}
+                                    secondary={<span style={{fontSize: '0.95rem', color: '#64748b'}}>No hay premios disponibles</span>}
+                                />
+                            </MenuItem>
+                        ) : (
+                            awards.map((award) => {
+                                const expired = isAwardExpired(award.playDate);
+                                return (
+                                    <MenuItem
+                                        key={award.id}
+                                        onClick={() => {
+                                            if (!expired) {
+                                                handleSendPaymentReminderWhatsApp(award);
+                                                handleMenuClose();
+                                            }
+                                        }}
+                                        disabled={expired}
+                                        sx={{
+                                            width: '100%',
+                                            borderRadius: 2,
+                                            mb: 0.5,
+                                            opacity: expired ? 0.5 : 1,
+                                            cursor: expired ? 'not-allowed' : 'pointer',
+                                            backgroundColor: expired ? '#f3f4f6' : undefined,
+                                        }}
+                                    >
+                                        <ListItemText
+                                            primary={
+                                                <span style={{
+                                                    maxWidth: 320,
+                                                    display: 'inline-block',
+                                                    whiteSpace: 'nowrap',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    verticalAlign: 'middle',
+                                                    fontSize: '1rem',
+                                                    fontWeight: 500,
+                                                    color: expired ? '#9ca3af' : '#1e293b'
+                                                }}>{award.name}</span>
+                                            }
+                                            secondary={<span style={{fontSize: '0.95rem', color: expired ? '#9ca3af' : '#64748b'}}>{formatDateTimeLarge(award.playDate)}</span>}
+                                        />
+                                    </MenuItem>
+                                );
+                            })
+                        )}
+                    </Menu>
+                </>
             )}
 
             <IconButton

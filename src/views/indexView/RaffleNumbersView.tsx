@@ -1054,9 +1054,9 @@ function RaffleNumbersView() {
                 raffle={raffle} 
                 refechtRaffle={refechtRaffle}
             />}
-            {raffle && raffleNumbers && awards && <PayNumbersModal
+            {raffle && raffleNumbers && <PayNumbersModal
                 refetch={handleRefetch}
-                awards={awards}
+                awards={awards || []}
                 totalNumbers={raffle.totalNumbers || 0}
                 infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description, responsable: raffle.nameResponsable}}
                 numbersSeleted={numbersSeleted} 
@@ -1067,20 +1067,20 @@ function RaffleNumbersView() {
                 setPdfData={setPdfData}
                 setUrlWasap={setUrlWasap}
             />}
-            {raffle && raffleNumbers && pdfData && awards && <PaymentSellNumbersModal
+            {raffle && raffleNumbers && pdfData && <PaymentSellNumbersModal
                 totalNumbers={raffle.totalNumbers || 0}
                 raffle={raffle}
-                awards={awards}
+                awards={awards || []}
                 setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
                 setPdfData={setPdfData}
                 paymentsSellNumbersModal={paymentsSellNumbersModal}
                 pdfData={pdfData}
                 urlWasap={urlWasap}
             />}
-            {raffle && raffleNumbers && awards && <ViewRaffleNumberData
+            {raffle && raffleNumbers && <ViewRaffleNumberData
                 totalNumbers={raffle.totalNumbers || 0}
                 raffle={raffle}
-                awards={awards}
+                awards={awards || []}
                 infoRaffle={{name: raffle.name, amountRaffle: raffle.price, playDate: raffle.playDate, description: raffle.description, responsable: raffle.nameResponsable}}
                 setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
                 setPdfData={setPdfData}

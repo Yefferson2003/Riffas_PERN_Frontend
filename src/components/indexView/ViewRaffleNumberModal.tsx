@@ -218,7 +218,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
         }
     }
     
-    const handleSendPaymentReminderWhatsApp = () => {
+    const handleSendPaymentReminderWhatsApp = (award: AwardType | undefined) => {
         const firstName = watch('firstName');
         const phone = watch('phone');
         const amount = watch('amount');
@@ -234,7 +234,9 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                 statusRaffleNumber: raffleNumber.status,
                 totalNumbers,
                 awards, 
-                reservedDate: pdfData[0].reservedDate
+                reservedDate: pdfData[0].reservedDate,
+                award,
+                abonosPendientes: +raffleNumber.paymentDue
             });
             setUrlWasap(url);
 

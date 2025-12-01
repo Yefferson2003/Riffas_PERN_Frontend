@@ -67,8 +67,7 @@ const MobileDebugButton: React.FC = () => {
   };
 
   // Solo mostrar en móviles o en desarrollo
-  const shouldShow = /mobile|android|iphone|ipad/i.test(navigator.userAgent) || 
-                    process.env.NODE_ENV === 'development';
+  const shouldShow = /mobile|android|iphone|ipad/i.test(navigator.userAgent)
 
   if (!shouldShow) return null;
 

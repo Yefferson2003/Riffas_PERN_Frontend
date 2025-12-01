@@ -58,7 +58,7 @@ class MobileErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBound
           >
             Intentar de nuevo
           </button>
-          {process.env.NODE_ENV === 'development' && this.state.error && (
+          {this.state.error && (
             <details className="mt-4 text-xs text-gray-600">
               <summary>Detalles del error (desarrollo)</summary>
               <pre className="p-2 mt-2 overflow-auto text-xs bg-gray-100 rounded">
