@@ -236,7 +236,6 @@ export const generateRafflePurchaseMessage = ({
     numbers,
     payments,
     statusRaffleNumber,
-    awards,
     reservedDate,
     priceRaffleNumber,
 }: Omit<redirectToWhatsAppType, 'phone'>): string => {
@@ -283,9 +282,9 @@ export const generateRafflePurchaseMessage = ({
         .map(n => formatWithLeadingZeros(n.number, totalNumbers))
         .join(", ");
     
-    const premios = awards?.length
-        ? awards.map(a => `• ${a.name} (${formatDateTimeLarge(a.playDate)})`).join("\n")
-        : "Sin premios registrados";
+    // const premios = awards?.length
+    //     ? awards.map(a => `• ${a.name} (${formatDateTimeLarge(a.playDate)})`).join("\n")
+    //     : "Sin premios registrados";
 
     const message = `
 ✨ Hola *${name.trim()}*
@@ -299,9 +298,6 @@ ${paymentTypeMessage}
 📉 Deuda actual: *${formatCurrencyCOP(deuda)}*
 🗓 Fecha del sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*
 🕒 Reservado: *${formatDateTimeLarge(reservedDate ?? "")}*
-
-🎁 *Premios:*
-${premios}
 
 Si tienes alguna pregunta, estamos aquí para ayudarte 🤝
 
@@ -385,16 +381,16 @@ export const sendPaymentReminderWhatsApp = ({
         .map(n => formatWithLeadingZeros(n.number, totalNumbers))
         .join(", ");
 
+
     let premioInfo = "";
     if (award) {
-        premioInfo = `🎁 Premio: *${award.name}*\n🗓 Fecha de juego: *${formatDateTimeLarge(award.playDate)}*\n`;
+        premioInfo = `,se viene nuestro premioespecial que se juega el *${formatDateTimeLarge(award.playDate).trim()}* y es *${award.name.trim()}*`;
     }
 
     const message = `
 ✨ Hola *${name.trim()}*,
 
-Recuerda que apartaste el número(s) *${numbersList}* en la rifa *“${infoRaffle.name.trim()}”* 🎟
-${premioInfo}
+Recuerda que apartaste el número(s) *${numbersList}* en la rifa *“${infoRaffle.name.trim()}”* ${premioInfo}
 📌 Detalles
 💵 Valor pendiente: *${formatCurrencyCOP(valorPendiente)}*
 🗓 Fecha de la reservación: *${formatDateTimeLarge(reservedDate)}*
