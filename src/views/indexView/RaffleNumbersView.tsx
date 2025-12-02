@@ -670,7 +670,7 @@ function RaffleNumbersView() {
                                 name='search'
                                 value={inputValues.search}
                                 onChange={handleChangeSearchParams}
-                                className="min-w-0"
+                                className="min-w-0 md:col-span-3"
                                 sx={{
                                     '& .MuiFilledInput-root': {
                                         '&:hover:not(.Mui-disabled):before': {
@@ -714,7 +714,7 @@ function RaffleNumbersView() {
                             )}
 
                             {/* Filtros de fecha - Solo visible cuando hay método de pago seleccionado */}
-                            {paymentMethodFilter && (
+                            {(
                                 <div className="flex flex-col w-full gap-2 md:col-span-3 sm:flex-row sm:gap-4">
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                                         <DatePicker
@@ -803,7 +803,7 @@ function RaffleNumbersView() {
                     
                     {/* Botones de descarga */}
                     {(user.rol.name !== 'vendedor') &&
-                        (searchParams.search || searchParams.searchAmount || Object.keys(filter).length > 0 || paymentMethodFilter || userFilter) &&
+                        (searchParams.search || searchParams.searchAmount || Object.keys(filter).length > 0 || paymentMethodFilter || userFilter || (startDate && endDate)) &&
                         raffleNumbers && (
                             <div className="flex flex-col w-full max-w-4xl gap-3 mt-4 sm:flex-row sm:justify-center sm:gap-4">
                                 <button
@@ -924,6 +924,7 @@ function RaffleNumbersView() {
                             </button>
                         </div>
                     }
+                    
                     {/* Switch de selección */}
                     <div className="mt-2">
                         <FormControlLabel 
