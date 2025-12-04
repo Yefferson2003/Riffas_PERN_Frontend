@@ -17,7 +17,27 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { ClientType, ResponseClientType } from '../../types';
 import { Chip } from '@mui/material';
-import { formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros } from '../../utils';
+import { formatCurrencyCOP, formatWithLeadingZeros } from '../../utils';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardActions from '@mui/material/CardActions';
+import Divider from '@mui/material/Divider';
+import Stack from '@mui/material/Stack';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import LockIcon from '@mui/icons-material/Lock';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+
+// Utilidad para fecha corta (solo fecha, no hora)
+function formatDateShort(dateStr?: string) {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString();
+}
 
 interface ClientsListTableProps {
     clients: ResponseClientType[];
@@ -43,17 +63,23 @@ function Row({ client, onEdit, onBuyNumbers }: Pick<ClientsListTableProps, 'onEd
     // Función para capitalizar el estado
     const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 
-    // Colores para el chip de estado
-    const getChipColor = (status: string) => {
-        if (status === 'apartado') return 'warning';
-        if (status === 'sold') return 'success';
-        if (status === 'pending') return 'info';
-        return 'default';
+    // Chips personalizados para el estado
+    const renderStatusChip = (status: string) => {
+        if (status === 'sold') {
+            return <Chip icon={<CheckCircleIcon sx={{ color: '#43a047' }} />} label="Vendido" color="success" size="small" sx={{ fontWeight: 700, px: 1.5, borderRadius: 2, minWidth: 110, maxWidth: 110, justifyContent: 'center', bgcolor: '#e8f5e9', color: '#388e3c' }} />;
+        }
+        if (status === 'apartado') {
+            return <Chip icon={<LockIcon sx={{ color: '#fbc02d' }} />} label="Apartado" color="warning" size="small" sx={{ fontWeight: 700, px: 1.5, borderRadius: 2, minWidth: 110, maxWidth: 110, justifyContent: 'center', bgcolor: '#fffde7', color: '#fbc02d' }} />;
+        }
+        if (status === 'pending') {
+            return <Chip icon={<AccessTimeIcon sx={{ color: '#0288d1' }} />} label="Pendiente" color="info" size="small" sx={{ fontWeight: 700, px: 1.5, borderRadius: 2, minWidth: 110, maxWidth: 110, justifyContent: 'center', bgcolor: '#e3f2fd', color: '#0288d1' }} />;
+        }
+        return <Chip label={status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()} size="small" sx={{ fontWeight: 700, px: 1.5, borderRadius: 2, minWidth: 110, maxWidth: 110, justifyContent: 'center' }} />;
     };
 
     return (
         <React.Fragment>
-            <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
+            <TableRow sx={{ '& > *': { borderBottom: 'unset' }, '& td, & th': { whiteSpace: { xs: 'nowrap', sm: 'unset' }, fontSize: { xs: 13, sm: 15 } } }}>
                 <TableCell>
                     <IconButton
                         aria-label="expand row"
@@ -64,11 +90,22 @@ function Row({ client, onEdit, onBuyNumbers }: Pick<ClientsListTableProps, 'onEd
                     </IconButton>
                 </TableCell>
                 <TableCell component="th" scope="row">
-                    {client.firstName} {client.lastName}
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 0.5 }}>
+                        <span>{client.firstName}</span>
+                        <span>{client.lastName}</span>
+                    </Box>
                 </TableCell>
-                <TableCell>{client.phone || 'Sin teléfono'}</TableCell>
-                <TableCell>{client.address || 'Sin dirección'}</TableCell>
-                <TableCell align="center" sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                <TableCell>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        <span style={{ wordBreak: 'break-all' }}>{client.phone || 'Sin teléfono'}</span>
+                    </Box>
+                </TableCell>
+                <TableCell>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        <span style={{ wordBreak: 'break-all' }}>{client.address || 'Sin dirección'}</span>
+                    </Box>
+                </TableCell>
+                <TableCell align="center" sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
                     <Tooltip title="Editar cliente" arrow>
                         <IconButton color="primary" onClick={() => onEdit(client)} size="small">
                             <EditIcon />
@@ -84,7 +121,7 @@ function Row({ client, onEdit, onBuyNumbers }: Pick<ClientsListTableProps, 'onEd
             <TableRow>
                 <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={5}>
                     <Collapse in={open} timeout="auto" unmountOnExit>
-                        <Box sx={{ margin: 2 }}>
+                        <Box sx={{ margin: 2, overflowX: 'auto' }}>
                             <Typography variant="h6" gutterBottom component="div">
                                 Números
                             </Typography>
@@ -106,20 +143,20 @@ function Row({ client, onEdit, onBuyNumbers }: Pick<ClientsListTableProps, 'onEd
                                                 borderRadius: 3,
                                                 boxShadow: `0 2px 8px ${raffleColor || '#1976d2'}22`,
                                                 background: raffleColor ? `${raffleColor}11` : undefined,
+                                                overflowX: 'auto',
                                             }}
                                         >
-                                            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1, color: raffleColor || 'primary.main' }}>
+                                            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1, color: raffleColor || 'primary.main', fontSize: { xs: 15, sm: 17 } }}>
                                                 Rifa: {numbers[0].raffle?.name || `ID ${raffleId}`}
-                                                
                                             </Typography>
-                                            <Table size="small" aria-label="números">
+                                            <Table size="small" aria-label="números" sx={{ minWidth: 420 }}>
                                                 <TableHead>
                                                     <TableRow>
-                                                        <TableCell>Número</TableCell>
-                                                        <TableCell>Fecha apartado</TableCell>
-                                                        <TableCell>Estado</TableCell>
-                                                        <TableCell>Abonos</TableCell>
-                                                        <TableCell>Deuda</TableCell>
+                                                        <TableCell sx={{ minWidth: 70 }}>Número</TableCell>
+                                                        <TableCell sx={{ minWidth: 120 }}>Fecha apartado</TableCell>
+                                                        <TableCell sx={{ minWidth: 80 }}>Estado</TableCell>
+                                                        <TableCell sx={{ minWidth: 90 }}>Abonos</TableCell>
+                                                        <TableCell sx={{ minWidth: 90 }}>Deuda</TableCell>
                                                     </TableRow>
                                                 </TableHead>
                                                 <TableBody>
@@ -128,24 +165,11 @@ function Row({ client, onEdit, onBuyNumbers }: Pick<ClientsListTableProps, 'onEd
                                                             <TableCell>
                                                                 {formatWithLeadingZeros(num.number, num.raffle?.totalNumbers || 0)}
                                                             </TableCell>
-                                                            <TableCell>{num.reservedDate ? formatDateTimeLarge(num.reservedDate) : '-'}</TableCell>
+                                                            <TableCell>{formatDateShort(num.reservedDate ?? undefined)}</TableCell>
                                                             <TableCell>
                                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                                     <Box>
-                                                                        <Chip
-                                                                            label={capitalize(num.status)}
-                                                                            color={getChipColor(num.status)}
-                                                                            size="small"
-                                                                            sx={{
-                                                                                fontWeight: 700,
-                                                                                px: 1.5,
-                                                                                borderRadius: 2,
-                                                                                minWidth: 90,
-                                                                                justifyContent: 'center',
-                                                                                bgcolor: num.status === 'apartado' ? '#fffde7' : undefined,
-                                                                                color: num.status === 'apartado' ? '#fbc02d' : undefined
-                                                                            }}
-                                                                        />
+                                                                        {renderStatusChip(num.status)}
                                                                     </Box>
                                                                 </Box>
                                                             </TableCell>
@@ -172,29 +196,141 @@ function Row({ client, onEdit, onBuyNumbers }: Pick<ClientsListTableProps, 'onEd
 }
 
 export default function ClientsListTable({ clients, onEdit, onBuyNumbers }: ClientsListTableProps) {
+    const isMobile = useMediaQuery('(max-width:600px)');
+
+    if (isMobile) {
+        // Vista tipo tarjeta para móvil, centrada a la izquierda y acordeón para los números
+        return (
+            <Stack spacing={2} sx={{ mt: 2, alignItems: 'flex-start' }}>
+                {clients.map((client: ResponseClientType) => {
+                    // Agrupar números por rifa
+                    const groupedByRaffle = (client.raffleNumbers || []).reduce((acc, num) => {
+                        const raffleId = num.raffle?.id || num.raffleId;
+                        if (!acc[raffleId]) acc[raffleId] = [];
+                        acc[raffleId].push(num);
+                        return acc;
+                    }, {} as Record<string, typeof client.raffleNumbers>);
+                    return (
+                        <Card key={client.id} sx={{ borderRadius: 3, boxShadow: 3, p: 1, minWidth: 0, width: '100%', maxWidth: 420 }}>
+                            <CardContent sx={{ pb: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                                    <Typography variant="h6" sx={{ fontWeight: 700, fontSize: 17 }}>
+                                        {client.firstName} {client.lastName}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mb: 1 }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        <b>Teléfono:</b> {client.phone || 'Sin teléfono'}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        <b>Dirección:</b> {client.address || 'Sin dirección'}
+                                    </Typography>
+                                </Box>
+                                <Divider sx={{ my: 1 }} />
+                                <Accordion sx={{ boxShadow: 'none', bgcolor: 'transparent' }}>
+                                    <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel-numeros-content" id={`panel-numeros-header-${client.id}`}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                                            Números (últimos 50)
+                                        </Typography>
+                                    </AccordionSummary>
+                                    <AccordionDetails sx={{ p: 0 }}>
+                                        {Object.keys(groupedByRaffle).length === 0 ? (
+                                            <Typography variant="body2" color="text.secondary" sx={{ px: 2, pb: 1 }}>No tiene números asociados.</Typography>
+                                        ) : (
+                                            Object.entries(groupedByRaffle).map(([raffleId, numbers]) => {
+                                                if (!numbers || numbers.length === 0) return null;
+                                                const raffleColor = numbers[0].raffle?.color || undefined;
+                                                return (
+                                                    <Box key={raffleId} sx={{ mb: 1.5, p: 1, border: `2px solid ${raffleColor || '#1976d2'}`, borderRadius: 2, background: raffleColor ? `${raffleColor}11` : undefined }}>
+                                                        <Typography variant="body2" sx={{ fontWeight: 700, color: raffleColor || 'primary.main', mb: 0.5 }}>
+                                                            Rifa: {numbers[0].raffle?.name || `ID ${raffleId}`}
+                                                        </Typography>
+                                                        <Stack spacing={0.5} divider={<Divider flexItem />}>
+                                                            {numbers.map(num => (
+                                                                <Box key={num.id} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, py: 0.5 }}>
+                                                                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', mb: 0.5 }}>
+                                                                        {num.status === 'sold' && (
+                                                                            <Chip icon={<CheckCircleIcon sx={{ color: '#43a047' }} />} label="Vendido" color="success" size="small" sx={{ fontWeight: 700, px: 1.5, borderRadius: 2, minWidth: 110, maxWidth: 110, justifyContent: 'center', bgcolor: '#e8f5e9', color: '#388e3c' }} />
+                                                                        )}
+                                                                        {num.status === 'apartado' && (
+                                                                            <Chip icon={<LockIcon sx={{ color: '#fbc02d' }} />} label="Apartado" color="warning" size="small" sx={{ fontWeight: 700, px: 1.5, borderRadius: 2, minWidth: 110, maxWidth: 110, justifyContent: 'center', bgcolor: '#fffde7', color: '#fbc02d' }} />
+                                                                        )}
+                                                                        {num.status === 'pending' && (
+                                                                            <Chip icon={<AccessTimeIcon sx={{ color: '#0288d1' }} />} label="Pendiente" color="info" size="small" sx={{ fontWeight: 700, px: 1.5, borderRadius: 2, minWidth: 110, maxWidth: 110, justifyContent: 'center', bgcolor: '#e3f2fd', color: '#0288d1' }} />
+                                                                        )}
+                                                                        {num.status !== 'sold' && num.status !== 'apartado' && num.status !== 'pending' && (
+                                                                            <Chip label={num.status.charAt(0).toUpperCase() + num.status.slice(1).toLowerCase()} size="small" sx={{ fontWeight: 700, px: 1.5, borderRadius: 2, minWidth: 110, maxWidth: 110, justifyContent: 'center' }} />
+                                                                        )}
+                                                                    </Box>
+                                                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, fontSize: 13 }}>
+                                                                        <Box sx={{ flex: '1 1 45%', minWidth: 120, mb: 0.5 }}>
+                                                                            <b>Número:</b> {formatWithLeadingZeros(num.number, num.raffle?.totalNumbers || 0)}
+                                                                        </Box>
+                                                                        <Box sx={{ flex: '1 1 45%', minWidth: 120, mb: 0.5 }}>
+                                                                            <b>Fecha:</b> {formatDateShort(num.reservedDate ?? undefined)}
+                                                                        </Box>
+                                                                        <Box sx={{ flex: '1 1 45%', minWidth: 120, mb: 0.5, color: '#388e3c', fontWeight: 700 }}>
+                                                                            <b>Abonos:</b> {formatCurrencyCOP(+num.paymentAmount)}
+                                                                        </Box>
+                                                                        <Box sx={{ flex: '1 1 45%', minWidth: 120, mb: 0.5, color: '#d32f2f', fontWeight: 700 }}>
+                                                                            <b>Deuda:</b> {formatCurrencyCOP(+num.paymentDue)}
+                                                                        </Box>
+                                                                    </Box>
+                                                                </Box>
+                                                            ))}
+                                                        </Stack>
+                                                    </Box>
+                                                );
+                                            })
+                                        )}
+                                    </AccordionDetails>
+                                </Accordion>
+                            </CardContent>
+                            <CardActions sx={{ justifyContent: 'flex-end', gap: 1 }}>
+                                <Tooltip title="Editar cliente" arrow>
+                                    <IconButton color="primary" onClick={() => onEdit(client)} size="small">
+                                        <EditIcon />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Vender números" arrow>
+                                    <IconButton color="success" onClick={() => onBuyNumbers(client)} size="small">
+                                        <LocalAtmIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            </CardActions>
+                        </Card>
+                    );
+                })}
+            </Stack>
+        );
+    }
+
+    // Vista de tabla tradicional para escritorio/tablet
     return (
-        <TableContainer component={Paper} sx={{ mt: 2, borderRadius: 3, boxShadow: 3 }}>
-            <Table aria-label="collapsible table">
-                <TableHead>
-                    <TableRow>
-                        <TableCell />
-                        <TableCell>Nombre</TableCell>
-                        <TableCell>Teléfono</TableCell>
-                        <TableCell>Dirección</TableCell>
-                        <TableCell align="center">Acciones</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {clients.map((client: ClientType) => (
-                        <Row 
-                            key={client.id} 
-                            client={client} 
-                            onEdit={onEdit}
-                            onBuyNumbers={onBuyNumbers}
+        <Box sx={{ width: '100%', overflowX: 'auto', mt: 2 }}>
+            <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 3, minWidth: 360 }}>
+                <Table aria-label="collapsible table" size="small" sx={{ minWidth: 600 }}>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell sx={{ width: 40 }} />
+                            <TableCell sx={{ minWidth: 120 }}>Nombre</TableCell>
+                            <TableCell sx={{ minWidth: 120 }}>Teléfono</TableCell>
+                            <TableCell sx={{ minWidth: 140 }}>Dirección</TableCell>
+                            <TableCell align="center" sx={{ minWidth: 120 }}>Acciones</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {clients.map((client: ClientType) => (
+                            <Row 
+                                key={client.id} 
+                                client={client} 
+                                onEdit={onEdit}
+                                onBuyNumbers={onBuyNumbers}
                             />
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Box>
     );
 }
