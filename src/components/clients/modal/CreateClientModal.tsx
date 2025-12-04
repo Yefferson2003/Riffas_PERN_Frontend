@@ -8,7 +8,6 @@ import { useMutation } from "@tanstack/react-query";
 import { createClient } from "../../../api/clientApi";
 import { toast } from "react-toastify";
 
-
 const style = {
     position: 'absolute',
     top: '50%',
@@ -54,10 +53,9 @@ export default function CreateClientModal({refetch}: CreateClientModalProps) {
         onError(error) {
             toast.error(error.message || 'Error al crear el cliente');
         },
-        onSuccess(data) {
-            toast.success(data || 'Cliente creado con éxito');
+        onSuccess() {
+            toast.success('Cliente creado con éxito');
             reset();
-            navigate(location.pathname, {replace: true});
             refetch();
         },
     })

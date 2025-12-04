@@ -81,7 +81,7 @@ function IndexView() {
                         }}
                         sx={{width: '100%', maxWidth: 300}}
                     >
-                        Descargar Exel 
+                        Descargar Excel 
                     </Button>
                 }
                 {user.rol.name === 'admin' &&

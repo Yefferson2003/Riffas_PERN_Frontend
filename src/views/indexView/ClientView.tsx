@@ -1,23 +1,18 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
-import { Button, CircularProgress, Pagination, TextField, Typography, Box, Fade, Tooltip } from "@mui/material";
 import SyncIcon from '@mui/icons-material/Sync';
+import { Box, Button, CircularProgress, Fade, Pagination, TextField, Tooltip, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getClients } from "../../api/clientApi";
+import ClientsListTable from "../../components/clients/ClientsListTable";
+import BuyNumbersForClientModal from "../../components/clients/modal/BuyNumbersForClientModal";
 import CreateClientModal from "../../components/clients/modal/CreateClientModal";
 import EditClientModal from "../../components/clients/modal/EditClientModal";
-import ClientsListTable from "../../components/clients/ClientsListTable";
 import { ClientType } from "../../types";
-import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import BuyNumbersForClientModal from "../../components/clients/modal/BuyNumbersForClientModal";
 
 
 
 function ClientView () {
-    const location = useLocation();
-
     const navigate = useNavigate();
 
     const [search, setSearch] = useState("");
@@ -71,15 +66,6 @@ function ClientView () {
         refetch();
     }
 
-
-    useEffect(() => {
-        if (location.state?.showSuccess) {
-            toast.success(location.state.message || 'Números procesados con éxito');
-            // Limpiar el estado para evitar mostrar el toast en cada render
-            window.history.replaceState({}, document.title, location.pathname + location.search);
-        }
-    }, [location.state, location.pathname, location.search]);
-
     return (
         <Box sx={{ width: '100%', pb: 8, px: { xs: 1, md: 4 }, textAlign: 'center' }}>
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, alignItems: 'center', justifyContent: 'space-between', mb: 6, gap: 3 }}>
@@ -115,14 +101,7 @@ function ClientView () {
                     </Tooltip>
                 </Box>
             </Box>
-            <style>{`
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-            `}</style>
 
-            <ToastContainer position="top-right" autoClose={2500} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
 
             <CreateClientModal
                 refetch={handleRefetch}
