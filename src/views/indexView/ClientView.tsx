@@ -78,7 +78,7 @@ function ClientView () {
             // Limpiar el estado para evitar mostrar el toast en cada render
             window.history.replaceState({}, document.title, location.pathname + location.search);
         }
-    }, [location.state]);
+    }, [location.state, location.pathname, location.search]);
 
     return (
         <Box sx={{ width: '100%', pb: 8, px: { xs: 1, md: 4 }, textAlign: 'center' }}>

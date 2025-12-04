@@ -11,6 +11,7 @@ import TermsAndConditionsView from "./views/TermsAndConditionsView"
 import PrivacyPolicyView from "./views/PrivacyPolicyView"
 import PayMethodeView from "./views/indexView/PayMethodeView"
 import ClientView from "./views/indexView/ClientView"
+import WhatsAppView from "./views/indexView/WhatsAppView"
 
 
 function Router() {
@@ -31,6 +32,7 @@ function Router() {
                     <Route path="/raffle/:raffleId" element={<RaffleNumbersView/>} index/>
                     <Route path="/pay-methods" element={<PayMethodeView/>} index/>
                     <Route path="/clients" element={<ClientView/>} index/>
+                    <Route path="/whatsapp" element={<WhatsAppView/>} />
                 </Route>
 
 

@@ -36,12 +36,14 @@ const drawerWidth = 240;
 const navConfig = {
     base: [
         { key: 'index', name: 'Inicio', url: '/' },
+        { key: 'clients', name: 'Clientes', url: '/clients' },
         { key: 'logout', name: 'Cerrar Sesión', url: '/' }
     ],
     responsable: [
         { key: 'index', name: 'Inicio', url: '/' },
         { key: 'users', name: 'Usuarios', url: '/users' },
         { key: 'clients', name: 'Clientes', url: '/clients' },
+        { key: 'whatsapp', name: 'Whatsapp', url: '/whatsapp' },
         { key: 'logout', name: 'Cerrar Sesión', url: '/' },
     ],
     admin: [
@@ -49,6 +51,7 @@ const navConfig = {
         { key: 'users', name: 'Usuarios', url: '/users' },
         { key: 'clients', name: 'Clientes', url: '/clients' },
         { key: 'payMethods', name: 'Métodos de Pago', url: '/pay-methods' },
+        { key: 'whatsapp', name: 'Whatsapp', url: '/whatsapp' },
         { key: 'logout', name: 'Cerrar Sesión', url: '/' },
     ]
 };
