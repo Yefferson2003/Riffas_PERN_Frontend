@@ -17,18 +17,18 @@ import PhoneNumberInput from "../PhoneNumberInput";
 import UploadImageButton from "./UploadImageButton";
 
 const style = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 550,
-    maxWidth: '100vw',
-    bgcolor: '#f1f5f9',
-    border: '2px solid #000',
-    boxShadow: 24,
-    p: 4,
-    maxHeight: '95vh', 
-    overflowY: 'auto',
+position: 'absolute',
+top: '50%',
+left: '50%',
+transform: 'translate(-50%, -50%)',
+width: 550,
+maxWidth: '100vw',
+bgcolor: '#f1f5f9',
+border: '2px solid #000',
+boxShadow: 24,
+p: 4,
+maxHeight: '95vh', 
+overflowY: 'auto',
 };
 
 type AddRaffleModalProps = {
@@ -49,25 +49,25 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
     const [selectedFileMobile, setSelectedFileMobile] = useState<File | null>(null); // Nuevo estado para la segunda imagen
     const [colorPickerAnchor, setColorPickerAnchor] = useState<HTMLElement | null>(null);
 
-    const initialValues: CreateRaffleForm   = {
-        name: '',
-        nitResponsable: '',
-        nameResponsable: '',
-        description: '',
-        startDate: dayjs().startOf('day'),
-        editDate: null,
-        playDate: null,
-        price: '',
-        banerImgUrl: '',
-        quantity: 1000,
-        banerMovileImgUrl: '',
-        color: '#1976d2',
-        contactRifero: '',
-    }
+const initialValues: CreateRaffleForm   = {
+    name: '',
+    nitResponsable: '',
+    nameResponsable: '',
+    description: '',
+    startDate: dayjs().startOf('day'),
+    editDate: null,
+    playDate: null,
+    price: '',
+    banerImgUrl: '',
+    quantity: 1000,
+    banerMovileImgUrl: '',
+    color: '#1976d2',
+    contactRifero: '',
+}
 
-    const {register, handleSubmit, setValue, watch, reset, formState: {errors}} = useForm({
-        defaultValues : initialValues
-    })
+const {register, handleSubmit, setValue, watch, reset, formState: {errors}} = useForm({
+    defaultValues : initialValues
+})
 
     const quantity = watch("quantity");
     const startDate = watch("startDate");

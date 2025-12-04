@@ -10,6 +10,7 @@ import RaffleSharedView from "./views/indexView/RaffleSharedView"
 import TermsAndConditionsView from "./views/TermsAndConditionsView"
 import PrivacyPolicyView from "./views/PrivacyPolicyView"
 import PayMethodeView from "./views/indexView/PayMethodeView"
+import ClientView from "./views/indexView/ClientView"
 
 
 function Router() {
@@ -29,6 +30,7 @@ function Router() {
                     <Route path="/users" element={<UsersView/>} index/>
                     <Route path="/raffle/:raffleId" element={<RaffleNumbersView/>} index/>
                     <Route path="/pay-methods" element={<PayMethodeView/>} index/>
+                    <Route path="/clients" element={<ClientView/>} index/>
                 </Route>
 
 

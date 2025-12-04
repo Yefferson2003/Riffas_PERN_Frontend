@@ -15,6 +15,26 @@ const ResponsePaginationSchema = z.object({
     currentPage: z.number(),
 })
 
+export const ClientSchema = z.object({
+    id: z.number(),
+    firstName:  z.string().nullable(),
+    lastName:  z.string().nullable(),
+    phone: z.string().nullable(),
+    address: z.string().nullable(),
+})
+
+export const responseClientSchema = ClientSchema.pick({
+    id: true,
+    firstName: true,
+    lastName: true,
+    phone: true,
+    address: true,
+})
+
+
+export type ClientType = z.infer<typeof ClientSchema>
+export type ClientFormType = Pick<ClientType, 'firstName' | 'lastName' | 'phone' | 'address'>
+
 const Rol = z.object({
     name: z.enum(rolNameEnum)
 })
@@ -204,7 +224,9 @@ export const responseGetRafflesSchema = ResponsePaginationSchema.pick({
     total: true,
     totalPages: true,
 }).extend({
-    raffles: z.array(raffleSchema)
+    raffles: z.array(raffleSchema.extend({
+        totalNumbers: z.number().min(0).optional(),
+    }))
 })
 
 export const responseRaffleSharedSchema = z.object({
@@ -304,6 +326,7 @@ const PaymentSchema = z.object({
     updatedAt: z.string(),
     isValid: z.boolean(),
     user: userVendedor,
+    paymentMethodId: z.number().nullable().optional(),
     reference: z.string().nullable().optional(),
     rafflePayMethode: rafflePayMethodeSchema.pick({
             id: true,
@@ -361,6 +384,7 @@ export const RaffleNumberSchema = z.object({
     paymentAmount: z.string(),
     paymentDue: z.string(),    
     raffleId: z.number(),
+    clienteId: z.number().nullable(),
     createdAt: z.string(), 
     updatedAt: z.string(), 
     payments: z.array(PaymentSchema.pick({
@@ -743,3 +767,50 @@ export const responseRaffleOffersSchema = z.array(RaffleOffersSchema)
 
 export type RaffleOfferType = z.infer<typeof RaffleOffersSchema>
 export type RaffleOfferFormType = Pick<RaffleOfferType, 'minQuantity'> & { discountedPrice: number }
+
+export const ResponseClientSchema = ClientSchema.pick({
+        id: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        address: true,
+    }).extend({
+        raffleNumbers: z.array(
+            RaffleNumberSchema.pick({
+                id: true,
+                number: true,
+                reservedDate: true,
+                paymentAmount: true,
+                paymentDue: true,
+                status: true,
+                clienteId: true,
+                raffleId: true,
+            }).extend({
+                raffle: raffleSchema.pick({
+                    id: true,
+                    name: true,
+                    playDate: true,
+                    price: true,
+                    color: true,
+                }).extend({
+                    totalNumbers: z.number().optional()
+                }).optional(),
+                payments: z.array(PaymentSchema.pick({
+                    id: true,
+                    amount: true,
+                    createdAt: true,
+                    paymentMethodId: true,
+                }))
+            })
+        ).optional()
+    })
+
+export const responseClientsSchema = ResponsePaginationSchema.extend({
+    clients: z.array(ResponseClientSchema)
+})
+
+export const ClientsListForExportSchema = z.object({
+    clients: z.array(ResponseClientSchema)
+})
+
+export type ResponseClientType = z.infer<typeof ResponseClientSchema>

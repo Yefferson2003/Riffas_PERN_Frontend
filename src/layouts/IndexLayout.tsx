@@ -33,22 +33,24 @@ interface Props {
 }
 
 const drawerWidth = 240;
-const navItemsBase = ['index', 'logout'];
-const navItemsResponsable = ['index', 'users', 'logout', ];
-const navItemsAdmin = ['index', 'users', 'payMethods', 'logout', ];
-
-const navItemsTraslations: { [key: string]: string } = {
-    index: 'Inicio',
-    users: 'Usuarios',
-    payMethods: 'Métodos de Pago',
-    logout: 'Cerrar Sesión',
-};
-
-const navItemsUrls: { [key: string]: string } = {
-    index: '/',
-    logout: '/',
-    users: '/users',
-    payMethods: '/pay-methods',
+const navConfig = {
+    base: [
+        { key: 'index', name: 'Inicio', url: '/' },
+        { key: 'logout', name: 'Cerrar Sesión', url: '/' }
+    ],
+    responsable: [
+        { key: 'index', name: 'Inicio', url: '/' },
+        { key: 'users', name: 'Usuarios', url: '/users' },
+        { key: 'clients', name: 'Clientes', url: '/clients' },
+        { key: 'logout', name: 'Cerrar Sesión', url: '/' },
+    ],
+    admin: [
+        { key: 'index', name: 'Inicio', url: '/' },
+        { key: 'users', name: 'Usuarios', url: '/users' },
+        { key: 'clients', name: 'Clientes', url: '/clients' },
+        { key: 'payMethods', name: 'Métodos de Pago', url: '/pay-methods' },
+        { key: 'logout', name: 'Cerrar Sesión', url: '/' },
+    ]
 };
 
 function HideOnScroll(props: Props) {
@@ -82,12 +84,12 @@ export default function IndexLayout(props: Props) {
     };
 
 
-    const handleNavigation = (item : string) => {
-        if (item === 'logout') {
+    const handleNavigation = (item: { key: string, url: string }) => {
+        if (item.key === 'logout') {
             logout();
-            return
+            return;
         }
-        navigate(navItemsUrls[item]);
+        navigate(item.url);
     };
 
     const handleDrawerToggle = () => {
@@ -95,28 +97,28 @@ export default function IndexLayout(props: Props) {
     };
 
     const getNavItems = () => {
-        return (user?.rol.name === 'admin')
-            ? navItemsAdmin
-            : user?.rol.name === 'responsable' ? navItemsResponsable : navItemsBase;
+        if (user?.rol.name === 'admin') return navConfig.admin;
+        if (user?.rol.name === 'responsable') return navConfig.responsable;
+        return navConfig.base;
     };
 
     const drawer = (
         <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
-        <Typography variant="h6" sx={{ my: 2 }}>
-            RIFFAS
-        </Typography>
-        <Divider />
-        <List>
-            {getNavItems().map((item) => (
-            <ListItem key={item} disablePadding>
-                <ListItemButton sx={{ textAlign: 'center' }} 
-                    onClick={() => handleNavigation(item)}
-                >
-                    <ListItemText primary={navItemsTraslations[item]} />
-                </ListItemButton>
-            </ListItem>
-            ))}
-        </List>
+            <Typography variant="h6" sx={{ my: 2 }}>
+                RIFFAS
+            </Typography>
+            <Divider />
+            <List>
+                {getNavItems().map((item) => (
+                    <ListItem key={item.key} disablePadding>
+                        <ListItemButton sx={{ textAlign: 'center' }}
+                            onClick={() => handleNavigation(item)}
+                        >
+                            <ListItemText primary={item.name} />
+                        </ListItemButton>
+                    </ListItem>
+                ))}
+            </List>
         </Box>
     );
     
@@ -163,12 +165,12 @@ export default function IndexLayout(props: Props) {
                 </Typography>
                 <Box sx={{ display: { xs: 'none', sm: 'block' }, }}>
                     {getNavItems().map((item) => (
-                    <Button key={item} sx={{ color: '#fff' }}
-                        onClick={() => handleNavigation(item)}
-                    >
-                        {navItemsTraslations[item]}
-                    </Button>
-                ))}
+                        <Button key={item.key} sx={{ color: '#fff' }}
+                            onClick={() => handleNavigation(item)}
+                        >
+                            {item.name}
+                        </Button>
+                    ))}
                 </Box>
                 </Toolbar>
             </AppBar>
