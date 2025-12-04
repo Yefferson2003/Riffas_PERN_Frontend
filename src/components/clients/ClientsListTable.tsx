@@ -60,8 +60,6 @@ function Row({ client, onEdit, onBuyNumbers }: Pick<ClientsListTableProps, 'onEd
         return Object.entries(groups);
     }, [client]);
 
-    // Función para capitalizar el estado
-    const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 
     // Chips personalizados para el estado
     const renderStatusChip = (status: string) => {
