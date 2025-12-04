@@ -1,4 +1,7 @@
 import SyncIcon from '@mui/icons-material/Sync';
+import DownloadIcon from '@mui/icons-material/Download';
+import IconButton from '@mui/material/IconButton';
+import { exportClientsToExcel } from '../../utils/exportClientsExcel';
 import { Box, Button, CircularProgress, Fade, Pagination, TextField, Tooltip, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -88,16 +91,23 @@ function ClientView () {
                         Nuevo Cliente
                     </Button>
                     <Tooltip title="Actualizar clientes" arrow>
-                        <Button
-                            variant="outlined"
+                        <IconButton
                             color="info"
-                            sx={{ borderRadius: 2, minWidth: 48, px: 2, boxShadow: 1, transition: 'transform 0.2s', '&:hover': { transform: 'rotate(-10deg) scale(1.08)', bgcolor: '#e3f2fd' } }}
+                            sx={{ borderRadius: 2, boxShadow: 1, transition: 'transform 0.2s', '&:hover': { transform: 'rotate(-10deg) scale(1.08)', bgcolor: '#e3f2fd' } }}
                             onClick={handleRefetch}
-                            startIcon={<SyncIcon sx={{ animation: isLoading ? 'spin 1s linear infinite' : 'none' }} />}
                             disabled={isLoading}
                         >
-                            <span style={{ display: 'none' }}>Actualizar</span>
-                        </Button>
+                            <SyncIcon sx={{ animation: isLoading ? 'spin 1s linear infinite' : 'none', fontSize: 28 }} />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Exportar clientes a Excel" arrow>
+                        <IconButton
+                            color="success"
+                            sx={{ borderRadius: 2, boxShadow: 1, transition: 'transform 0.2s', '&:hover': { bgcolor: '#e8f5e9', color: 'success.main', transform: 'scale(1.12)' } }}
+                            onClick={exportClientsToExcel}
+                        >
+                            <DownloadIcon sx={{ fontSize: 28 }} />
+                        </IconButton>
                     </Tooltip>
                 </Box>
             </Box>

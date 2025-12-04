@@ -1,6 +1,9 @@
+
+
+
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { ClientFormType, ClientType, responseClientSchema, responseClientsSchema } from "../types";
+import { ClientFormType, ClientsListForExportSchema, ClientType, responseClientSchema, responseClientsSchema } from "../types";
 
 type ClientApi = { 
     page: number;
@@ -96,7 +99,7 @@ export async function getClientsForExport() {
     try {
         const { data } = await api.get("/clients/export-all");
         // No paginación, retorna todos los clientes
-        const response = responseClientsSchema.safeParse(data);
+        const response = ClientsListForExportSchema.safeParse(data);
         if (response.success) {
             return response.data;
         }
