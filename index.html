@@ -1,49 +1,14 @@
-
 <!doctype html>
 <html lang="en">
   <head>
-  <meta charset="UTF-8" />
-
-  <!-- SEO BÁSICO -->
-  <title>Riffas | Participa y gana los mejores premios</title>
-  <meta name="description" content="Participa en las mejores rifas, reserva tus números y recibe tu comprobante digital al instante. ¡Rápido, seguro y confiable!">
-
-  <meta name="keywords" content="riffas, sorteos, premios, loterías, números, tickets, rifas online, comprueba tu número">
-  <meta name="author" content="Riffas">
-
-  <!-- MOBILE -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-
-  <!-- OPEN GRAPH (WhatsApp, Facebook, Instagram, Messenger) -->
-  <meta property="og:title" content="Riffas | Participa y gana" />
-  <meta property="og:description" content="Reserva tus números, recibe tu comprobante y participa por grandes premios." />
-  <meta property="og:image" content="https://tudominio.com/preview.jpg" />
-  <meta property="og:url" content="https://tudominio.com" />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Riffas" />
-
-  <!-- TWITTER CARD -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Riffas | Participa y gana premios reales">
-  <meta name="twitter:description" content="Compra tus números y recibe tu recibo digital. Fácil, rápido y transparente.">
-  <meta name="twitter:image" content="https://tudominio.com/preview.jpg">
-
-  <!-- ICONO -->
-  <link
-    rel="icon"
-    type="image/svg+xml"
-    href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMjAgMjAiPjxwYXRoIGZpbGw9IiMxNDQ2QTAiIGQ9Ik0xMi40MzcgMy4yNUE1IDUgMCAwIDAgMTAuMDAxIDVhNSA1IDAgMCAwLTIuNDM3LTEuNzVBMyAzIDAgMCAxIDEwLjAwMSAyYzEuMDAzIDAgMS44OTIuNDkzIDIuNDM2IDEuMjVtLTguODEgNy45N2E2LjUwNCA2LjUwNCAwIDAgMSA1Ljg1LTUuMmE0IDQgMCAxIDAtNS44NSA1LjE5OW0xMi43NDcgMGE0IDQgMCAxIDAtNS44NS01LjE5OWE2LjUwNCA2LjUwNCAwIDAgMSA1Ljg1IDUuMTk5TTE1LjUgMTIuNWE1LjUgNS41IDAgMSAxLTExIDBhNS41IDUuNSAwIDAgMSAxMSAwbS03LjUtMmEuNS41IDAgMCAwIC41LjVoMi4yNHEtLjE1NC4yMi0uMzIuNDg1Yy0uNDgzLjc3Mi0xLjAyOCAxLjg0Ni0xLjE2NiAyLjk1M2EuNS41IDAgMSAwIC45OTIuMTI0Yy4xMTItLjg5My41NjctMS44MTkgMS4wMjItMi41NDdhMTEgMTEgMCAwIDEgLjg0My0xLjE2OGwuMDEyLS4wMTRsLjAwNC0uMDA0QS41LjUgMCAwIDAgMTEuNzUgMTBIOC41YS41LjUgMCAwIDAtLjUuNSIvPjwvc3ZnPg=="
-  />
-
-  <!-- FONTS -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-
-  <!-- COLORS → mejora vista previa del navegador -->
-  <meta name="theme-color" content="#1446A0">
-
-</head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMjAgMjAiPjxwYXRoIGZpbGw9IiMxNDQ2QTAiIGQ9Ik0xMi40MzcgMy4yNUE1IDUgMCAwIDAgMTAuMDAxIDVhNSA1IDAgMCAwLTIuNDM3LTEuNzVBMyAzIDAgMCAxIDEwLjAwMSAyYzEuMDAzIDAgMS44OTIuNDkzIDIuNDM2IDEuMjVtLTguODEgNy45N2E2LjUwNCA2LjUwNCAwIDAgMSA1Ljg1LTUuMmE0IDQgMCAxIDAtNS44NSA1LjE5OW0xMi43NDcgMGE0IDQgMCAxIDAtNS44NS01LjE5OWE2LjUwNCA2LjUwNCAwIDAgMSA1Ljg1IDUuMTk5TTE1LjUgMTIuNWE1LjUgNS41IDAgMSAxLTExIDBhNS41IDUuNSAwIDAgMSAxMSAwbS03LjUtMmEuNS41IDAgMCAwIC41LjVoMi4yNHEtLjE1NC4yMi0uMzIuNDg1Yy0uNDgzLjc3Mi0xLjAyOCAxLjg0Ni0xLjE2NiAyLjk1M2EuNS41IDAgMSAwIC45OTIuMTI0Yy4xMTItLjg5My41NjctMS44MTkgMS4wMjItMi41NDdhMTEgMTEgMCAwIDEgLjg0My0xLjE2OGwuMDEyLS4wMTRsLjAwNC0uMDA0QS41LjUgMCAwIDAgMTEuNzUgMTBIOC41YS41LjUgMCAwIDAtLjUuNSIvPjwvc3ZnPg==" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Riffas</title>
+  </head>
   <body class="bg-gris">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

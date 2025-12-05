@@ -12,7 +12,6 @@ import PrivacyPolicyView from "./views/PrivacyPolicyView"
 import PayMethodeView from "./views/indexView/PayMethodeView"
 import ClientView from "./views/indexView/ClientView"
 import WhatsAppView from "./views/indexView/WhatsAppView"
-import PdfView from "./views/PdfView"
 
 
 function Router() {
@@ -24,7 +23,7 @@ function Router() {
                 <Route path="/terms-and-conditions" element={<TermsAndConditionsView/>} />
                 <Route path="/privacy-policy" element={<PrivacyPolicyView/>} />
 
-                <Route path="/pdf/:pdfUrl" element={<PdfView/>} />
+
                 <Route path="*" element={<Error404View/>}/>
 
                 <Route element={<IndexLayout/>}>
@@ -35,6 +34,7 @@ function Router() {
                     <Route path="/clients" element={<ClientView/>} index/>
                     <Route path="/whatsapp" element={<WhatsAppView/>} />
                 </Route>
+
 
                 <Route element={<AuthLayout/>}>
                     <Route path="/auth-login" element={<LoginView/>}/>
