@@ -951,7 +951,32 @@ const uploadPDFToTmpFiles = async (pdfBlob: Blob, filename: string): Promise<str
     }
 };
 
-// 💌 Función para enviar mensaje de WhatsApp CON PDF descargable
+
+// Función para acortar una URL usando CleanURI
+export const shortenUrlWithCleanURI = async (longUrl: string): Promise<string> => {
+    try {
+        const response = await fetch("https://cleanuri.com/api/v1/shorten", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams({ url: longUrl })
+        });
+
+        if (!response.ok) throw new Error("Error acortando la URL");
+
+        const data = await response.json();
+        if (data.result_url) return data.result_url;
+
+        return longUrl;
+    } catch (error) {
+        console.warn("⚠️ No se pudo acortar la URL, se usará la original:", error);
+        return longUrl;
+    }
+};
+
+
+// 💌 Función para enviar mensaje de WhatsApp CON PDF descargable y enlace corto
 export const handleSendMessageToWhatsApp = async ({
     raffle,
     awards,
@@ -968,6 +993,7 @@ export const handleSendMessageToWhatsApp = async ({
     try {
         const pdfBlob = generatePDFBlob({ raffle, awards, pdfData, totalNumbers });
         let pdfUrl: string | undefined;
+        let shortUrl: string | undefined;
 
         if (uploadToCloudinary) {
             const filename = `${Date.now().toString(36)}.pdf`;
@@ -975,7 +1001,6 @@ export const handleSendMessageToWhatsApp = async ({
                 pdfUrl = await uploadPDFToTmpFiles(pdfBlob, filename);
             } catch (uploadError) {
                 console.warn('⚠️ Error al subir PDF a tmpfiles.org:', uploadError);
-            // Continúa sin archivo si falla la subida
             }
         }
 
@@ -1011,11 +1036,16 @@ export const handleSendMessageToWhatsApp = async ({
 
         if (pdfUrl) {
             const visualizadorUrl = `${window.location.origin}/pdf-view/${encodeURIComponent(pdfUrl)}`;
-            defaultMessage += `\n\n📄 Recibo Digital Disponible\n🔗 Visualízalo aquí: ${visualizadorUrl}\nℹ️ Haz clic en el enlace para ver y descargar tu recibo en PDF`;
+
+            // 👉 ACORTAR LA URL CON CLEANURI
+            shortUrl = await shortenUrlWithCleanURI(visualizadorUrl);
+
+            defaultMessage += `\n\n📄 Recibo Digital Disponible\nDescargar recibo: ${shortUrl}`;
         }
 
         const message = customMessage || defaultMessage;
         const whatsappUrl = `https://wa.me/${phoneNumber.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(message.normalize('NFC'))}`;
+
         window.open(whatsappUrl, '_blank');
 
         return { success: true, pdfBlob, pdfUrl, whatsappUrl, message };
@@ -1023,6 +1053,7 @@ export const handleSendMessageToWhatsApp = async ({
         return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
     }
 };
+
 
 // Función para redirigir al propietario al WhatsApp tras compra exitosa
 export const redirectOwnerToWhatsApp = ({

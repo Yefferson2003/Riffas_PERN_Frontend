@@ -46,50 +46,39 @@ function PdfView() {
                     alignItems: 'center',
                     boxShadow: '0 4px 24px rgba(20,70,160,0.12)'
                 }}>
-                    <Typography variant="h4" fontWeight={700} color="#1446A0" align="center" mb={3}>
-                        Visualizador de PDF
+                    <Typography variant="h4" fontWeight={700} color="#1446A0" align="center" mb={2}>
+                        ¡Gracias por tu compra!
+                    </Typography>
+                    <Typography variant="h6" color="#1E90FF" align="center" mb={2}>
+                        Tu recibo está listo para descargar
+                    </Typography>
+                    <Typography color="#1446A0" align="center" fontWeight={500} fontSize="1.1rem" mb={3}>
+                        Te deseamos mucha suerte en la rifa 🍀<br />
+                        Si tienes dudas, contáctanos.<br />
+                        <span style={{fontWeight:700}}>¡Guarda tu recibo para cualquier reclamo!</span>
                     </Typography>
                     {decodedUrl ? (
-                        <>
-                            <Box sx={{
-                                width: '100%',
-                                maxWidth: 600,
-                                height: { xs: '60vh', sm: '70vh' },
-                                mb: 3,
+                        <Button
+                            variant="contained"
+                            size="large"
+                            sx={{
+                                background: 'linear-gradient(90deg, #1446A0 60%, #1E90FF 100%)',
+                                color: '#fff',
+                                fontWeight: 600,
+                                fontSize: '1.1rem',
                                 borderRadius: 2,
-                                overflow: 'hidden',
-                                border: '2px solid #1446A0',
-                                background: '#F4F8FF',
-                                boxShadow: '0 2px 8px rgba(20,70,160,0.08)'
-                            }}>
-                                <iframe
-                                    src={decodedUrl}
-                                    title="PDF"
-                                    style={{ width: '100%', height: '100%', border: 'none' }}
-                                    allow="autoplay"
-                                />
-                            </Box>
-                            <Button
-                                variant="contained"
-                                size="large"
-                                sx={{
-                                    background: 'linear-gradient(90deg, #1446A0 60%, #1E90FF 100%)',
-                                    color: '#fff',
-                                    fontWeight: 600,
-                                    fontSize: '1.1rem',
-                                    borderRadius: 2,
-                                    boxShadow: '0 2px 8px rgba(20,70,160,0.10)',
-                                    px: 4,
-                                    py: 1.5,
-                                    '&:hover': {
-                                        background: '#1E90FF',
-                                    }
-                                }}
-                                onClick={handleDownload}
-                            >
-                                Descargar PDF
-                            </Button>
-                        </>
+                                boxShadow: '0 2px 8px rgba(20,70,160,0.10)',
+                                px: 4,
+                                py: 1.5,
+                                mb: 2,
+                                '&:hover': {
+                                    background: '#1E90FF',
+                                }
+                            }}
+                            onClick={handleDownload}
+                        >
+                            Descargar Recibo PDF
+                        </Button>
                     ) : (
                         <Typography color="#1446A0" align="center" fontWeight={500} fontSize="1.1rem">
                             No se encontró el PDF o la URL es inválida.
