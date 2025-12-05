@@ -268,7 +268,7 @@ export const generateRafflePurchaseMessage = ({
             .reduce((acc, p) => acc + Number(p.amount), 0);
         paymentTypeMessage = `Has realizado abonos por un total de *${formatCurrencyCOP(abonosValidos)}* para la rifa *"${infoRaffle.name}"* 💸`;
     } else if (amount === 0) {
-        paymentTypeMessage = `Has apartado el/los número(s) en la rifa *"${infoRaffle.name.trim()}"* 🎟`;
+        paymentTypeMessage = `Has apartado el/los número(s) en la rifa *"${infoRaffle.name.trim()}"* 🏷️`;
     } else if (amount < rafflePrice) {
         paymentTypeMessage = `Has realizado un abono de *${formatCurrencyCOP(amount)}* para la rifa *"${infoRaffle.name}"* 💵`;
     } else if (amount === rafflePrice * numbers.length) {
@@ -296,12 +296,12 @@ ${paymentTypeMessage}
 💬 Descripción: *${infoRaffle.description.trim()}*
 💵 Valor por número: *${formatCurrencyCOP(rafflePrice)}*
 📉 Deuda actual: *${formatCurrencyCOP(deuda)}*
-🗓 Fecha del sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*
-🕒 Reservado: *${formatDateTimeLarge(reservedDate ?? "")}*
+🗓️ Fecha del sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*
+⏰ Reservado: *${formatDateTimeLarge(reservedDate ?? "")}*
 
 Si tienes alguna pregunta, estamos aquí para ayudarte 🤝
 
-Saludos,  
+Saludos,
 *${infoRaffle.responsable.trim()}*
 `.trim();
 
@@ -1043,7 +1043,7 @@ export const handleSendMessageToWhatsApp = async ({
             defaultMessage += `\n\n📄 *Recibo Digital Disponible*`;
             defaultMessage += `\n🔗 Visualízalo aquí: ${visualizadorUrl}`;
             defaultMessage += `\n⏰ Disponible por *6 horas*`;
-            defaultMessage += `\n💡 _Haz clic en el enlace para ver y descargar tu recibo en PDF_`;
+            defaultMessage += `\nℹ️ _Haz clic en el enlace para ver y descargar tu recibo en PDF_`;
         }
         
         const message = customMessage || defaultMessage;
