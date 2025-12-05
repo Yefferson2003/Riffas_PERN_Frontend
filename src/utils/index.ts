@@ -976,6 +976,7 @@ export const handleSendMessageToWhatsApp = async ({
 
 
         let pdfUrl: string | undefined;
+        let previewUrl: string | undefined;
         
         if (uploadToCloudinary) {
             // Crear nombre de archivo único
@@ -1038,9 +1039,13 @@ export const handleSendMessageToWhatsApp = async ({
         }
         
         if (pdfUrl) {
+
+            const encodedPdfUrl = encodeURIComponent(pdfUrl);
+            previewUrl = `${window.location.origin}/pdf/${encodedPdfUrl}`;
+            
             // � Agregar enlace del PDF descargable
             defaultMessage += `\n\n📄 *Recibo Digital Disponible*`;
-            defaultMessage += `\n🔗 Descarga aquí: ${pdfUrl}`;
+            defaultMessage += `\n🔗 Descarga aquí: ${previewUrl}`;
             defaultMessage += `\n⏰ Disponible por *6 horas*`;
             defaultMessage += `\n💡 _Haz clic en el enlace para descargar tu recibo en PDF_`;
         }
@@ -1058,9 +1063,9 @@ export const handleSendMessageToWhatsApp = async ({
         return {
             success: true,
             pdfBlob,
-            pdfUrl,
+            pdfUrl: previewUrl,
             whatsappUrl,
-            message: pdfUrl 
+            message: previewUrl 
                 ? '✅ PDF generado, subido a tmpfiles.org (6 horas) y WhatsApp abierto'
                 : '✅ PDF generado y WhatsApp abierto (sin subida externa)'
         };
