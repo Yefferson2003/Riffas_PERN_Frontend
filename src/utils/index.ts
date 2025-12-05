@@ -1038,11 +1038,12 @@ export const handleSendMessageToWhatsApp = async ({
         }
         
         if (pdfUrl) {
-            // � Agregar enlace del PDF descargable
+            // Generar URL para el visualizador de PDF con la URL codificada
+            const visualizadorUrl = `${window.location.origin}/pdf-view/${encodeURIComponent(pdfUrl)}`;
             defaultMessage += `\n\n📄 *Recibo Digital Disponible*`;
-            defaultMessage += `\n🔗 Descarga aquí: ${pdfUrl}`;
+            defaultMessage += `\n🔗 Visualízalo aquí: ${visualizadorUrl}`;
             defaultMessage += `\n⏰ Disponible por *6 horas*`;
-            defaultMessage += `\n💡 _Haz clic en el enlace para descargar tu recibo en PDF_`;
+            defaultMessage += `\n💡 _Haz clic en el enlace para ver y descargar tu recibo en PDF_`;
         }
         
         const message = customMessage || defaultMessage;
