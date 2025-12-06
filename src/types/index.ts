@@ -555,7 +555,7 @@ export const raffleNumberExelSchema = raffleNumbersSchema.pick({
             firstName: z.string(),
             lastName: z.string(),
             identificationNumber: z.string()
-        })
+        }).optional().nullable()
     }))
 })
 export const responseRaffleNumbersExelSchema = ResponsePaginationSchema.pick({

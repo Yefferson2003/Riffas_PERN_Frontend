@@ -82,6 +82,9 @@ export async function getRaffleNumersExel({params, raffleId} : {params : object,
     try { 
         const {data} = await api.get(`/raffles-numbers/${raffleId}/exel`, {params})
         const response = responseRaffleNumbersExelSchema.safeParse(data)
+
+
+
         if (response.success) {
             return response.data
         }

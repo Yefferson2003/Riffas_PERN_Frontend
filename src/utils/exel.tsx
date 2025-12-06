@@ -13,6 +13,7 @@ export const fetchRaffleNumbers = async (raffleId: number) => {
         if (data) {
             return data.raffleNumbers
         }
+        
 
     } catch (error) {
         console.log(error);
@@ -530,7 +531,12 @@ export const exportRaffleNumbers = async (raffleId: string | undefined, nitRespo
                 lastName: raffle.lastName || '---',
                 phone: raffle.phone || '---',
                 address: raffle.address || '---',
-                vendedor: `${raffle.payments.find(payment => payment.user && payment.isValid === true)?.user.firstName || '---'} ${raffle.payments.find(payment => payment.user && payment.isValid === true)?.user.lastName || '---'}`,
+                vendedor: (() => {
+                    const validPayment = raffle.payments.find(payment => payment.user && payment.isValid === true);
+                    const firstName = validPayment?.user?.firstName ?? '---';
+                    const lastName = validPayment?.user?.lastName ?? '---';
+                    return `${firstName} ${lastName}`;
+                })(),
                 paymentAmount: +raffle.paymentAmount || 0,
                 paymentDue: +raffle.paymentDue || 0,
                 payments: raffle.payments.reduce((sum, payment) => sum + +payment.amount, 0) - +raffle.paymentAmount
