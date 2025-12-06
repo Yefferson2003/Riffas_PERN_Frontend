@@ -813,4 +813,15 @@ export const ClientsListForExportSchema = z.object({
     clients: z.array(ResponseClientSchema)
 })
 
+export const ClientSelectSchema = ResponsePaginationSchema.extend({
+    clients: z.array(ClientSchema.pick({
+        id: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        address: true,
+    }))
+})
+
+export type ClientSelectType = z.infer<typeof ClientSelectSchema>
 export type ResponseClientType = z.infer<typeof ResponseClientSchema>

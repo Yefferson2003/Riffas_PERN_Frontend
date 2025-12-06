@@ -1,7 +1,7 @@
 import { QueryObserverResult, RefetchOptions, useQuery } from "@tanstack/react-query"
 import { Navigate, useParams } from "react-router-dom"
 import { getRaffleNumberById } from "../../api/raffleNumbersApi"
-import { AwardType, Raffle, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types"
+import { AwardType, ClientSelectType, Raffle, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types"
 import ViewRaffleNumberModal from "./ViewRaffleNumberModal"
 
 export type InfoRaffleType = {
@@ -14,6 +14,12 @@ export type InfoRaffleType = {
 }
 
 type ViewRaffleNumberDataProps = {
+    clientSelectInput?: ClientSelectType
+    clientPage: number
+    clientSearch: string
+    setClientPage: React.Dispatch<React.SetStateAction<number>>
+    setClientSearch: React.Dispatch<React.SetStateAction<string>>
+    isLoadingClients: boolean
     raffle: Raffle
     awards: AwardType[]
     totalNumbers: number
@@ -31,7 +37,7 @@ type ViewRaffleNumberDataProps = {
     // }
 }
 
-function ViewRaffleNumberData({ awards, raffle, totalNumbers, infoRaffle, setPaymentsSellNumbersModal, setPdfData, refetch, setUrlWasap} : ViewRaffleNumberDataProps) {
+function ViewRaffleNumberData({clientSelectInput, clientPage, clientSearch, setClientPage, setClientSearch, isLoadingClients, awards, raffle, totalNumbers, infoRaffle, setPaymentsSellNumbersModal, setPdfData, refetch, setUrlWasap,} : ViewRaffleNumberDataProps) {
     const queryParams = new URLSearchParams(location.search)
     const modalviewRaffleNumber = queryParams.get('viewRaffleNumber')
     const raffleNumberId = Number(modalviewRaffleNumber)
@@ -46,6 +52,12 @@ function ViewRaffleNumberData({ awards, raffle, totalNumbers, infoRaffle, setPay
 
     if (isError) return <Navigate to={'/404'}/> 
     if (data) return <ViewRaffleNumberModal 
+        clientSelectInput={clientSelectInput}
+        clientPage={clientPage}
+        clientSearch={clientSearch}
+        setClientPage={setClientPage}
+        setClientSearch={setClientSearch}
+        isLoadingClients={isLoadingClients}
         awards={awards}
         pdfData={[data]}
         raffle={raffle}

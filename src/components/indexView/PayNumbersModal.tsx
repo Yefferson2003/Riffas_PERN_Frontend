@@ -1,14 +1,16 @@
 import CircularProgress from '@mui/material/CircularProgress';
 import { Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Modal, Select, SelectChangeEvent, Switch, TextField } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+// Importar el componente ClientSelectInput
+import ClientSelectInput from "./raffleNumber/ClientSelectInput";
 import { Controller, useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getActiveRafflePayMethods } from "../../api/payMethodeApi";
 import { getRaffleNumbersPending, sellNumbers } from "../../api/raffleNumbersApi";
 import { getRaffleById } from "../../api/raffleApi";
-import { AwardType, PayNumbersForm, RaffleNumbersPayments } from "../../types";
+import { AwardType, ClientSelectType, PayNumbersForm, RaffleNumbersPayments } from "../../types";
 import { capitalize, formatCurrencyCOP, formatWithLeadingZeros, handleSendMessageToWhatsApp, redirectToWhatsApp } from "../../utils";
 import { NumbersSelectedType } from "../../views/indexView/RaffleNumbersView";
 import ButtonCloseModal from "../ButtonCloseModal";
@@ -42,11 +44,19 @@ type PayNumbersModalProps = {
     setPaymentsSellNumbersModal: React.Dispatch<React.SetStateAction<boolean>>
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
     setUrlWasap: React.Dispatch<React.SetStateAction<string>>
+    // Props para ClientSelectInput
+    clientSelectInput?: ClientSelectType
+    clientPage: number
+    setClientPage: React.Dispatch<React.SetStateAction<number>>
+    clientSearch: string
+    setClientSearch: React.Dispatch<React.SetStateAction<string>>
+    isLoadingClientSelectInput?: boolean
 }
+    
 
 type ActionModeType = 'buy' | 'separate';
 
-function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap} : PayNumbersModalProps) {
+function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap, clientPage, setClientPage, clientSearch, setClientSearch, isLoadingClientSelectInput, clientSelectInput } : PayNumbersModalProps) {
 
     const queryClient = useQueryClient()
 
@@ -345,6 +355,25 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
             }
         })
     }
+
+    // Estado local para el cliente seleccionado
+    const [selectedClientId, setSelectedClientId] = useState<number | ''>('');
+
+    // Verificar si todos los números seleccionados están disponibles
+    const allAvailable = numbersSeleted.length > 0 && numbersSeleted.every(n => n.status === 'available');
+
+    // Cuando selecciona un cliente, rellenar los datos
+    useEffect(() => {
+        if (selectedClientId && clientSelectInput) {
+            const client = clientSelectInput.clients.find((c) => c.id === selectedClientId);
+            if (client) {
+                setValue('firstName', client.firstName || '');
+                setValue('lastName', client.lastName || '');
+                setValue('phone', client.phone || '');
+                setValue('address', client.address || '');
+            }
+        }
+    }, [selectedClientId, clientSelectInput, setValue]);
 
     return (
         <Modal
@@ -742,6 +771,20 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                             </>
                         ) : (
                             <React.Fragment>
+                            {/* ClientSelectInput solo si todos los números están disponibles */}
+                            {allAvailable && (
+                                <ClientSelectInput
+                                    raffleNumberStatus="available"
+                                    clientSelectInput={clientSelectInput}
+                                    selectedClientId={selectedClientId}
+                                    setSelectedClientId={setSelectedClientId}
+                                    clientPage={clientPage}
+                                    setClientPage={setClientPage}
+                                    clientSearch={clientSearch}
+                                    setClientSearch={setClientSearch}
+                                    isLoadingClients={isLoadingClientSelectInput}
+                                />
+                            )}
                             <TextField id="firstName" label="Nombres" variant="outlined" 
                                 error={!!errors.firstName}
                                 helperText={errors.firstName?.message}
@@ -758,6 +801,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                                         color: raffle?.color || '#1976d2',
                                     },
                                 }}
+                                InputLabelProps={{ shrink: true }}
                                 {...register('firstName', {required: 'Nombres Obligatorio'})}
                             />
                             <TextField id="lastName" label="Apellidos" variant="outlined" 
@@ -776,6 +820,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                                         color: raffle?.color || '#1976d2',
                                     },
                                 }}
+                                InputLabelProps={{ shrink: true }}
                                 {...register('lastName', {required: 'Apellidos Obligatorio'})}
                             />
                             <p 
@@ -809,6 +854,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                                         color: raffle?.color || '#1976d2',
                                     },
                                 }}
+                                InputLabelProps={{ shrink: true }}
                                 {...register('address', {required: 'Dirección Obligatoria'})}
                             />
                             <FormControl>

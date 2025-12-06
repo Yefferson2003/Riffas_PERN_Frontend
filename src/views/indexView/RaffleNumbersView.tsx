@@ -42,6 +42,7 @@ import { capitalize, colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeL
 import { exelRaffleNumbersFilter, exelRaffleNumbersFilterDetails } from '../../utils/exel';
 import LoaderView from "../LoaderView";
 import '../../styles/mobile-fixes.css';
+import { getClientsForSelect } from '../../api/clientApi';
 
 export type NumbersSelectedType = {
     numberId: number, 
@@ -241,7 +242,12 @@ function RaffleNumbersView() {
 
     // const { data: raffle, isLoading :isLoadingRaffle , isError: isErrorRaffle } = useRaffleById(parsedRaffleId!);
 
-    const [raffleNumbersData, raffleData, awardsData, expensesTotalData, expensesTotalByUserData, usersRaffleData, payMethodsData] = useQueries({
+    // Estados para paginación y búsqueda de clientes
+    const [clientPage, setClientPage] = useState<number>(1);
+    const [clientRowsPerPage] = useState<number>(10);
+    const [clientSearch, setClientSearch] = useState<string>('');
+
+    const [raffleNumbersData, raffleData, awardsData, expensesTotalData, expensesTotalByUserData, usersRaffleData, payMethodsData, clientSelectInputData] = useQueries({
         queries: [
             {
                 queryKey: ['raffleNumbers', searchParams.search, raffleId, filter, page, rowsPerPage, searchParams.searchAmount, paymentMethodFilter, startDate?.format('YYYY-MM-DD'), endDate?.format('YYYY-MM-DD'), userFilter],
@@ -292,6 +298,12 @@ function RaffleNumbersView() {
                 queryKey: ['rafflePayMethods', raffleId],
                 queryFn: () => getActiveRafflePayMethods(raffleId!),
                 enabled: !!raffleId,
+            },
+            {
+                queryKey: ['clientSelectInput', raffleId, clientPage, clientRowsPerPage, clientSearch],
+                queryFn: () => getClientsForSelect({limit: clientRowsPerPage, page: clientPage, search: clientSearch}),
+                enabled: !!raffleId,
+                
             }
         ]
     });
@@ -303,6 +315,8 @@ function RaffleNumbersView() {
     const { data: expenseTotalByUser, refetch: refechtExpenseTotalByUser,} = expensesTotalByUserData
     const { data: usersRaffle,} = usersRaffleData
     const { data: payMethods, isLoading: isLoadingPayMethods} = payMethodsData
+    const { data: clientSelectInput, isLoading: isLoadingClientSelectInput} = clientSelectInputData
+    
     
     const handleNavigateViewRaffleNumber = (raffleNumberId: number) => {
         const params = new URLSearchParams(window.location.search);
@@ -527,7 +541,7 @@ function RaffleNumbersView() {
                 />
             </div>
 
-                            {/* Componente de progreso de la rifa */}
+            {/* Componente de progreso de la rifa */}
             {raffle && raffle.totalNumbers && (
                 <RaffleProgressBar 
                     numbersByStatus={raffle.numbersByStatus}
@@ -1056,6 +1070,12 @@ function RaffleNumbersView() {
                 refechtRaffle={refechtRaffle}
             />}
             {raffle && raffleNumbers && <PayNumbersModal
+            clientSelectInput={clientSelectInput}
+                clientPage={clientPage}
+                clientSearch={clientSearch}
+                setClientPage={setClientPage}
+                setClientSearch={setClientSearch}
+                isLoadingClientSelectInput={isLoadingClientSelectInput}
                 refetch={handleRefetch}
                 awards={awards || []}
                 totalNumbers={raffle.totalNumbers || 0}
@@ -1079,6 +1099,12 @@ function RaffleNumbersView() {
                 urlWasap={urlWasap}
             />}
             {raffle && raffleNumbers && <ViewRaffleNumberData
+                clientSelectInput={clientSelectInput}
+                clientPage={clientPage}
+                clientSearch={clientSearch}
+                setClientPage={setClientPage}
+                setClientSearch={setClientSearch}
+                isLoadingClients={isLoadingClientSelectInput}
                 totalNumbers={raffle.totalNumbers || 0}
                 raffle={raffle}
                 awards={awards || []}

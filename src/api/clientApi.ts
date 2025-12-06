@@ -3,7 +3,7 @@
 
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { ClientFormType, ClientsListForExportSchema, ClientType, responseClientSchema, responseClientsSchema } from "../types";
+import { ClientFormType, ClientSelectSchema, ClientsListForExportSchema, ClientType, responseClientSchema, responseClientsSchema } from "../types";
 
 type ClientApi = { 
     page: number;
@@ -112,3 +112,30 @@ export async function getClientsForExport() {
         throw error;
     }
 }
+
+// Obtener todos los clientes para exportación (sin paginación, datos completos)
+export async function getClientsForSelect({ page, limit, search } : Pick<ClientApi, 'page' | 'limit' | 'search'>) {
+    try {
+        const { data } = await api.get("/clients/select-input", { params: { 
+            page, 
+            limit, 
+            search 
+        } });
+        // Validar con el schema si es necesario
+        const response = ClientSelectSchema.safeParse(data);
+        console.log('error page',response.error);
+        
+        if (response.success) {
+            return response.data;
+        }
+        throw new Error("Respuesta inválida del backend");
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+        throw error;
+    }
+}
+
+

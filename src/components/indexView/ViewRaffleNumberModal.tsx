@@ -6,10 +6,11 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getActiveRafflePayMethods } from "../../api/payMethodeApi";
 import { amountNumber, updateNumber } from "../../api/raffleNumbersApi";
-import { AwardType, PayNumberForm, Raffle, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types";
+import { AwardType, ClientSelectType, PayNumberForm, Raffle, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types";
 import { capitalize, formatCurrencyCOP, formatWithLeadingZeros, handleSendMessageToWhatsApp, redirectToWhatsApp, sendPaymentReminderWhatsApp } from "../../utils";
 import PhoneNumberInput from "../PhoneNumberInput";
 import ButtonsRaffleModal from "./raffleNumber/ButtonsRaffleModal";
+import ClientSelectInput from "./raffleNumber/ClientSelectInput";
 import RaflleNumberPaymentsHistory from "./RaflleNumberPaymentsHistory";
 import { InfoRaffleType } from "./ViewRaffleNumberData";
 
@@ -30,6 +31,12 @@ const style = {
 };
 
 type ViewRaffleNumberModalProps = {
+    clientSelectInput?: ClientSelectType
+    clientPage: number
+    clientSearch: string
+    setClientPage: React.Dispatch<React.SetStateAction<number>>
+    setClientSearch: React.Dispatch<React.SetStateAction<string>>
+    isLoadingClients: boolean
     pdfData: RaffleNumbersPayments
     raffle: Raffle
     awards: AwardType[]
@@ -42,7 +49,7 @@ type ViewRaffleNumberModalProps = {
     setUrlWasap: React.Dispatch<React.SetStateAction<string>>
 }
 
-function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaffle, raffleNumber,setPaymentsSellNumbersModal, setPdfData, refetch, setUrlWasap} : ViewRaffleNumberModalProps) {
+function ViewRaffleNumberModal({ clientSelectInput, clientPage, clientSearch, setClientPage, setClientSearch, isLoadingClients, awards, pdfData, raffle, totalNumbers, infoRaffle, raffleNumber,setPaymentsSellNumbersModal, setPdfData, refetch, setUrlWasap} : ViewRaffleNumberModalProps) {
     const navigate = useNavigate(); 
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -66,6 +73,8 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
     });
 
     const [priceEspecial, setPriceEspecial] = useState(false)
+    // Estado para el cliente seleccionado
+    const [selectedClientId, setSelectedClientId] = useState<number | ''>('');
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setPriceEspecial(event.target.checked);
@@ -264,12 +273,37 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
         mutateUpdateNumber(data)
     }
 
+    // Cuando selecciona un cliente, rellenar los datos
+    useEffect(() => {
+    if (selectedClientId && clientSelectInput) {
+        const client = clientSelectInput.clients.find(c => c.id === selectedClientId);
+        if (client) {
+            setValue('firstName', client.firstName || '');
+            setValue('lastName', client.lastName || '');
+            setValue('phone', client.phone || '');
+            setValue('address', client.address || '');
+            // reset({
+            //     firstName: client.firstName || '',
+            //     lastName: client.lastName || '',
+            //     phone: client.phone || '',
+            //     address: client.address || ''
+            // }); // Reiniciar el formulario antes de establecer nuevos valores
+        }
+    }
+    }, [selectedClientId, clientSelectInput, setValue]);
+
+    // Función para cerrar el modal y reiniciar paginación/búsqueda de clientes
+    const handleCloseModal = () => {
+        // Reiniciar paginación y búsqueda de clientes
+        setClientPage(1);
+        setClientSearch('');
+        navigate(location.pathname, {replace: true});
+    };
+
     return (
         <Modal
             open={show}
-            onClose={() => {
-                navigate(location.pathname, {replace: true})
-            }}
+            onClose={handleCloseModal}
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
         >
@@ -447,6 +481,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                             />
                         )}
 
+
                         {raffleNumber.status != 'sold' && (
                             <FormControl error={!!errors.paymentMethod} size="small">
                                 <InputLabel 
@@ -576,6 +611,18 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                         </>
                     )}
 
+                    <ClientSelectInput
+                        raffleNumberStatus={raffleNumber.status}
+                        clientSelectInput={clientSelectInput}
+                        selectedClientId={selectedClientId}
+                        setSelectedClientId={setSelectedClientId}
+                        clientPage={clientPage}
+                        clientSearch={clientSearch}
+                        setClientPage={setClientPage}
+                        setClientSearch={setClientSearch}
+                        isLoadingClients={isLoadingClients}
+                    />
+
                     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
                         <TextField 
                             id="firstName" 
@@ -584,6 +631,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                             size="small"
                             error={!!errors.firstName}
                             helperText={errors.firstName?.message}
+                            
                             sx={{
                                 '& .MuiOutlinedInput-root': {
                                     '& fieldset': {
@@ -600,6 +648,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                                     color: raffle?.color || '#1976d2',
                                 },
                             }}
+                            InputLabelProps={{ shrink: true }}
                             {...register('firstName', {required: 'Nombres Obligatorio'})}
                         />
                         <TextField 
@@ -625,6 +674,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                                     color: raffle?.color || '#1976d2',
                                 },
                             }}
+                            InputLabelProps={{ shrink: true }}
                             {...register('lastName', {required: 'Apellidos Obligatorio'})}
                         />
                     </Box>
@@ -664,6 +714,7 @@ function ViewRaffleNumberModal({ awards, pdfData, raffle, totalNumbers, infoRaff
                                 color: raffle?.color || '#1976d2',
                             },
                         }}
+                        InputLabelProps={{ shrink: true }}
                         {...register('address', {required: 'Dirección Obligatoria'})}
                     />
 
