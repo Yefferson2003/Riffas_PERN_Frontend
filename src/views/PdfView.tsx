@@ -55,7 +55,7 @@ function PdfView() {
                     <Typography color="#1446A0" align="center" fontWeight={500} fontSize="1.1rem" mb={3}>
                         Te deseamos mucha suerte en la rifa 🍀<br />
                         Si tienes dudas, contáctanos.<br />
-                        <span style={{fontWeight:700}}>¡Guarda tu recibo para cualquier reclamo!</span>
+                        <span style={{fontWeight:700}}>¡Descarga y guarda tu recibo!</span>
                     </Typography>
                     {decodedUrl ? (
                         <Button

@@ -257,19 +257,30 @@ export const generateRafflePurchaseMessage = ({
         const totalAbonado = abonosValidos + amount;
         deuda = Math.max((rafflePrice * numbers.length) - totalAbonado, 0);
     } else {
+        // Calcular deuda considerando múltiples números
         const totalCost = rafflePrice * numbers.length;
         const totalPaid = amount + (abonosPendientes || 0);
         deuda = Math.max(totalCost - totalPaid, 0);
     }
 
-    const numbersList = numbers.map(n => formatWithLeadingZeros(n.number, totalNumbers)).join(", ");
+    const numbersList = numbers
+        .map(n => formatWithLeadingZeros(n.number, totalNumbers))
+        .join(", ");
 
     if (resumen) {
-        // Solo lo esencial
-        return `*Hola ${name.trim()}*\nNúmeros: ${numbersList}\nDeuda: ${formatCurrencyCOP(deuda)}\nSorteo: ${formatDateTimeLarge(infoRaffle.playDate)}`;
+        // Solo lo esencial, formato bonito y emojis
+        return [
+            `✨ *¡Gracias por tu compra, ${name.trim()}!* ✨`,
+            '',
+            `🔢 *Números:* ${numbersList}`,
+            `📉 *Deuda actual:* ${formatCurrencyCOP(deuda)}`,
+            `🗓️ *Fecha del sorteo:* ${formatDateTimeLarge(infoRaffle.playDate)}`,
+            `⏰ *Reservado:* ${formatDateTimeLarge(reservedDate ?? "")}`,
+            '',
+            '🍀 ¡Mucha suerte! 🍀',
+        ].join('\n');
     }
 
-    // ...resto de la función igual...
     let paymentTypeMessage = "";
     if (payments && statusRaffleNumber === "pending" && payments?.length > 0) {
         const abonosValidos = payments
@@ -281,11 +292,13 @@ export const generateRafflePurchaseMessage = ({
     } else if (amount < rafflePrice) {
         paymentTypeMessage = `Has realizado un abono de *${formatCurrencyCOP(amount)}* para la rifa *"${infoRaffle.name}"* 💵`;
     } else if (amount === rafflePrice * numbers.length) {
+        // Pago completo solo si cubre TODOS los números
         paymentTypeMessage = `Has realizado el pago completo de *${formatCurrencyCOP(amount)}* para la rifa *"${infoRaffle.name}"* ✅`;
     } else {
         paymentTypeMessage = `Has realizado un pago de *${formatCurrencyCOP(amount)}* para la rifa *"${infoRaffle.name}"* 💰`;
     }
 
+    // Mensaje completo (no resumen)
     const message = `
 ✨ Hola *${name.trim()}*
 
@@ -951,32 +964,7 @@ const uploadPDFToTmpFiles = async (pdfBlob: Blob, filename: string): Promise<str
     }
 };
 
-
-// Función para acortar una URL usando CleanURI
-export const shortenUrlWithCleanURI = async (longUrl: string): Promise<string> => {
-    try {
-        const response = await fetch("https://cleanuri.com/api/v1/shorten", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: new URLSearchParams({ url: longUrl })
-        });
-
-        if (!response.ok) throw new Error("Error acortando la URL");
-
-        const data = await response.json();
-        if (data.result_url) return data.result_url;
-
-        return longUrl;
-    } catch (error) {
-        console.warn("⚠️ No se pudo acortar la URL, se usará la original:", error);
-        return longUrl;
-    }
-};
-
-
-// 💌 Función para enviar mensaje de WhatsApp CON PDF descargable y enlace corto
+// 💌 Función para enviar mensaje de WhatsApp CON PDF descargable
 export const handleSendMessageToWhatsApp = async ({
     raffle,
     awards,
@@ -993,7 +981,6 @@ export const handleSendMessageToWhatsApp = async ({
     try {
         const pdfBlob = generatePDFBlob({ raffle, awards, pdfData, totalNumbers });
         let pdfUrl: string | undefined;
-        let shortUrl: string | undefined;
 
         if (uploadToCloudinary) {
             const filename = `${Date.now().toString(36)}.pdf`;
@@ -1001,6 +988,7 @@ export const handleSendMessageToWhatsApp = async ({
                 pdfUrl = await uploadPDFToTmpFiles(pdfBlob, filename);
             } catch (uploadError) {
                 console.warn('⚠️ Error al subir PDF a tmpfiles.org:', uploadError);
+            // Continúa sin archivo si falla la subida
             }
         }
 
@@ -1030,22 +1018,17 @@ export const handleSendMessageToWhatsApp = async ({
                 awards,
                 reservedDate: firstEntry.reservedDate ?? null,
                 priceRaffleNumber,
-                resumen: true,
+                resumen: true
             });
         }
 
         if (pdfUrl) {
             const visualizadorUrl = `${window.location.origin}/pdf-view/${encodeURIComponent(pdfUrl)}`;
-
-            // 👉 ACORTAR LA URL CON CLEANURI
-            shortUrl = await shortenUrlWithCleanURI(visualizadorUrl);
-
-            defaultMessage += `\n\n📄 Recibo Digital Disponible\nDescargar recibo: ${shortUrl}`;
+            defaultMessage += `\n\n📄 Recibo Digital Disponible\n🔗 Visualízalo aquí: ${visualizadorUrl}\nℹ️ Haz clic en el enlace para ver y descargar tu recibo en PDF`;
         }
 
         const message = customMessage || defaultMessage;
         const whatsappUrl = `https://wa.me/${phoneNumber.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(message.normalize('NFC'))}`;
-
         window.open(whatsappUrl, '_blank');
 
         return { success: true, pdfBlob, pdfUrl, whatsappUrl, message };
@@ -1053,7 +1036,6 @@ export const handleSendMessageToWhatsApp = async ({
         return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
     }
 };
-
 
 // Función para redirigir al propietario al WhatsApp tras compra exitosa
 export const redirectOwnerToWhatsApp = ({
