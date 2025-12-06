@@ -268,17 +268,25 @@ export const generateRafflePurchaseMessage = ({
         .join(", ");
 
     if (resumen) {
-        // Solo lo esencial, formato bonito y emojis
-        return [
-            `✨ *¡Gracias por tu compra, ${name.trim()}!* ✨`,
-            '',
-            `🔢 *Números:* ${numbersList}`,
-            `📉 *Deuda actual:* ${formatCurrencyCOP(deuda)}`,
-            `🗓️ *Fecha del sorteo:* ${formatDateTimeLarge(infoRaffle.playDate)}`,
-            `⏰ *Reservado:* ${formatDateTimeLarge(reservedDate ?? "")}`,
-            '',
-            '🍀 ¡Mucha suerte! 🍀',
-        ].join('\n');
+        // Mensaje resumido: saludo con nombre y paymentTypeMessage, números junto al saludo, sin saltos extra ni valor abonado ni valor del número
+        let paymentTypeMessage = "";
+        if (payments && statusRaffleNumber === "pending" && payments?.length > 0) {
+            const abonosValidos = payments
+                .filter(p => p.isValid)
+                .reduce((acc, p) => acc + Number(p.amount), 0);
+            paymentTypeMessage = `Has realizado abonos por un total de *${formatCurrencyCOP(abonosValidos)}* para la rifa *"${infoRaffle.name}"* 💸`;
+        } else if (amount === 0) {
+            paymentTypeMessage = `Has apartado el/los número(s) en la rifa *"${infoRaffle.name.trim()}"* 🏷️`;
+        } else if (amount < rafflePrice) {
+            paymentTypeMessage = `Has realizado un abono de *${formatCurrencyCOP(amount)}* para la rifa *"${infoRaffle.name}"* 💵`;
+        } else if (amount === rafflePrice * numbers.length) {
+            paymentTypeMessage = `Has realizado el pago completo de *${formatCurrencyCOP(amount)}* para la rifa *"${infoRaffle.name}"* ✅`;
+        } else {
+            paymentTypeMessage = `Has realizado un pago de *${formatCurrencyCOP(amount)}* para la rifa *"${infoRaffle.name}"* 💰`;
+        }
+
+        // Mostrar saludo con nombre, tipo de pago y números juntos, valor de la rifa arriba de deuda actual
+            return `*${name.trim()}* ha apartado: ${numbersList}\n${paymentTypeMessage}\n💵 Valor de la rifa: *${formatCurrencyCOP(rafflePrice)}*\n📉 Deuda actual: *${formatCurrencyCOP(deuda)}*\n🗓️ Fecha del sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*\n⏰ Reservado: *${formatDateTimeLarge(reservedDate ?? "")}*`;
     }
 
     let paymentTypeMessage = "";
@@ -1024,7 +1032,7 @@ export const handleSendMessageToWhatsApp = async ({
 
         if (pdfUrl) {
             const visualizadorUrl = `${window.location.origin}/pdf-view/${encodeURIComponent(pdfUrl)}`;
-            defaultMessage += `\n\n📄 Recibo Digital Disponible\n🔗 Visualízalo aquí: ${visualizadorUrl}\nℹ️ Haz clic en el enlace para ver y descargar tu recibo en PDF`;
+            defaultMessage += `\n\n📄 Recibo Digital Disponible\n🔗 Visualízalo aquí: ${visualizadorUrl}`;
         }
 
         const message = customMessage || defaultMessage;
@@ -1035,41 +1043,6 @@ export const handleSendMessageToWhatsApp = async ({
     } catch (error) {
         return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
     }
-};
-
-// Función para redirigir al propietario al WhatsApp tras compra exitosa
-export const redirectOwnerToWhatsApp = ({
-    raffle,
-    selectedNumbers,
-    buyerName,
-    totalNumbers,
-}: {
-    raffle: InfoRaffleType,
-    selectedNumbers: number[],
-    buyerName: string,
-    totalNumbers: number,
-}) => {
-    if (!raffle?.contactRifero) return;
-    // Formatear números con ceros a la izquierda
-    const numbersList = selectedNumbers.map(n => formatWithLeadingZeros(n, totalNumbers)).join(", ");
-    // Valor por unidad
-    const valorUnidad = formatCurrencyCOP(Number(raffle.amountRaffle));
-    const message = `
-Hola,
-
-Se han apartado los siguientes números en la rifa *${raffle.name}*:
-🔢 Números: *${numbersList}*
-💵 Valor por unidad: *${valorUnidad}*
-👤 Cliente: *${buyerName}*
-
-Por favor confirma la reservación y contacta al cliente si es necesario.
-
-Saludos,
-Sistema de Rifas
-`;
-    const encodedMessage = encodeURIComponent(message.trim());
-    const whatsappUrl = `https://wa.me/${raffle.contactRifero}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
 };
 
 export const handleSendReservationToOwnerWhatsApp = async ({
