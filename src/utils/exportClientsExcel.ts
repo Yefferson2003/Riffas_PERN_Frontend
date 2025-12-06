@@ -2,7 +2,7 @@ import { getClientsForExport } from '../api/clientApi';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import dayjs from 'dayjs';
-import { formatCurrencyCOP, translateRaffleStatus } from './index';
+import { formatCurrencyCOP, translateRaffleStatus, formatWithLeadingZeros } from './index';
 import { toast } from 'react-toastify';
 
 export async function exportClientsToExcel() {
@@ -26,7 +26,7 @@ export async function exportClientsToExcel() {
 
         // Encabezados de columnas
         const headers = [
-            'Nombre', 'Apellido', 'Teléfono', 'Dirección', 'Números (Rifa)', 'Fecha Apartado', 'Estado', 'Abonado', 'Deuda'
+            'Nombre', 'Apellido', 'Teléfono', 'Dirección', 'Rifa', 'Número', 'Fecha Apartado', 'Estado', 'Abonado', 'Deuda'
         ];
         worksheet.addRow(headers);
         worksheet.getRow(3).font = { bold: true, size: 12 };
@@ -43,6 +43,9 @@ export async function exportClientsToExcel() {
                         client.phone,
                         client.address,
                         num.raffle?.name || '',
+                        typeof num.number === 'number' && typeof num.raffle?.totalNumbers === 'number'
+                            ? formatWithLeadingZeros(num.number, num.raffle.totalNumbers)
+                            : num.number ?? '',
                         num.reservedDate ? dayjs(num.reservedDate).format('DD/MM/YYYY') : '',
                         translateRaffleStatus(num.status),
                         formatCurrencyCOP(+num.paymentAmount),
@@ -55,14 +58,14 @@ export async function exportClientsToExcel() {
                     client.lastName,
                     client.phone,
                     client.address,
-                    '', '', '', '', ''
+                    '', '', '', '', '', ''
                 ]);
             }
         });
 
         // Ajustar ancho de columnas
         worksheet.columns = [
-            { width: 15 }, { width: 15 }, { width: 15 }, { width: 25 }, { width: 20 }, { width: 15 }, { width: 12 }, { width: 15 }, { width: 15 }
+            { width: 15 }, { width: 15 }, { width: 15 }, { width: 25 }, { width: 20 }, { width: 12 }, { width: 15 }, { width: 12 }, { width: 15 }, { width: 15 }
         ];
 
         // Descargar archivo
