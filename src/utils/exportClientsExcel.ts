@@ -2,7 +2,7 @@ import { getClientsForExport } from '../api/clientApi';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import dayjs from 'dayjs';
-import { formatCurrencyCOP } from './index';
+import { formatCurrencyCOP, translateRaffleStatus } from './index';
 import { toast } from 'react-toastify';
 
 export async function exportClientsToExcel() {
@@ -44,7 +44,7 @@ export async function exportClientsToExcel() {
                         client.address,
                         num.raffle?.name || '',
                         num.reservedDate ? dayjs(num.reservedDate).format('DD/MM/YYYY') : '',
-                        num.status,
+                        translateRaffleStatus(num.status),
                         formatCurrencyCOP(+num.paymentAmount),
                         formatCurrencyCOP(+num.paymentDue)
                     ]);

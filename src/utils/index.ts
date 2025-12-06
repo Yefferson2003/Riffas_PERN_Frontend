@@ -64,7 +64,7 @@ export function capitalizeWords(text: string): string {
 export function translateRaffleStatus(status: StatusRaffleNumbersType): string {
     const translations: Record<typeof status, string> = {
         available: "Disponible",
-        sold: "Pagados",
+        sold: "Pagado",
         pending: "Apartado",
         apartado: "Pendiente"
     };
