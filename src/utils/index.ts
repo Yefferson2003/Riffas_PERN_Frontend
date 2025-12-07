@@ -286,7 +286,12 @@ export const generateRafflePurchaseMessage = ({
         }
 
         // Mostrar saludo con nombre, tipo de pago y números juntos, valor de la rifa arriba de deuda actual
+        if (amount === 0) {
+            // Saludo especial para apartado
+            return `*${name.trim()}* ha apartado: ${numbersList}\n${paymentTypeMessage}\n💵 Valor de la rifa: *${formatCurrencyCOP(rafflePrice)}*\n📉 Deuda actual: *${formatCurrencyCOP(deuda)}*\n🗓️ Fecha del sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*\n⏰ Reservado: *${formatDateTimeLarge(reservedDate ?? "")}*`;
+        } else {
             return `\n${paymentTypeMessage}\n💵 Valor de la rifa: *${formatCurrencyCOP(rafflePrice)}*\n📉 Deuda actual: *${formatCurrencyCOP(deuda)}*\n🗓️ Fecha del sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*\n⏰ Reservado: *${formatDateTimeLarge(reservedDate ?? "")}*`;
+        }
     }
 
     // let paymentTypeMessage = "";
