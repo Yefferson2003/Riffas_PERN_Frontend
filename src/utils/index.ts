@@ -187,6 +187,7 @@ type redirectToWhatsAppType = {
     priceRaffleNumber?: number
     award?: AwardType | undefined
     resumen?: boolean
+    paymentAmount?: number
 }
 
 export const handleMessageToWhatsAppAviso = ({
@@ -242,7 +243,8 @@ export const generateRafflePurchaseMessage = ({
     statusRaffleNumber,
     reservedDate,
     priceRaffleNumber,
-    resumen
+    resumen,
+    paymentAmount
 }: Omit<redirectToWhatsAppType, 'phone'> & { resumen?: boolean }): string => {
     const rafflePrice = priceRaffleNumber ?? +infoRaffle.amountRaffle;
     let deuda = 0;
@@ -272,12 +274,12 @@ export const generateRafflePurchaseMessage = ({
     if (resumen) {
         // Mensaje resumido: saludo con nombre y paymentTypeMessage, números junto al saludo, sin saltos extra ni valor abonado ni valor del número
         let paymentTypeMessage = "";
-        if (payments && statusRaffleNumber === "pending" && payments?.length > 0) {
+        if (payments && statusRaffleNumber === "pending" && payments?.length > 0 && amount !== 0) {
             const abonosValidos = payments
                 .filter(p => p.isValid)
                 .reduce((acc, p) => acc + Number(p.amount), 0);
             paymentTypeMessage = `Has realizado abonos por un total de *${formatCurrencyCOP(abonosValidos)}* para la rifa *"${infoRaffle.name}"* 💸`;
-        } else if (amount === 0) {
+        } else if (paymentAmount === 0 || amount === 0) {
             paymentTypeMessage = `Has apartado el/los número(s) en la rifa *"${infoRaffle.name.trim()}"* 🏷️`;
         } else if (amount < rafflePrice) {
             paymentTypeMessage = `Has realizado un abono de *${formatCurrencyCOP(amount)}* para la rifa *"${infoRaffle.name}"* 💵`;
@@ -288,7 +290,7 @@ export const generateRafflePurchaseMessage = ({
         }
 
         // Mostrar saludo con nombre, tipo de pago y números juntos, valor de la rifa arriba de deuda actual
-        if (amount === 0) {
+        if (amount === 0 || paymentAmount === 0) {
             // Saludo especial para apartado
             return `*${name.trim()}* ha apartado: ${numbersList}\n${paymentTypeMessage}\n💵 Valor de la rifa: *${formatCurrencyCOP(rafflePrice)}*\n📉 Deuda actual: *${formatCurrencyCOP(deuda)}*\n🗓️ Fecha del sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*\n⏰ Reservado: *${formatDateTimeLarge(reservedDate ?? "")}*`;
         } else {
@@ -1174,6 +1176,7 @@ export const handleSendMessageToWhatsApp = async ({
         defaultMessage = generateRafflePurchaseMessage({
             totalNumbers,
             amount: totalAmount,
+            paymentAmount: +firstEntry.paymentAmount,
             infoRaffle: {
                 name: raffle.name,
                 description: raffle.description,
