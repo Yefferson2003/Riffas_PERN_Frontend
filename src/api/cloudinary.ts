@@ -41,18 +41,26 @@ export const uploadPDFToCloudinary = async (
     pdfBlob: Blob, 
     filename?: string,
     options: UploadOptions = {}
-): Promise<UploadResponse> => {
+): Promise<string> => {
     const formData = new FormData();
     
-    // Crear File desde Blob con nombre personalizado
-    const pdfFile = new File([pdfBlob], filename || `recibo_${Date.now()}.pdf`, {
+    // Generar nombre corto único si no se provee
+    function randomShortName() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < 5; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    }
+    const shortName = filename || randomShortName() + '.pdf';
+    const pdfFile = new File([pdfBlob], shortName, {
         type: 'application/pdf'
     });
-    
     formData.append("file", pdfFile);
     formData.append("upload_preset", CLOUDINARY_PRESET);
     formData.append("resource_type", options.resource_type || "raw"); // 'raw' para PDFs
-    
+
     // Opciones adicionales
     if (options.folder) formData.append("folder", options.folder);
     if (options.public_id) formData.append("public_id", options.public_id);
@@ -71,7 +79,7 @@ export const uploadPDFToCloudinary = async (
             size: `${(pdfBlob.size / 1024).toFixed(2)} KB`
         });
         
-        return response.data;
+        return response.data.secure_url;
     } catch (error) {
         console.error('❌ Error al subir PDF a Cloudinary:', error);
         throw new Error(`Error uploading PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -79,58 +87,57 @@ export const uploadPDFToCloudinary = async (
 };
 
 // 🖼️ Función para convertir PDF a imagen en Cloudinary
-export const uploadPDFAsImageToCloudinary = async (
-    pdfBlob: Blob, 
-    filename?: string,
-    options: UploadOptions & { page?: number } = {}
-): Promise<UploadResponse> => {
-    const formData = new FormData();
+// export const uploadPDFAsImageToCloudinary = async (
+//     pdfBlob: Blob, 
+//     filename?: string,
+//     options: UploadOptions & { page?: number } = {}
+// ): Promise<UploadResponse> => {
+//     const formData = new FormData();
     
-    // Crear File desde Blob
-    const pdfFile = new File([pdfBlob], filename || `recibo_${Date.now()}.pdf`, {
-        type: 'application/pdf'
-    });
+//     // Crear File desde Blob
+//     const pdfFile = new File([pdfBlob], filename || `recibo_${Date.now()}.pdf`, {
+//         type: 'application/pdf'
+//     });
     
-    formData.append("file", pdfFile);
-    formData.append("upload_preset", CLOUDINARY_PRESET);
+//     formData.append("file", pdfFile);
+//     formData.append("upload_preset", CLOUDINARY_PRESET);
     
-    // 🔄 Configuración corregida para evitar errores 400
-    // NO usar resource_type="image" para PDFs, Cloudinary lo detecta automáticamente
+//     // 🔄 Configuración corregida para evitar errores 400
+//     // NO usar resource_type="image" para PDFs, Cloudinary lo detecta automáticamente
     
-    // Opciones adicionales
-    if (options.folder) formData.append("folder", options.folder);
-    if (options.public_id) formData.append("public_id", options.public_id);
-    if (options.tags) formData.append("tags", options.tags.join(','));
+//     // Opciones adicionales
+//     if (options.folder) formData.append("folder", options.folder);
+//     if (options.public_id) formData.append("public_id", options.public_id);
+//     if (options.tags) formData.append("tags", options.tags.join(','));
     
-    // ⚙️ Transformaciones como parámetros separados (más compatible)
-    if (options.format) formData.append("format", options.format);
-    if (options.page) formData.append("page", options.page.toString());
+//     // ⚙️ Solo page permitido en unsigned upload
+//     if (options.page) formData.append("page", options.page.toString());
 
-    try {
-        const response = await axios.post<UploadResponse>(CLOUDINARY_URL, formData, {
-            headers: {
-                "Content-Type": "multipart/form-data",
-            },
-        });
+//     try {
+//         const response = await axios.post<UploadResponse>(CLOUDINARY_URL, formData, {
+//             headers: {
+//                 "Content-Type": "multipart/form-data",
+//             },
+//         });
         
-        console.log('🖼️ PDF convertido a imagen en Cloudinary:', {
-            url: response.data.secure_url,
-            public_id: response.data.public_id,
-            format: response.data.format
-        });
+//         console.log('🖼️ PDF convertido a imagen en Cloudinary:', {
+//             url: response.data.secure_url,
+//             public_id: response.data.public_id,
+//             format: response.data.format
+//         });
         
-        return response.data;
-    } catch (error) {
-        console.error('❌ Error al convertir PDF a imagen en Cloudinary:', error);
+//         return response.data;
+//     } catch (error) {
+//         console.error('❌ Error al convertir PDF a imagen en Cloudinary:', error);
         
-        // 🔄 Si falla la conversión, intentar subirlo como PDF normal
-        console.log('🔄 Intentando subir como PDF normal...');
-        return await uploadPDFToCloudinary(pdfBlob, filename, {
-            ...options,
-            resource_type: 'raw'
-        });
-    }
-};
+//         // 🔄 Si falla la conversión, intentar subirlo como PDF normal
+//         console.log('🔄 Intentando subir como PDF normal...');
+//         return await uploadPDFToCloudinary(pdfBlob, filename, {
+//             ...options,
+//             resource_type: 'raw'
+//         });
+//     }
+// };
 
 
 // 📱 Función para generar URL optimizada para WhatsApp

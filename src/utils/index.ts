@@ -1,6 +1,8 @@
 
 import dayjs from "dayjs";
+import html2canvas from "html2canvas";
 import jsPDF from 'jspdf';
+import { uploadImageToImgbb } from "../api/imgbbApi";
 import { PaymentSellNumbersModalProps } from "../components/indexView/PaymentSellNumbersModal";
 import { InfoRaffleType } from "../components/indexView/ViewRaffleNumberData";
 import { AwardType, StatusRaffleNumbersType } from "../types";
@@ -644,6 +646,132 @@ export const generatePDFBlob = ({
     return doc.output('blob');
 };
 
+
+/**
+ * Genera una imagen JPG (preview) del ticket de la rifa usando solo la primera página del PDF.
+ *
+ * @returns Promise<Blob> — imagen lista para subir a imgbb o Supabase
+ */
+export const generateTicketPreviewImage = async ({
+    raffle,
+    pdfData,
+    totalNumbers
+}: Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "pdfData" | 'totalNumbers'>): Promise<HTMLImageElement> => {
+
+    // Crear un contenedor temporal para el preview
+    const containerId = "ticket-preview-image-temp";
+    let container = document.getElementById(containerId);
+    if (!container) {
+        container = document.createElement("div");
+        container.id = containerId;
+        container.style.width = "560px";
+        container.style.height = "300px";
+        container.style.display = "flex";
+        container.style.flexDirection = "column";
+        container.style.justifyContent = "flex-start";
+        container.style.background = "#ffffff";
+        container.style.borderRadius = "18px";
+        container.style.boxShadow = "0 4px 24px rgba(0,0,0,0.15)";
+        container.style.padding = "22px 28px";
+        container.style.border = "1.5px solid #e2e8f0";
+        document.body.appendChild(container);
+    }
+
+    const entry = pdfData[0];
+
+    const abonado = entry.payments
+    .filter(p => p.isValid)
+    .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+
+    const deuda = parseFloat(entry.paymentDue);
+    const total = abonado + deuda;
+    
+    container.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:6px;">
+
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                margin-bottom:10px;
+            ">
+                <div style="
+                    font-size:22px;
+                    font-weight:800;
+                    color:#1446A0;
+                    letter-spacing:1px;
+                    text-transform:uppercase;
+                ">
+                    RIFFAS
+                </div>
+
+                <h2 style="
+                    margin:0;
+                    font-size:24px;
+                    font-weight:800;
+                    color:#1446A0;
+                ">
+                    Boleto #${formatWithLeadingZeros(entry.number, totalNumbers)}
+                </h2>
+            </div>
+
+            <!-- Datos del comprador -->
+            <div style="font-size:15px;color:#334155;">
+                <div><span style="font-weight:700;">Comprador:</span> ${entry.firstName ?? ""} ${entry.lastName ?? ""}</div>
+                <div><span style="font-weight:700;">Teléfono:</span> ${entry.phone ?? ""}</div>
+            </div>
+
+            <hr style="border-top:1px solid #e2e8f0;margin:6px 0 4px 0;" />
+
+            <!-- Nombre de la rifa y fecha -->
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-size:16px;font-weight:700;color:#1446A0;">
+                    ${raffle.name}
+                </div>
+
+                <div style="text-align:right;">
+                    <div style="font-size:14px;font-weight:600;color:#475569;">
+                        ${formatDateTimeLarge(raffle.playDate)}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Valores económicos -->
+            <div style="margin-top:6px;font-size:15px;color:#334155;display:flex;flex-direction:column;gap:3px;">
+                <div>
+                    <span style="font-weight:700;">Valor total:</span>
+                    <span style="font-weight:800;color:#0a7a25;">${formatCurrencyCOP(total)}</span>
+                </div>
+                <div>
+                    <span style="font-weight:700;">Abonado:</span>
+                    <span style="font-weight:700;color:#2563eb;">${formatCurrencyCOP(abonado)}</span>
+                </div>
+                <div>
+                    <span style="font-weight:700;">Deuda:</span>
+                    <span style="font-weight:700;color:#b91c1c;">${formatCurrencyCOP(deuda)}</span>
+                </div>
+            </div>
+
+            <hr style="border-top:1px solid #e2e8f0;margin:6px 0 0 0;" />
+
+        </div>
+        `;
+
+    // Generar PNG con html2canvas
+    const canvas = await html2canvas(container, {
+        scale: 2,
+        backgroundColor: "#ffffff"
+    });
+    // Convertir canvas a imagen
+    const img = document.createElement('img');
+    img.src = canvas.toDataURL('image/png');
+    img.alt = 'Preview Ticket';
+    img.style.maxWidth = '100%';
+    // Limpiar el contenedor temporal
+    container.remove();
+    return img;
+};
+
 const addMultilineText = (
     doc: jsPDF,
     text: string,
@@ -972,7 +1100,7 @@ const uploadPDFToTmpFiles = async (pdfBlob: Blob, filename: string): Promise<str
     }
 };
 
-// 💌 Función para enviar mensaje de WhatsApp CON PDF descargable
+// 💌 Función para enviar mensaje de WhatsApp con imagen generada desde PDF
 export const handleSendMessageToWhatsApp = async ({
     raffle,
     awards,
@@ -980,70 +1108,116 @@ export const handleSendMessageToWhatsApp = async ({
     totalNumbers,
     phoneNumber,
     customMessage,
-    uploadToCloudinary = true
+    // uploadToCloudinary = true
 }: Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "pdfData" | 'totalNumbers'> & {
     phoneNumber: string;
     customMessage?: string;
     uploadToCloudinary?: boolean;
 }) => {
+
+    // let pdfUrl: string | undefined;
+    let imageUrl: string | undefined;
+    let pdfError = false;
+    let imageError = false;
+    let pdfBlob: Blob | undefined;
+
     try {
-        const pdfBlob = generatePDFBlob({ raffle, awards, pdfData, totalNumbers });
-        let pdfUrl: string | undefined;
+        pdfBlob = generatePDFBlob({ 
+            raffle, 
+            awards, 
+            pdfData, 
+            totalNumbers 
+        });
 
-        if (uploadToCloudinary) {
-            const filename = `${Date.now().toString(36)}.pdf`;
-            try {
-                pdfUrl = await uploadPDFToTmpFiles(pdfBlob, filename);
-            } catch (uploadError) {
-                console.warn('⚠️ Error al subir PDF a tmpfiles.org:', uploadError);
-            // Continúa sin archivo si falla la subida
-            }
-        }
+        // if (uploadToCloudinary) {
+        //     try {
+        //         const uploadResponse = await uploadToFileIo(pdfBlob);
+        //         pdfUrl = uploadResponse;
+        //     } catch (err) {
+        //         pdfError = true;
+        //         pdfUrl = undefined;
+        //         console.warn("⚠️ Error subiendo PDF:", err);
+        //     }
+        // }
 
-        let defaultMessage = '';
-        if (pdfData.length > 0) {
-            const firstEntry = pdfData[0];
-            const priceRaffleNumber = +firstEntry.paymentAmount + +firstEntry.paymentDue;
-            const totalAmount = pdfData.reduce((sum, entry) => sum + Number(entry.paymentAmount), 0);
-            const allPayments = pdfData.flatMap(entry => entry.payments);
-            const allPaid = pdfData.every(entry => Number(entry.paymentDue) === 0);
-            const statusRaffleNumber = allPaid ? 'sold' : 'pending';
-
-            defaultMessage = generateRafflePurchaseMessage({
-                totalNumbers,
-                amount: totalAmount,
-                infoRaffle: {
-                    name: raffle.name,
-                    description: raffle.description,
-                    amountRaffle: raffle.price,
-                    playDate: raffle.playDate,
-                    responsable: raffle.nameResponsable,
-                } as InfoRaffleType,
-                name: `${firstEntry.firstName ?? ''} ${firstEntry.lastName ?? ''}`.trim() || 'Cliente',
-                numbers: pdfData.map(entry => ({ numberId: entry.number, number: entry.number })),
-                payments: allPayments,
-                statusRaffleNumber,
-                awards,
-                reservedDate: firstEntry.reservedDate ?? null,
-                priceRaffleNumber,
-                resumen: true
-            });
-        }
-
-        if (pdfUrl) {
-            const visualizadorUrl = `${window.location.origin}/pdf-view/${encodeURIComponent(pdfUrl)}`;
-            defaultMessage += `\n\n📄 Recibo Digital Disponible\n🔗 Visualízalo aquí: ${visualizadorUrl}`;
-        }
-
-        const message = customMessage || defaultMessage;
-        const whatsappUrl = `https://wa.me/${phoneNumber.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(message.normalize('NFC'))}`;
-        window.open(whatsappUrl, '_blank');
-
-        return { success: true, pdfBlob, pdfUrl, whatsappUrl, message };
-    } catch (error) {
-        return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
+    } catch (err) {
+        pdfError = true;
+        // pdfUrl = undefined;
+        pdfBlob = undefined;
+        console.warn("⚠️ Error generando o subiendo PDF:", err);
     }
+
+    try {
+        const imgPrev = await generateTicketPreviewImage({ 
+            raffle, 
+            awards, 
+            pdfData, 
+            totalNumbers 
+        });
+
+        imageUrl = await uploadImageToImgbb(imgPrev);
+    } catch (err) {
+        imageError = true;
+        imageUrl = undefined;
+        console.warn("⚠️ Error generando o subiendo imagen:", err);
+    }
+
+    // 📌 Mensaje general
+    let defaultMessage = '';
+    if (pdfData.length > 0) {
+        const firstEntry = pdfData[0];
+        const priceRaffleNumber = +firstEntry.paymentAmount + +firstEntry.paymentDue;
+        const totalAmount = pdfData.reduce((sum, entry) => sum + Number(entry.paymentAmount), 0);
+        const payments = pdfData.flatMap(entry => entry.payments);
+        const allPaid = pdfData.every(entry => Number(entry.paymentDue) === 0);
+        const statusRaffleNumber = allPaid ? 'sold' : 'pending';
+        defaultMessage = generateRafflePurchaseMessage({
+            totalNumbers,
+            amount: totalAmount,
+            infoRaffle: {
+                name: raffle.name,
+                description: raffle.description,
+                amountRaffle: raffle.price,
+                playDate: raffle.playDate,
+                responsable: raffle.nameResponsable,
+            },
+            name: `${firstEntry.firstName ?? ''} ${firstEntry.lastName ?? ''}`.trim() || 'Cliente',
+            numbers: pdfData.map(entry => ({
+                numberId: entry.number,
+                number: entry.number
+            })),
+            payments,
+            statusRaffleNumber,
+            awards,
+            reservedDate: firstEntry.reservedDate ?? null,
+            priceRaffleNumber,
+            resumen: true
+        });
+    }
+
+
+    // Agregar primero la imagen (preview), ocultar el PDF
+    if (imageUrl) {
+        defaultMessage += `\n\n🖼️ Vista previa del recibo:\n${imageUrl}`;
+    } else if (imageError) {
+        defaultMessage += `\n\n🖼️ Vista previa del recibo no disponible.`;
+    }
+    // PDF oculto para el usuario:
+    // if (pdfUrl) {
+    //     defaultMessage += `\n📄 Recibo PDF para descargar:\n${pdfUrl}`;
+    // } else if (pdfError) {
+    //     defaultMessage += `\n📄 Recibo PDF no disponible.`;
+    // }
+
+    const message = customMessage || defaultMessage;
+    const whatsappUrl = `https://wa.me/${phoneNumber.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(
+        message.normalize('NFC')
+    )}`;
+    window.open(whatsappUrl, '_blank');
+    return { success: true, pdfBlob, imageUrl, whatsappUrl, message, pdfError, imageError };
 };
+
+
 
 export const handleSendReservationToOwnerWhatsApp = async ({
     raffle,
