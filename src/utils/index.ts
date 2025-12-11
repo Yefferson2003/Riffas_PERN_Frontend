@@ -272,8 +272,12 @@ export const generateRafflePurchaseMessage = ({
         .join(", ");
 
     if (resumen) {
-        // Mensaje resumido: saludo con nombre y paymentTypeMessage, números junto al saludo, sin saltos extra ni valor abonado ni valor del número
+        // Mensaje resumido: saludo con nombre y paymentTypeMessage, SIEMPRE incluir los números reservados
         let paymentTypeMessage = "";
+        const numerosTexto = numbers && numbers.length > 0
+            ? `Números reservado(s): *${numbers.map(n => formatWithLeadingZeros(n.number, totalNumbers)).join(", ")}*\n`
+            : "";
+
         if (payments && statusRaffleNumber === "pending" && payments?.length > 0 && amount !== 0) {
             const abonosValidos = payments
                 .filter(p => p.isValid)
@@ -289,13 +293,7 @@ export const generateRafflePurchaseMessage = ({
             paymentTypeMessage = `Has realizado un pago de *${formatCurrencyCOP(amount)}* para la rifa *"${infoRaffle.name}"* 💰`;
         }
 
-        // Mostrar saludo con nombre, tipo de pago y números juntos, valor de la rifa arriba de deuda actual
-        if (amount === 0 || paymentAmount === 0) {
-            // Saludo especial para apartado
-            return `*${name.trim()}* ha apartado: ${numbersList}\n${paymentTypeMessage}\n💵 Valor de la rifa: *${formatCurrencyCOP(rafflePrice)}*\n📉 Deuda actual: *${formatCurrencyCOP(deuda)}*\n🗓️ Fecha del sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*\n⏰ Reservado: *${formatDateTimeLarge(reservedDate ?? "")}*`;
-        } else {
-            return `\n${paymentTypeMessage}\n💵 Valor de la rifa: *${formatCurrencyCOP(rafflePrice)}*\n📉 Deuda actual: *${formatCurrencyCOP(deuda)}*\n🗓️ Fecha del sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*\n⏰ Reservado: *${formatDateTimeLarge(reservedDate ?? "")}*`;
-        }
+        return `\n${paymentTypeMessage}\n${numerosTexto}💵 Valor de la rifa: *${formatCurrencyCOP(rafflePrice)}*\n📉 Deuda actual: *${formatCurrencyCOP(deuda)}*\n🗓️ Fecha del sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*\n⏰ Reservado: *${formatDateTimeLarge(reservedDate ?? "")}*`;
     }
 
     // let paymentTypeMessage = "";
@@ -679,15 +677,26 @@ export const generateTicketPreviewImage = async ({
         document.body.appendChild(container);
     }
 
+
+    // Adaptar para varios números
+    const isMultiple = pdfData.length > 1;
+    // Sumar abonados y deudas
+    const abonado = pdfData.reduce((sum, entry) => sum + entry.payments.filter(p => p.isValid).reduce((s, p) => s + parseFloat(p.amount), 0), 0);
+    const deuda = pdfData.reduce((sum, entry) => sum + parseFloat(entry.paymentDue), 0);
+    const total = abonado + deuda;
+
+    // Obtener los números del pdfData
+    const allNumbers = pdfData.map(e => formatWithLeadingZeros(e.number, totalNumbers));
+    let numerosPreview = "";
+    if (allNumbers.length > 3) {
+        numerosPreview = `${allNumbers.slice(0, 3).join(", ")} ...`;
+    } else {
+        numerosPreview = allNumbers.join(", ");
+    }
+
+    // Mostrar nombre y teléfono del primer comprador (asumimos mismo comprador para todos)
     const entry = pdfData[0];
 
-    const abonado = entry.payments
-    .filter(p => p.isValid)
-    .reduce((sum, p) => sum + parseFloat(p.amount), 0);
-
-    const deuda = parseFloat(entry.paymentDue);
-    const total = abonado + deuda;
-    
     container.innerHTML = `
         <div style="display:flex;flex-direction:column;gap:6px;">
 
@@ -713,7 +722,7 @@ export const generateTicketPreviewImage = async ({
                     font-weight:800;
                     color:#1446A0;
                 ">
-                    Boleto #${formatWithLeadingZeros(entry.number, totalNumbers)}
+                    ${isMultiple ? 'Números' : 'Boleto'}: ${numerosPreview}
                 </h2>
             </div>
 
@@ -741,15 +750,15 @@ export const generateTicketPreviewImage = async ({
             <!-- Valores económicos -->
             <div style="margin-top:6px;font-size:15px;color:#334155;display:flex;flex-direction:column;gap:3px;">
                 <div>
-                    <span style="font-weight:700;">Valor total:</span>
+                    <span style="font-weight:700;">Valor total${isMultiple ? ' de los boletos' : ''}:</span>
                     <span style="font-weight:800;color:#0a7a25;">${formatCurrencyCOP(total)}</span>
                 </div>
                 <div>
-                    <span style="font-weight:700;">Abonado:</span>
+                    <span style="font-weight:700;">Abonad${isMultiple ? 'os' : 'o'}:</span>
                     <span style="font-weight:700;color:#2563eb;">${formatCurrencyCOP(abonado)}</span>
                 </div>
                 <div>
-                    <span style="font-weight:700;">Deuda:</span>
+                    <span style="font-weight:700;">Deud${isMultiple ? 'as' : 'a'}:</span>
                     <span style="font-weight:700;color:#b91c1c;">${formatCurrencyCOP(deuda)}</span>
                 </div>
             </div>
