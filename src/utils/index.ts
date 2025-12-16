@@ -737,6 +737,7 @@ export const generateTicketPreviewImage = async ({
                         Sorteo: ${formatDateTimeLarge(raffle.playDate)}
                     </span>
                 </div>
+                <div style="font-size:15px;font-weight:400;color:#222; margin-bottom:2px;">${raffle.nameResponsable}</div>
                 <div style="font-size:17px;font-weight:700;color:#1446A0;">${isMultiple ? "Números" : "Boleto"}: ${numerosPreview}</div>
             </div>
         </div>
