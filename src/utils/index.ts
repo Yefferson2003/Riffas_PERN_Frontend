@@ -716,53 +716,32 @@ export const generateTicketPreviewImage = async ({
 
     const entry = pdfData[0];
 
-    // HTML del ticket
+    // HTML del ticket (solo icono, luego nombre y fecha, luego línea y datos)
     container.innerHTML = `
         <!-- Icono / Logo -->
-        <img
-            src="${currentImgIconURL}"
-            crossorigin="anonymous"
-            style="
-                position:absolute;
-                top:18px;
-                left:22px;
-                width:44px;
-                height:44px;
-                object-fit:contain;
-                border-radius:10px;
-            "
-        />
-
-        <div style="display:flex;flex-direction:column;gap:6px;">
-
-            <!-- Header -->
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                margin-bottom:8px;
-                padding-left:56px;
-            ">
-                <div style="
-                    font-size:22px;
-                    font-weight:800;
-                    color:#1446A0;
-                    letter-spacing:1px;
-                    text-transform:uppercase;
-                ">
-                    RIFFAS
+        <div style="display:flex;align-items:center;gap:18px;">
+            <img
+                src="${currentImgIconURL}"
+                crossorigin="anonymous"
+                style="
+                    width:44px;
+                    height:44px;
+                    object-fit:contain;
+                    border-radius:10px;
+                "
+            />
+            <div style="display:flex;flex-direction:column;flex:1;gap:2px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:20px;font-weight:800;color:#1446A0;">${raffle.name}</span>
+                    <span style="font-size:15px;font-weight:600;color:#475569;">
+                        Sorteo: ${formatDateTimeLarge(raffle.playDate)}
+                    </span>
                 </div>
-
-                <h2 style="
-                    margin:0;
-                    font-size:24px;
-                    font-weight:800;
-                    color:#1446A0;
-                ">
-                    ${isMultiple ? "Números" : "Boleto"}: ${numerosPreview}
-                </h2>
+                <div style="font-size:17px;font-weight:700;color:#1446A0;">${isMultiple ? "Números" : "Boleto"}: ${numerosPreview}</div>
             </div>
-
+        </div>
+        <hr style="border-top:1px solid #e2e8f0;margin:12px 0 10px 0;" />
+        <div style="display:flex;flex-direction:column;gap:6px;">
             <!-- Comprador -->
             <div style="font-size:15px;color:#334155;">
                 <div>
@@ -774,22 +753,6 @@ export const generateTicketPreviewImage = async ({
                     ${entry.phone ?? ""}
                 </div>
             </div>
-
-            <hr style="border-top:1px solid #e2e8f0;margin:6px 0 4px 0;" />
-
-            <!-- Rifa -->
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-                <div style="font-size:16px;font-weight:700;color:#1446A0;">
-                    ${raffle.name}
-                </div>
-
-                <div style="text-align:right;">
-                    <div style="font-size:14px;font-weight:600;color:#475569;">
-                        ${formatDateTimeLarge(raffle.playDate)}
-                    </div>
-                </div>
-            </div>
-
             <!-- Valores -->
             <div style="
                 margin-top:6px;
@@ -824,8 +787,6 @@ export const generateTicketPreviewImage = async ({
                     </span>
                 </div>
             </div>
-
-            <hr style="border-top:1px solid #e2e8f0;margin:6px 0 0 0;" />
         </div>
     `;
 
