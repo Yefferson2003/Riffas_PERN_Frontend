@@ -1,3 +1,7 @@
+<<<<<<< Updated upstream
+=======
+import { sendWhatsappRaffleSummary, WhatsappSendRaffleSummaryPayload } from "../api/whatsappApi";
+>>>>>>> Stashed changes
 import dayjs from "dayjs";
 import jsPDF from 'jspdf';
 import { PaymentSellNumbersModalProps } from "../components/indexView/PaymentSellNumbersModal";
@@ -966,6 +970,7 @@ export const handleSendMessageToWhatsApp = async ({
     uploadToCloudinary?: boolean;
 }) => {
     try {
+<<<<<<< Updated upstream
         // 📄 Generar PDF blob
         const pdfBlob = generatePDFBlob({
             raffle,
@@ -1072,6 +1077,134 @@ export const handleSendMessageToWhatsApp = async ({
             error: error instanceof Error ? error.message : 'Error desconocido'
         };
     }
+=======
+        pdfBlob = generatePDFBlob({ 
+            raffle, 
+            awards, 
+            pdfData, 
+            totalNumbers 
+        });
+
+        // if (uploadToCloudinary) {
+        //     try {
+        //         const uploadResponse = await uploadToFileIo(pdfBlob);
+        //         pdfUrl = uploadResponse;
+        //     } catch (err) {
+        //         pdfError = true;
+        //         pdfUrl = undefined;
+        //         console.warn("⚠️ Error subiendo PDF:", err);
+        //     }
+        // }
+
+    } catch (err) {
+        pdfError = true;
+        // pdfUrl = undefined;
+        pdfBlob = undefined;
+        console.warn("⚠️ Error generando o subiendo PDF:", err);
+    }
+
+    try {
+        const imgPrev = await generateTicketPreviewImage({ 
+            raffle, 
+            awards, 
+            pdfData, 
+            totalNumbers 
+        });
+
+        imageUrl = await uploadImageToImgbb(imgPrev);
+    } catch (err) {
+        imageError = true;
+        imageUrl = undefined;
+        console.warn("⚠️ Error generando o subiendo imagen:", err);
+    }
+
+    // 📌 Mensaje general
+
+    if (pdfData.length > 0) {
+        const firstEntry = pdfData[0];
+        const priceRaffleNumber = +firstEntry.paymentAmount + +firstEntry.paymentDue;
+        const totalAmount = pdfData.reduce((sum, entry) => sum + Number(entry.paymentAmount), 0);
+        const payments = pdfData.flatMap(entry => entry.payments);
+        const allPaid = pdfData.every(entry => Number(entry.paymentDue) === 0);
+        const statusRaffleNumber = allPaid ? 'sold' : 'pending'
+
+        const payload = buildWhatsappRaffleSummaryPayload({
+            totalNumbers,
+            amount: totalAmount,
+            paymentAmount: +firstEntry.paymentAmount,
+            infoRaffle: {
+                name: raffle.name,
+                description: raffle.description,
+                amountRaffle: raffle.price,
+                playDate: raffle.playDate,
+                responsable: raffle.nameResponsable,
+            },
+            name: `${firstEntry.firstName ?? ''} ${firstEntry.lastName ?? ''}`.trim() || 'Cliente',
+            numbers: pdfData.map(entry => ({
+                numberId: entry.number,
+                number: entry.number
+            })),
+            payments,
+            statusRaffleNumber,
+            awards,
+            reservedDate: firstEntry.reservedDate ?? null,
+            priceRaffleNumber,
+            // Required extra fields
+            phone: phoneNumber,
+            imageUrl: imageUrl || '',
+            raffleName: raffle.name,
+            price: priceRaffleNumber ?? raffle.price,
+            playDate: raffle.playDate,
+        })
+
+        return await sendWhatsappRaffleSummary({ payload });
+
+        // defaultMessage = generateRafflePurchaseMessage({
+        //     totalNumbers,
+        //     amount: totalAmount,
+        //     paymentAmount: +firstEntry.paymentAmount,
+        //     infoRaffle: {
+        //         name: raffle.name,
+        //         description: raffle.description,
+        //         amountRaffle: raffle.price,
+        //         playDate: raffle.playDate,
+        //         responsable: raffle.nameResponsable,
+        //     },
+        //     name: `${firstEntry.firstName ?? ''} ${firstEntry.lastName ?? ''}`.trim() || 'Cliente',
+        //     numbers: pdfData.map(entry => ({
+        //         numberId: entry.number,
+        //         number: entry.number
+        //     })),
+        //     payments,
+        //     statusRaffleNumber,
+        //     awards,
+        //     reservedDate: firstEntry.reservedDate ?? null,
+        //     priceRaffleNumber,
+        //     resumen: true
+        // });
+    }
+
+
+    // Agregar primero la imagen (preview), ocultar el PDF
+    // if (imageUrl) {
+    //     defaultMessage += `\n\n🖼️ Vista previa del recibo:\n${imageUrl}`;
+    // } else if (imageError) {
+    //     defaultMessage += `\n\n🖼️ Vista previa del recibo no disponible.`;
+    // }
+    // PDF oculto para el usuario:
+    // if (pdfUrl) {
+    //     defaultMessage += `\n📄 Recibo PDF para descargar:\n${pdfUrl}`;
+    // } else if (pdfError) {
+    //     defaultMessage += `\n📄 Recibo PDF no disponible.`;
+    // }
+
+    const message = customMessage || '';
+    const whatsappUrl = `https://wa.me/${phoneNumber.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(
+        message.normalize('NFC')
+    )}`;
+
+    return { success: true, pdfBlob, imageUrl, whatsappUrl, message, pdfError, imageError };
+>>>>>>> Stashed changes
 };
 
 // Función para redirigir al propietario al WhatsApp tras compra exitosa
@@ -1190,3 +1323,82 @@ Por favor confirma la reservación y contáctame si es necesario.
         };
     }
 };
+
+/**
+ * Construye el payload para enviar el resumen de la rifa por WhatsApp API
+ * @param params - datos necesarios para el mensaje
+ * @returns WhatsappSendRaffleSummaryPayload
+ */
+export function buildWhatsappRaffleSummaryPayload({
+    phone,
+    imageUrl,
+    name,
+    raffleName,
+    numbers,
+    totalNumbers,
+    amount,
+    abonosPendientes,
+    infoRaffle,
+    payments,
+    statusRaffleNumber,
+    priceRaffleNumber,
+    paymentAmount
+}: Omit<redirectToWhatsAppType, 'phone'> & {
+    phone: string;
+    imageUrl: string;
+    name: string;
+    raffleName: string;
+    price: number | string;
+    playDate: string;
+}): WhatsappSendRaffleSummaryPayload {
+
+    const rafflePrice = priceRaffleNumber ?? +infoRaffle.amountRaffle;
+    let paymentTypeMessage = "";
+
+    let deuda = 0;
+
+    if (statusRaffleNumber === "pending" && payments) {
+        const abonosValidos = payments
+            .filter(p => p.isValid)
+            .reduce((acc, p) => acc + Number(p.amount), 0);
+        deuda = Math.max((rafflePrice * numbers.length) - abonosValidos, 0);
+    } else if (payments && payments.length > 0) {
+        const abonosValidos = payments
+            .filter(p => p.isValid)
+            .reduce((acc, p) => acc + Number(p.amount), 0);
+        const totalAbonado = abonosValidos + amount;
+        deuda = Math.max((rafflePrice * numbers.length) - totalAbonado, 0);
+    } else {
+        // Calcular deuda considerando múltiples números
+        const totalCost = rafflePrice * numbers.length;
+        const totalPaid = amount + (abonosPendientes || 0);
+        deuda = Math.max(totalCost - totalPaid, 0);
+    }
+
+    if (payments && statusRaffleNumber === "pending" && payments?.length > 0 && amount !== 0) {
+        const abonosValidos = payments
+            .filter(p => p.isValid)
+            .reduce((acc, p) => acc + Number(p.amount), 0);
+        paymentTypeMessage = `Has realizado abonos por un total de *${formatCurrencyCOP(abonosValidos)}*`;
+    } else if (paymentAmount === 0 || amount === 0) {
+        paymentTypeMessage = `Has apartado el/los número(s) en la rifa *"${infoRaffle.name.trim()}"* 🏷️`;
+    } else if (amount < rafflePrice) {
+        paymentTypeMessage = `Has realizado un abono de *${formatCurrencyCOP(amount)}*`;
+    } else if (amount === rafflePrice * numbers.length) {
+        paymentTypeMessage = `Has realizado el pago completo de *${formatCurrencyCOP(amount)}*`;
+    } else {
+        paymentTypeMessage = `Has realizado un pago de *${formatCurrencyCOP(amount)}*`;
+    }
+
+    return {
+        to: phone,
+        imageUrl,
+        name: name.trim(),
+        actionMessage: paymentTypeMessage.trim(),
+        raffleName: raffleName.trim(),
+        numbers: numbers.map(n => formatWithLeadingZeros(n.number, totalNumbers)).join(", "),
+        price:formatCurrencyCOP(rafflePrice),
+        debt: formatCurrencyCOP(deuda),
+        playDate: formatDateTimeLarge(infoRaffle.playDate)
+    };
+}
