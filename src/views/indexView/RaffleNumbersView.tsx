@@ -318,6 +318,7 @@ function RaffleNumbersView() {
     const { data: clientSelectInput, isLoading: isLoadingClientSelectInput} = clientSelectInputData
     
     
+    
     const handleNavigateViewRaffleNumber = (raffleNumberId: number) => {
         const params = new URLSearchParams(window.location.search);
         params.set('viewRaffleNumber', String(raffleNumberId));

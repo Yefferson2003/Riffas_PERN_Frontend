@@ -149,6 +149,7 @@ export const raffleSchema = z.object({
     price: z.string(),
     banerImgUrl: z.string(),
     banerMovileImgUrl: z.string(),
+    imgIconoUrl: z.string().nullable().optional(),
     color: z.string().nullable().optional(),
     contactRifero: z.string().nullable().optional(),
 })
@@ -185,6 +186,7 @@ export const createRaffleSchema = raffleSchema.pick({
     nitResponsable: true,
     nameResponsable: true,
     banerMovileImgUrl: true,
+    imgIconoUrl: true,
     color: true,
     contactRifero: true
 })
@@ -217,6 +219,7 @@ export const updateRaffleSchema = createRaffleSchema.pick({
     banerMovileImgUrl: true,
     color: true,
     contactRifero: true,
+    imgIconoUrl: true
 })
 
 export const responseGetRafflesSchema = ResponsePaginationSchema.pick({

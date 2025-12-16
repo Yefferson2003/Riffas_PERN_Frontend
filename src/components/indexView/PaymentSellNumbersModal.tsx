@@ -32,6 +32,7 @@ export type PaymentSellNumbersModalProps = {
     paymentsSellNumbersModal: boolean
     pdfData: RaffleNumbersPayments
     urlWasap: string
+    imgIconURL?: string
 }
 
 function PaymentSellNumbersModal({ totalNumbers, raffle, awards, paymentsSellNumbersModal,pdfData,setPaymentsSellNumbersModal,setPdfData, urlWasap} : PaymentSellNumbersModalProps) {

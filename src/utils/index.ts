@@ -648,19 +648,27 @@ export const generatePDFBlob = ({
 
 
 /**
- * Genera una imagen JPG (preview) del ticket de la rifa usando solo la primera página del PDF.
- *
- * @returns Promise<Blob> — imagen lista para subir a imgbb o Supabase
+ * Genera una imagen PNG (preview) del ticket de la rifa usando HTML + html2canvas
  */
 export const generateTicketPreviewImage = async ({
     raffle,
     pdfData,
-    totalNumbers
-}: Pick<PaymentSellNumbersModalProps, "raffle" | "awards" | "pdfData" | 'totalNumbers'>): Promise<HTMLImageElement> => {
+    totalNumbers,
+    imgIconURL
+}: Pick<
+    PaymentSellNumbersModalProps,
+    "raffle" | "awards" | "pdfData" | "totalNumbers" | "imgIconURL"
+>): Promise<HTMLImageElement> => {
 
-    // Crear un contenedor temporal para el preview
+    const DEFAULT_RAFFLE_ICON =
+        "https://res.cloudinary.com/dfbwjrpdu/image/upload/v1765900779/receipt_657234_p517ss.png"
+
+    const currentImgIconURL = imgIconURL || DEFAULT_RAFFLE_ICON;
+
+    // Crear contenedor temporal
     const containerId = "ticket-preview-image-temp";
     let container = document.getElementById(containerId);
+
     if (!container) {
         container = document.createElement("div");
         container.id = containerId;
@@ -674,37 +682,66 @@ export const generateTicketPreviewImage = async ({
         container.style.boxShadow = "0 4px 24px rgba(0,0,0,0.15)";
         container.style.padding = "22px 28px";
         container.style.border = "1.5px solid #e2e8f0";
+        container.style.position = "relative";
         document.body.appendChild(container);
     }
 
-
-    // Adaptar para varios números
+    // Lógica de datos
     const isMultiple = pdfData.length > 1;
-    // Sumar abonados y deudas
-    const abonado = pdfData.reduce((sum, entry) => sum + entry.payments.filter(p => p.isValid).reduce((s, p) => s + parseFloat(p.amount), 0), 0);
-    const deuda = pdfData.reduce((sum, entry) => sum + parseFloat(entry.paymentDue), 0);
+
+    const abonado = pdfData.reduce(
+        (sum, entry) =>
+            sum +
+            entry.payments
+                .filter(p => p.isValid)
+                .reduce((s, p) => s + parseFloat(p.amount), 0),
+        0
+    );
+
+    const deuda = pdfData.reduce(
+        (sum, entry) => sum + parseFloat(entry.paymentDue),
+        0
+    );
+
     const total = abonado + deuda;
 
-    // Obtener los números del pdfData
-    const allNumbers = pdfData.map(e => formatWithLeadingZeros(e.number, totalNumbers));
-    let numerosPreview = "";
-    if (allNumbers.length > 3) {
-        numerosPreview = `${allNumbers.slice(0, 3).join(", ")} ...`;
-    } else {
-        numerosPreview = allNumbers.join(", ");
-    }
+    const allNumbers = pdfData.map(e =>
+        formatWithLeadingZeros(e.number, totalNumbers)
+    );
 
-    // Mostrar nombre y teléfono del primer comprador (asumimos mismo comprador para todos)
+    const numerosPreview =
+        allNumbers.length > 3
+            ? `${allNumbers.slice(0, 3).join(", ")} ...`
+            : allNumbers.join(", ");
+
     const entry = pdfData[0];
 
+    // HTML del ticket
     container.innerHTML = `
+        <!-- Icono / Logo -->
+        <img
+            src="${currentImgIconURL}"
+            crossorigin="anonymous"
+            style="
+                position:absolute;
+                top:18px;
+                left:22px;
+                width:44px;
+                height:44px;
+                object-fit:contain;
+                border-radius:10px;
+            "
+        />
+
         <div style="display:flex;flex-direction:column;gap:6px;">
 
+            <!-- Header -->
             <div style="
                 display:flex;
                 justify-content:space-between;
                 align-items:center;
-                margin-bottom:10px;
+                margin-bottom:8px;
+                padding-left:56px;
             ">
                 <div style="
                     font-size:22px;
@@ -722,19 +759,25 @@ export const generateTicketPreviewImage = async ({
                     font-weight:800;
                     color:#1446A0;
                 ">
-                    ${isMultiple ? 'Números' : 'Boleto'}: ${numerosPreview}
+                    ${isMultiple ? "Números" : "Boleto"}: ${numerosPreview}
                 </h2>
             </div>
 
-            <!-- Datos del comprador -->
+            <!-- Comprador -->
             <div style="font-size:15px;color:#334155;">
-                <div><span style="font-weight:700;">Comprador:</span> ${entry.firstName ?? ""} ${entry.lastName ?? ""}</div>
-                <div><span style="font-weight:700;">Teléfono:</span> ${entry.phone ?? ""}</div>
+                <div>
+                    <span style="font-weight:700;">Comprador:</span>
+                    ${entry.firstName ?? ""} ${entry.lastName ?? ""}
+                </div>
+                <div>
+                    <span style="font-weight:700;">Teléfono:</span>
+                    ${entry.phone ?? ""}
+                </div>
             </div>
 
             <hr style="border-top:1px solid #e2e8f0;margin:6px 0 4px 0;" />
 
-            <!-- Nombre de la rifa y fecha -->
+            <!-- Rifa -->
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <div style="font-size:16px;font-weight:700;color:#1446A0;">
                     ${raffle.name}
@@ -747,41 +790,61 @@ export const generateTicketPreviewImage = async ({
                 </div>
             </div>
 
-            <!-- Valores económicos -->
-            <div style="margin-top:6px;font-size:15px;color:#334155;display:flex;flex-direction:column;gap:3px;">
+            <!-- Valores -->
+            <div style="
+                margin-top:6px;
+                font-size:15px;
+                color:#334155;
+                display:flex;
+                flex-direction:column;
+                gap:3px;
+            ">
                 <div>
-                    <span style="font-weight:700;">Valor total${isMultiple ? ' de los boletos' : ''}:</span>
-                    <span style="font-weight:800;color:#0a7a25;">${formatCurrencyCOP(total)}</span>
+                    <span style="font-weight:700;">
+                        Valor total${isMultiple ? " de los boletos" : ""}:
+                    </span>
+                    <span style="font-weight:800;color:#0a7a25;">
+                        ${formatCurrencyCOP(total)}
+                    </span>
                 </div>
                 <div>
-                    <span style="font-weight:700;">Abonad${isMultiple ? 'os' : 'o'}:</span>
-                    <span style="font-weight:700;color:#2563eb;">${formatCurrencyCOP(abonado)}</span>
+                    <span style="font-weight:700;">
+                        Abonad${isMultiple ? "os" : "o"}:
+                    </span>
+                    <span style="font-weight:700;color:#2563eb;">
+                        ${formatCurrencyCOP(abonado)}
+                    </span>
                 </div>
                 <div>
-                    <span style="font-weight:700;">Deud${isMultiple ? 'as' : 'a'}:</span>
-                    <span style="font-weight:700;color:#b91c1c;">${formatCurrencyCOP(deuda)}</span>
+                    <span style="font-weight:700;">
+                        Deud${isMultiple ? "as" : "a"}:
+                    </span>
+                    <span style="font-weight:700;color:#b91c1c;">
+                        ${formatCurrencyCOP(deuda)}
+                    </span>
                 </div>
             </div>
 
             <hr style="border-top:1px solid #e2e8f0;margin:6px 0 0 0;" />
-
         </div>
-        `;
+    `;
 
-    // Generar PNG con html2canvas
+    // Renderizar imagen
     const canvas = await html2canvas(container, {
         scale: 2,
-        backgroundColor: "#ffffff"
+        backgroundColor: "#ffffff",
+        useCORS: true
     });
-    // Convertir canvas a imagen
-    const img = document.createElement('img');
-    img.src = canvas.toDataURL('image/png');
-    img.alt = 'Preview Ticket';
-    img.style.maxWidth = '100%';
-    // Limpiar el contenedor temporal
+
+    const img = document.createElement("img");
+    img.src = canvas.toDataURL("image/png");
+    img.alt = "Preview Ticket";
+    img.style.maxWidth = "100%";
+
     container.remove();
     return img;
 };
+
 
 const addMultilineText = (
     doc: jsPDF,
@@ -1158,12 +1221,15 @@ export const handleSendMessageToWhatsApp = async ({
         console.warn("⚠️ Error generando o subiendo PDF:", err);
     }
 
+    
+
     try {
         const imgPrev = await generateTicketPreviewImage({ 
             raffle, 
             awards, 
             pdfData, 
-            totalNumbers 
+            totalNumbers,
+            imgIconURL: raffle.imgIconoUrl ?? undefined
         });
 
         imageUrl = await uploadImageToImgbb(imgPrev);
