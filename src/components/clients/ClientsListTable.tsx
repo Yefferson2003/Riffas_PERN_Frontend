@@ -310,11 +310,11 @@ export default function ClientsListTable({ clients, onEdit, onBuyNumbers }: Clie
                 <Table aria-label="collapsible table" size="small" sx={{ minWidth: 600 }}>
                     <TableHead>
                         <TableRow>
-                            <TableCell sx={{ width: 40 }} />
-                            <TableCell sx={{ minWidth: 120 }}>Nombre</TableCell>
-                            <TableCell sx={{ minWidth: 120 }}>Teléfono</TableCell>
-                            <TableCell sx={{ minWidth: 140 }}>Dirección</TableCell>
-                            <TableCell align="center" sx={{ minWidth: 120 }}>Acciones</TableCell>
+                            <TableCell sx={{ width: 40, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 700, fontSize: 16, letterSpacing: 0.5, borderBottom: '2px solid #1976d2' }} />
+                            <TableCell sx={{ minWidth: 120, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 700, fontSize: 16, letterSpacing: 0.5, borderBottom: '2px solid #1976d2' }}>Nombre</TableCell>
+                            <TableCell sx={{ minWidth: 120, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 700, fontSize: 16, letterSpacing: 0.5, borderBottom: '2px solid #1976d2' }}>Teléfono</TableCell>
+                            <TableCell sx={{ minWidth: 140, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 700, fontSize: 16, letterSpacing: 0.5, borderBottom: '2px solid #1976d2' }}>Dirección</TableCell>
+                            <TableCell align="center" sx={{ minWidth: 120, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 700, fontSize: 16, letterSpacing: 0.5, borderBottom: '2px solid #1976d2' }}>Acciones</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>

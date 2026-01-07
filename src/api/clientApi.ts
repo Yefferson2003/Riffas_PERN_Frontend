@@ -13,6 +13,8 @@ type ClientApi = {
     clientId: ClientType['id'];
     formData: ClientFormType;
     buyNumberForClientFormData: BuyNumberForClientFormType;
+    startDate: string | undefined
+    endDate: string | undefined
 }
 
 export type BuyNumberForClientFormType = {
@@ -35,13 +37,15 @@ export async function buyNumbersForClient({ clientId, buyNumberForClientFormData
     }
 }
 
-export async function getClients( { page, limit, search, order } : Pick<ClientApi, 'page' | 'limit' | 'search' | 'order'>) {
+export async function getClients( { page, limit, search, order, startDate, endDate } : Pick<ClientApi, 'page' | 'limit' | 'search' | 'order' | 'startDate' | 'endDate'>) {
     try {
         const { data } = await api.get("/clients", { params: { 
             page, 
             limit, 
             search, 
-            order
+            order,
+            startDate,
+            endDate
         } });
         
         const response = responseClientsSchema.safeParse(data);

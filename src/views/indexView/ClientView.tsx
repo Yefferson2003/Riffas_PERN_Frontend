@@ -3,6 +3,9 @@ import DownloadIcon from '@mui/icons-material/Download';
 import IconButton from '@mui/material/IconButton';
 import { exportClientsToExcel } from '../../utils/exportClientsExcel';
 import { Box, Button, CircularProgress, Fade, Pagination, TextField, Tooltip, Typography, MenuItem, Select, InputLabel, FormControl, SelectChangeEvent } from "@mui/material";
+import { Dayjs } from 'dayjs';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -22,6 +25,8 @@ function ClientView () {
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [page, setPage] = useState(1);
     const [order, setOrder] = useState(3); // 1: Alfa ASC, 2: Alfa DESC, 3: Fecha ASC, 4: Fecha DESC
+    const [startDate, setStartDate] = useState<Dayjs | null>(null);
+    const [endDate, setEndDate] = useState<Dayjs | null>(null);
     const limit = 15;
 
     useEffect(() => {
@@ -44,8 +49,8 @@ function ClientView () {
         error,
         refetch
     } = useQuery({
-        queryKey: ["clients", { page, limit, search: debouncedSearch, order }],
-        queryFn: () => getClients({ page, limit, search: debouncedSearch, order }),
+        queryKey: ["clients", { page, limit, search: debouncedSearch, order, startDate: startDate?.format('YYYY-MM-DD'), endDate: endDate?.format('YYYY-MM-DD') }],
+        queryFn: () => getClients({ page, limit, search: debouncedSearch, order, startDate: startDate?.format('YYYY-MM-DD'), endDate: endDate?.format('YYYY-MM-DD') }),
     });
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,31 +84,55 @@ function ClientView () {
     return (
         <Box sx={{ width: '100%', pb: 8, px: { xs: 1, md: 4 }, textAlign: 'center' }}>
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, alignItems: 'center', justifyContent: 'space-between', mb: 6, gap: 3 }}>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <TextField
-                        id="search"
-                        label="Buscar cliente..."
-                        variant="outlined"
-                        size="small"
-                        value={search}
-                        onChange={handleSearchChange}
-                        sx={{ width: { xs: '100%', sm: 300 } }}
-                    />
-                    <FormControl size="small" sx={{ minWidth: 180 }}>
-                        <InputLabel id="order-select-label">Ordenar por</InputLabel>
-                        <Select
-                            labelId="order-select-label"
-                            id="order-select"
-                            value={order}
-                            label="Ordenar por"
-                            onChange={handleOrderChange}
-                        >
-                            <MenuItem value={1}>Alfabético (Apellido) (A-Z)</MenuItem>
-                            <MenuItem value={2}>Alfabético (Apellido) (Z-A)</MenuItem>
-                            <MenuItem value={3}>Fecha creación (más reciente primero)</MenuItem>
-                            <MenuItem value={4}>Fecha creación (más antiguo primero)</MenuItem>
-                        </Select>
-                    </FormControl>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, alignItems: { xs: 'stretch', md: 'center' }, width: '100%' }}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, width: '100%' }}>
+                        <TextField
+                            id="search"
+                            label="Buscar cliente..."
+                            variant="outlined"
+                            size="small"
+                            value={search}
+                            onChange={handleSearchChange}
+                            sx={{ width: { xs: '100%', md: 300 } }}
+                        />
+                        <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 180 } }}>
+                            <InputLabel id="order-select-label">Ordenar por</InputLabel>
+                            <Select
+                                labelId="order-select-label"
+                                id="order-select"
+                                value={order}
+                                label="Ordenar por"
+                                onChange={handleOrderChange}
+                            >
+                                <MenuItem value={1}>Alfabético (Apellido) (A-Z)</MenuItem>
+                                <MenuItem value={2}>Alfabético (Apellido) (Z-A)</MenuItem>
+                                <MenuItem value={3}>Fecha creación (más reciente primero)</MenuItem>
+                                <MenuItem value={4}>Fecha creación (más antiguo primero)</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Box>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, width: { xs: '100%', md: 'auto' }, mt: { xs: 2, md: 0 } }}>
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                            <DatePicker
+                                label="Fecha inicial"
+                                value={startDate}
+                                onChange={(newValue) => {
+                                    setStartDate(newValue);
+                                    if (!newValue) setEndDate(null);
+                                }}
+                                slotProps={{ textField: { size: 'small', sx: { minWidth: { xs: '100%', md: 130 } } } }}
+                                maxDate={endDate || undefined}
+                            />
+                            <DatePicker
+                                label="Fecha final"
+                                value={endDate}
+                                onChange={setEndDate}
+                                slotProps={{ textField: { size: 'small', sx: { minWidth: { xs: '100%', md: 130 } } } }}
+                                minDate={startDate || undefined}
+                                disabled={!startDate}
+                            />
+                        </LocalizationProvider>
+                    </Box>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                     <Button
@@ -136,6 +165,12 @@ function ClientView () {
                 </Box>
             </Box>
 
+            <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'primary.main', fontSize: 18, letterSpacing: 0.5 }}>
+                    Total de clientes: {data?.total || 0}
+                </Typography>
+            </Box>
+
 
             <CreateClientModal
                 refetch={handleRefetch}
@@ -165,6 +200,8 @@ function ClientView () {
                 </Typography>
             ) : (
                 <Box sx={{ mt: 2 }}>
+                    {/* Contador de clientes solo en escritorio/tablet */}
+                    
                     <ClientsListTable 
                         clients={clients} 
                         onEdit={handleNavigateEditClient}
