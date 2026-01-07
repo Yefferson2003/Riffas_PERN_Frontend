@@ -1,4 +1,3 @@
-
 import dayjs from "dayjs";
 import html2canvas from "html2canvas";
 import jsPDF from 'jspdf';
@@ -77,7 +76,7 @@ export function translateRaffleStatusSelect(status: StatusRaffleNumbersType): st
     const translations: Record<typeof status, string> = {
         available: "Disponibles",
         sold: "Pagados",
-        pending: "Abonados",
+        pending: "Apartados - Abonados",
         apartado: "Por Confirmar"
     };
     return translations[status] || status;
@@ -90,6 +89,16 @@ export const colorStatusRaffleNumber : {[key: string] : "warning" | "default" | 
     sold: 'success',
     pending: 'warning',
     reserved: undefined, 
+}
+
+// Función para abrir WhatsApp compatible con iOS y Android
+export function openWhatsAppUrl(url: string) {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+        window.location.href = url;
+    } else {
+        window.open(url, '_blank');
+    }
 }
 
 export const getChipStyles = (status: string) => {
@@ -238,7 +247,7 @@ El equipo de *${raffleName}* 🎟️
     
     const whatsappUrl = `https://wa.me/${telefono}?text=${encodedMessage}`;
     
-    window.open(whatsappUrl, '_blank');
+    openWhatsAppUrl(whatsappUrl);
 };
 
 // 📋 Función para generar mensaje de compra de rifa
@@ -706,15 +715,23 @@ export const generateTicketPreviewImage = async ({
         (sum, entry) => sum + parseFloat(entry.paymentDue),
         0
     );
+
     const total = abonado + deuda;
     const allNumbers = pdfData.map(e =>
         formatWithLeadingZeros(e.number, totalNumbers)
     );
-    const numerosPreview =
-        allNumbers.length > 3
-            ? `${allNumbers.slice(0, 3).join(", ")} ...`
-            : allNumbers.join(", ");
+    const numerosPreview = allNumbers.join(", ");
     const entry = pdfData[0];
+
+    // Buscar la fecha del último abono válido (payments[].createdAt más reciente)
+    let lastPaymentDate = null;
+    const allPayments = pdfData.flatMap(e => e.payments).filter(p => p.isValid);
+    if (allPayments.length > 0) {
+        lastPaymentDate = allPayments.reduce((latest, p) => {
+            if (!latest) return p.createdAt;
+            return new Date(p.createdAt) > new Date(latest) ? p.createdAt : latest;
+        }, null as string | null);
+    }
 
     // HTML del ticket estilo recibo/tiquete
     container.innerHTML = `
@@ -740,6 +757,7 @@ export const generateTicketPreviewImage = async ({
             <div style="font-size:0.9rem;font-weight:700;color:#111;">Valor total: <span style='font-weight:900;'>${formatCurrencyCOP(total)}</span></div>
             <div style="font-size:0.9rem;font-weight:700;color:#111;">Abonado: <span style='font-weight:900;'>${formatCurrencyCOP(abonado)}</span></div>
             <div style="font-size:0.9rem;font-weight:700;color:#111;">Deuda: <span style='font-weight:900;'>${formatCurrencyCOP(deuda)}</span></div>
+            ${lastPaymentDate ? `<div style="font-size:0.85rem;font-weight:600;color:#1976d2;">Último abono: <span style='font-weight:900;'>${formatDateTimeLarge(lastPaymentDate)}</span></div>` : ''}
         </div>
         <div style="border-top:1.5px dashed #222;margin:10px 0 8px 0;width:100%;"></div>
         <div style="font-size:0.85rem;color:#222;font-weight:700;text-align:center;">¡Gracias por su compra!</div>
@@ -1275,7 +1293,7 @@ Por favor confirma la reservación y contáctame si es necesario.
 
         const encodedMessage = encodeURIComponent(message.trim());
         const whatsappUrl = `https://wa.me/${raffle.contactRifero}?text=${encodedMessage}`;
-        window.open(whatsappUrl, '_blank');
+        openWhatsAppUrl(whatsappUrl);
 
         return {
             success: true,
