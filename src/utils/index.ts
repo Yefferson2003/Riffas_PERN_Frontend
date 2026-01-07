@@ -650,6 +650,7 @@ export const generatePDFBlob = ({
 /**
  * Genera una imagen PNG (preview) del ticket de la rifa usando HTML + html2canvas
  */
+
 export const generateTicketPreviewImage = async ({
     raffle,
     pdfData,
@@ -659,36 +660,30 @@ export const generateTicketPreviewImage = async ({
     PaymentSellNumbersModalProps,
     "raffle" | "awards" | "pdfData" | "totalNumbers" | "imgIconURL"
 >): Promise<HTMLImageElement> => {
-
     const DEFAULT_RAFFLE_ICON =
-        "https://res.cloudinary.com/dfbwjrpdu/image/upload/v1765900779/receipt_657234_p517ss.png"
-
+        "https://res.cloudinary.com/dfbwjrpdu/image/upload/v1765900779/receipt_657234_p517ss.png";
     const currentImgIconURL = imgIconURL || DEFAULT_RAFFLE_ICON;
 
     // Crear contenedor temporal
     const containerId = "ticket-preview-image-temp";
     let container = document.getElementById(containerId);
-
     if (!container) {
         container = document.createElement("div");
         container.id = containerId;
-        container.style.width = "560px";
-        container.style.height = "300px";
-        container.style.display = "flex";
-        container.style.flexDirection = "column";
-        container.style.justifyContent = "flex-start";
-        container.style.background = "#ffffff";
-        container.style.borderRadius = "18px";
-        container.style.boxShadow = "0 4px 24px rgba(0,0,0,0.15)";
-        container.style.padding = "22px 28px";
-        container.style.border = "1.5px solid #e2e8f0";
+        container.style.width = "540px";
+        container.style.minHeight = "1px";
+        container.style.background = "#fff";
+        container.style.borderRadius = "8px";
+        container.style.boxShadow = "0 2px 8px rgba(0,0,0,0.10)";
+        container.style.padding = "18px 12px 12px 12px";
+        container.style.border = "1.5px dashed #222";
         container.style.position = "relative";
+        container.style.fontFamily = "monospace, 'Courier New', Courier";
         document.body.appendChild(container);
     }
 
     // Lógica de datos
     const isMultiple = pdfData.length > 1;
-
     const abonado = pdfData.reduce(
         (sum, entry) =>
             sum +
@@ -697,112 +692,59 @@ export const generateTicketPreviewImage = async ({
                 .reduce((s, p) => s + parseFloat(p.amount), 0),
         0
     );
-
     const deuda = pdfData.reduce(
         (sum, entry) => sum + parseFloat(entry.paymentDue),
         0
     );
-
     const total = abonado + deuda;
-
     const allNumbers = pdfData.map(e =>
         formatWithLeadingZeros(e.number, totalNumbers)
     );
-
     const numerosPreview =
         allNumbers.length > 3
             ? `${allNumbers.slice(0, 3).join(", ")} ...`
             : allNumbers.join(", ");
-
     const entry = pdfData[0];
 
-    // HTML del ticket (solo icono, luego nombre y fecha, luego línea y datos)
+    // HTML del ticket estilo recibo/tiquete
     container.innerHTML = `
-        <!-- Icono / Logo -->
-        <div style="display:flex;align-items:center;gap:18px;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
             <img
                 src="${currentImgIconURL}"
                 crossorigin="anonymous"
-                style="
-                    width:44px;
-                    height:44px;
-                    object-fit:contain;
-                    border-radius:10px;
-                "
+                style="width:38px;height:38px;object-fit:contain;margin-bottom:2px;filter: grayscale(100%);"
             />
-            <div style="display:flex;flex-direction:column;flex:1;gap:2px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <span style="font-size:20px;font-weight:800;color:#1446A0;">${raffle.name}</span>
-                    <span style="font-size:15px;font-weight:600;color:#475569;">
-                        Sorteo: ${formatDateTimeLarge(raffle.playDate)}
-                    </span>
-                </div>
-                <div style="font-size:15px;font-weight:400;color:#222; margin-bottom:2px;">${raffle.nameResponsable}</div>
-                <div style="font-size:17px;font-weight:700;color:#1446A0;">${isMultiple ? "Números" : "Boleto"}: ${numerosPreview}</div>
-            </div>
+            <div style="font-size:1.1rem;font-weight:900;color:#111;letter-spacing:1px;">${raffle.name}</div>
+            <div style="font-size:0.95rem;font-weight:700;color:#222;">${raffle.nameResponsable}</div>
+            <div style="font-size:0.85rem;font-weight:600;color:#222;">Sorteo: ${formatDateTimeLarge(raffle.playDate)}</div>
         </div>
-        <hr style="border-top:1px solid #e2e8f0;margin:12px 0 10px 0;" />
-        <div style="display:flex;flex-direction:column;gap:6px;">
-            <!-- Comprador -->
-            <div style="font-size:15px;color:#334155;">
-                <div>
-                    <span style="font-weight:700;">Comprador:</span>
-                    ${entry.firstName ?? ""} ${entry.lastName ?? ""}
-                </div>
-                <div>
-                    <span style="font-weight:700;">Teléfono:</span>
-                    ${entry.phone ?? ""}
-                </div>
-            </div>
-            <!-- Valores -->
-            <div style="
-                margin-top:6px;
-                font-size:15px;
-                color:#334155;
-                display:flex;
-                flex-direction:column;
-                gap:3px;
-            ">
-                <div>
-                    <span style="font-weight:700;">
-                        Valor total${isMultiple ? " de los boletos" : ""}:
-                    </span>
-                    <span style="font-weight:800;color:#0a7a25;">
-                        ${formatCurrencyCOP(total)}
-                    </span>
-                </div>
-                <div>
-                    <span style="font-weight:700;">
-                        Abonad${isMultiple ? "os" : "o"}:
-                    </span>
-                    <span style="font-weight:700;color:#2563eb;">
-                        ${formatCurrencyCOP(abonado)}
-                    </span>
-                </div>
-                <div>
-                    <span style="font-weight:700;">
-                        Deud${isMultiple ? "as" : "a"}:
-                    </span>
-                    <span style="font-weight:700;color:#b91c1c;">
-                        ${formatCurrencyCOP(deuda)}
-                    </span>
-                </div>
-            </div>
+        <div style="border-top:1.5px dashed #222;margin:10px 0 8px 0;width:100%;"></div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:0.95rem;font-weight:700;color:#111;">${isMultiple ? "Números" : "Boleto"}: <span style='font-weight:900;'>${numerosPreview}</span></div>
+            <div style="font-size:0.9rem;font-weight:700;color:#111;">Comprador: <span style='font-weight:900;'>${entry.firstName ?? ""} ${entry.lastName ?? ""}</span></div>
+            <div style="font-size:0.9rem;font-weight:700;color:#111;">Teléfono: <span style='font-weight:900;'>${entry.phone ?? ""}</span></div>
+            <div style="font-size:0.85rem;font-weight:700;color:#222;">Reservado: <span style='font-weight:900;'>${formatDateTimeLarge(entry.reservedDate ?? "")}</span></div>
         </div>
+        <div style="border-top:1.5px dashed #222;margin:10px 0 8px 0;width:100%;"></div>
+        <div style="display:flex;flex-direction:column;gap:1px;">
+            <div style="font-size:0.9rem;font-weight:700;color:#111;">Valor total: <span style='font-weight:900;'>${formatCurrencyCOP(total)}</span></div>
+            <div style="font-size:0.9rem;font-weight:700;color:#111;">Abonado: <span style='font-weight:900;'>${formatCurrencyCOP(abonado)}</span></div>
+            <div style="font-size:0.9rem;font-weight:700;color:#111;">Deuda: <span style='font-weight:900;'>${formatCurrencyCOP(deuda)}</span></div>
+        </div>
+        <div style="border-top:1.5px dashed #222;margin:10px 0 8px 0;width:100%;"></div>
+        <div style="font-size:0.85rem;color:#222;font-weight:700;text-align:center;">¡Gracias por su compra!</div>
     `;
 
     // Renderizar imagen
     const canvas = await html2canvas(container, {
         scale: 2,
-        backgroundColor: "#ffffff",
+        backgroundColor: "#fff",
         useCORS: true
     });
-
     const img = document.createElement("img");
     img.src = canvas.toDataURL("image/png");
     img.alt = "Preview Ticket";
     img.style.maxWidth = "100%";
-
     container.remove();
     return img;
 };
