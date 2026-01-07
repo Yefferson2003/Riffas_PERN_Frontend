@@ -77,7 +77,7 @@ export function translateRaffleStatusSelect(status: StatusRaffleNumbersType): st
     const translations: Record<typeof status, string> = {
         available: "Disponibles",
         sold: "Pagados",
-        pending: "Apartados",
+        pending: "Abonados",
         apartado: "Por Confirmar"
     };
     return translations[status] || status;

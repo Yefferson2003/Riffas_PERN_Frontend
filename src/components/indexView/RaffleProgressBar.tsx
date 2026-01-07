@@ -349,7 +349,7 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default',
                             fontSize: { xs: '0.6rem', sm: '0.75rem' },
                             display: 'block'
                         }}>
-                            Pendientes
+                            Por Confirmar
                         </Typography>
                         <Typography variant="body2" sx={{ 
                             color: '#374151',
