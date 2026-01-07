@@ -2,7 +2,7 @@ import SyncIcon from '@mui/icons-material/Sync';
 import DownloadIcon from '@mui/icons-material/Download';
 import IconButton from '@mui/material/IconButton';
 import { exportClientsToExcel } from '../../utils/exportClientsExcel';
-import { Box, Button, CircularProgress, Fade, Pagination, TextField, Tooltip, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, Fade, Pagination, TextField, Tooltip, Typography, MenuItem, Select, InputLabel, FormControl, SelectChangeEvent } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +21,7 @@ function ClientView () {
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [page, setPage] = useState(1);
+    const [order, setOrder] = useState(3); // 1: Alfa ASC, 2: Alfa DESC, 3: Fecha ASC, 4: Fecha DESC
     const limit = 15;
 
     useEffect(() => {
@@ -30,6 +31,12 @@ function ClientView () {
         return () => clearTimeout(handler);
     }, [search]);
 
+    // Manejar cambio de orden
+    const handleOrderChange = (e:  SelectChangeEvent<number>) => {
+        setOrder(e.target.value as number);
+        setPage(1);
+    };
+
     const {
         data,
         isLoading,
@@ -37,8 +44,8 @@ function ClientView () {
         error,
         refetch
     } = useQuery({
-        queryKey: ["clients", { page, limit, search: debouncedSearch }],
-        queryFn: () => getClients({ page, limit, search: debouncedSearch }),
+        queryKey: ["clients", { page, limit, search: debouncedSearch, order }],
+        queryFn: () => getClients({ page, limit, search: debouncedSearch, order }),
     });
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,15 +79,32 @@ function ClientView () {
     return (
         <Box sx={{ width: '100%', pb: 8, px: { xs: 1, md: 4 }, textAlign: 'center' }}>
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, alignItems: 'center', justifyContent: 'space-between', mb: 6, gap: 3 }}>
-                <TextField
-                    id="search"
-                    label="Buscar cliente..."
-                    variant="outlined"
-                    size="small"
-                    value={search}
-                    onChange={handleSearchChange}
-                    sx={{ width: { xs: '100%', sm: 300 } }}
-                />
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <TextField
+                        id="search"
+                        label="Buscar cliente..."
+                        variant="outlined"
+                        size="small"
+                        value={search}
+                        onChange={handleSearchChange}
+                        sx={{ width: { xs: '100%', sm: 300 } }}
+                    />
+                    <FormControl size="small" sx={{ minWidth: 180 }}>
+                        <InputLabel id="order-select-label">Ordenar por</InputLabel>
+                        <Select
+                            labelId="order-select-label"
+                            id="order-select"
+                            value={order}
+                            label="Ordenar por"
+                            onChange={handleOrderChange}
+                        >
+                            <MenuItem value={1}>Alfabético (Apellido) (A-Z)</MenuItem>
+                            <MenuItem value={2}>Alfabético (Apellido) (Z-A)</MenuItem>
+                            <MenuItem value={3}>Fecha creación (más reciente primero)</MenuItem>
+                            <MenuItem value={4}>Fecha creación (más antiguo primero)</MenuItem>
+                        </Select>
+                    </FormControl>
+                </Box>
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                     <Button
                         variant="contained"

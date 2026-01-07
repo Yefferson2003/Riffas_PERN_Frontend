@@ -59,7 +59,7 @@ function Awards({ awards, refecht, raffleDate, raffleColor = '#1976d2' }: Awards
                 Premios
             </h3>
 
-            {user.rol.name === 'admin' && <button
+            {(user.rol.name === 'admin' || user.rol.name === 'responsable') && <button
                 onClick={handleNewAwardModal}
                 className="px-4 py-2 mb-4 text-white transition-opacity rounded hover:opacity-90"
                 style={{ backgroundColor: raffleColor }}
@@ -87,7 +87,7 @@ function Awards({ awards, refecht, raffleDate, raffleColor = '#1976d2' }: Awards
                             Juega: <span className="text-black">{formatDateTimeLargeIsNull(award.playDate)}</span>
                         </p>
 
-                        {user.rol.name === 'admin' && (
+                        {(user.rol.name === 'admin' || user.rol.name === 'responsable') && (
                             <>
                             <IconButton 
                                 color="primary" 

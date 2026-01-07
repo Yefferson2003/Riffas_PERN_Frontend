@@ -7,6 +7,7 @@ import { ClientFormType, ClientSelectSchema, ClientsListForExportSchema, ClientT
 
 type ClientApi = { 
     page: number;
+    order: number;
     limit: number;
     search: string;
     clientId: ClientType['id'];
@@ -34,12 +35,13 @@ export async function buyNumbersForClient({ clientId, buyNumberForClientFormData
     }
 }
 
-export async function getClients( { page, limit, search } : Pick<ClientApi, 'page' | 'limit' | 'search'>) {
+export async function getClients( { page, limit, search, order } : Pick<ClientApi, 'page' | 'limit' | 'search' | 'order'>) {
     try {
         const { data } = await api.get("/clients", { params: { 
             page, 
             limit, 
-            search 
+            search, 
+            order
         } });
         
         const response = responseClientsSchema.safeParse(data);
