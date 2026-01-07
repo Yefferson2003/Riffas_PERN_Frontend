@@ -73,6 +73,16 @@ export function translateRaffleStatus(status: StatusRaffleNumbersType): string {
     return translations[status] || status;
 }
 
+export function translateRaffleStatusSelect(status: StatusRaffleNumbersType): string {
+    const translations: Record<typeof status, string> = {
+        available: "Disponibles",
+        sold: "Pagados",
+        pending: "Apartados",
+        apartado: "Por Confirmar"
+    };
+    return translations[status] || status;
+}
+
 export const rifflesNumbersStatusEnum = ['available', 'sold', 'pending', 'apartado'] as const;
 
 export const colorStatusRaffleNumber : {[key: string] : "warning" | "default" | "success" | undefined } = {

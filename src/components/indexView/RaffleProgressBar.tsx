@@ -254,7 +254,7 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default',
                         }} />
                     )}
                     
-                    {/* Pendientes */}
+                    {/* Pendientes (ahora color dorado) */}
                     {pendingPercentage > 0 && (
                         <Box sx={{
                             position: 'absolute',
@@ -262,11 +262,11 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default',
                             top: 0,
                             width: `${pendingPercentage}%`,
                             height: '100%',
-                            backgroundColor: '#ed6c02' // Amarillo warning de MUI
+                            backgroundColor: '#ffd700', // Amarillo puro (gold) ahora para pendientes
                         }} />
                     )}
                     
-                    {/* Apartados */}
+                    {/* Apartados (ahora color warning) */}
                     {apartadoPercentage > 0 && (
                         <Box sx={{
                             position: 'absolute',
@@ -274,7 +274,7 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default',
                             top: 0,
                             width: `${apartadoPercentage}%`,
                             height: '100%',
-                            backgroundColor: '#ffd700', // Amarillo puro (gold)
+                            backgroundColor: '#ed6c02', // Amarillo warning de MUI ahora para apartados
                             borderRadius: apartadoProgress === 100 ? { xs: 4, sm: 5, md: 6 } : { xs: '0 4px 4px 0', sm: '0 5px 5px 0', md: '0 6px 6px 0' }
                         }} />
                     )}
@@ -338,14 +338,14 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default',
                         <Box sx={{ 
                             width: { xs: 8, sm: 10, md: 12 }, 
                             height: { xs: 8, sm: 10, md: 12 }, 
-                            backgroundColor: '#ed6c02', // Amarillo warning de MUI
+                            backgroundColor: '#ffd700', // Amarillo puro (gold) ahora para pendientes
                             borderRadius: '50%', 
                             mx: 'auto', 
                             mb: { xs: 0.25, sm: 0.5 }
                         }} />
                         <Typography variant="caption" sx={{ 
                             fontWeight: 'bold', 
-                            color: '#e65100', // Color de texto warning más oscuro de MUI
+                            color: '#b8860b', // Color de texto dorado oscuro para contraste
                             fontSize: { xs: '0.6rem', sm: '0.75rem' },
                             display: 'block'
                         }}>
@@ -372,14 +372,14 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default',
                         <Box sx={{ 
                             width: { xs: 8, sm: 10, md: 12 }, 
                             height: { xs: 8, sm: 10, md: 12 }, 
-                            backgroundColor: '#ffd700', // Amarillo puro (gold)
+                            backgroundColor: '#ed6c02', // Amarillo warning de MUI ahora para apartados
                             borderRadius: '50%', 
                             mx: 'auto', 
                             mb: { xs: 0.25, sm: 0.5 }
                         }} />
                         <Typography variant="caption" sx={{ 
                             fontWeight: 'bold', 
-                            color: '#b8860b', // Color de texto dorado oscuro para contraste
+                            color: '#e65100', // Color de texto warning más oscuro de MUI
                             fontSize: { xs: '0.6rem', sm: '0.75rem' },
                             display: 'block'
                         }}>
