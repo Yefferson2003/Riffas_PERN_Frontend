@@ -38,7 +38,7 @@ import MobileErrorBoundary from '../../components/shared/MobileErrorBoundary';
 import MobileSafePagination from '../../components/shared/MobileSafePagination';
 import socket from '../../socket';
 import { RaffleNumber, RaffleNumbersPayments, statusRaffleNumbersEnum, User } from "../../types";
-import { capitalize, colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros, getChipStyles, translateRaffleStatus, translateRaffleStatusSelect } from "../../utils";
+import { capitalize, colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros, getChipStyles, translateRaffleStatusSelect } from "../../utils";
 import { exelRaffleNumbersFilter, exelRaffleNumbersFilterDetails } from '../../utils/exel';
 import LoaderView from "../LoaderView";
 import '../../styles/mobile-fixes.css';
