@@ -338,18 +338,19 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default',
                         <Box sx={{ 
                             width: { xs: 8, sm: 10, md: 12 }, 
                             height: { xs: 8, sm: 10, md: 12 }, 
-                            backgroundColor: '#ffd700', // Amarillo puro (gold) ahora para pendientes
+                            backgroundColor: '#ed6c02', // Amarillo puro (gold) ahora para pendientes
+                            // backgroundColor: '#ffd700', // Amarillo puro (gold) ahora para pendientes
                             borderRadius: '50%', 
                             mx: 'auto', 
                             mb: { xs: 0.25, sm: 0.5 }
                         }} />
                         <Typography variant="caption" sx={{ 
                             fontWeight: 'bold', 
-                            color: '#b8860b', // Color de texto dorado oscuro para contraste
+                            color: '#e65100', // Color de texto dorado oscuro para contraste
                             fontSize: { xs: '0.6rem', sm: '0.75rem' },
                             display: 'block'
                         }}>
-                            Por Confirmar
+                            Apartado
                         </Typography>
                         <Typography variant="body2" sx={{ 
                             color: '#374151',
@@ -372,18 +373,20 @@ function RaffleProgressBar({ numbersByStatus, totalNumbers, variant = 'default',
                         <Box sx={{ 
                             width: { xs: 8, sm: 10, md: 12 }, 
                             height: { xs: 8, sm: 10, md: 12 }, 
-                            backgroundColor: '#ed6c02', // Amarillo warning de MUI ahora para apartados
+                            backgroundColor: '#ffd700', // Amarillo warning de MUI ahora para apartados
+                            // backgroundColor: '#ed6c02', // Amarillo warning de MUI ahora para apartados
                             borderRadius: '50%', 
                             mx: 'auto', 
                             mb: { xs: 0.25, sm: 0.5 }
                         }} />
                         <Typography variant="caption" sx={{ 
                             fontWeight: 'bold', 
-                            color: '#e65100', // Color de texto warning más oscuro de MUI
+                            color: '#b8860b', // Color de texto warning más oscuro de MUI
+                            // color: '#e65100', // Color de texto warning más oscuro de MUI
                             fontSize: { xs: '0.6rem', sm: '0.75rem' },
                             display: 'block'
                         }}>
-                            Apartados
+                            Por Confirmar
                         </Typography>
                         <Typography variant="body2" sx={{ 
                             color: '#374151',
