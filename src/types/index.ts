@@ -236,10 +236,24 @@ export const responseRaffleSharedSchema = z.object({
     raffle: raffleSchema
 })
 
+
+
 export const URLSchema = z.object({
-    url: z.string()
+    id: z.number(),
+    uuid: z.string(),
+    token: z.string(),
+    expiresAt: z.string(),
+    url: z.string().nullable(),
+    raffleId: z.number().nullable(),
 })
 
+export const responseURLsSchema= z.object({
+    urls: z.array(URLSchema)
+})
+
+export const responseURLSchema = URLSchema.pick({
+    url: true
+})
 
 export type Raffle = z.infer<typeof raffleSchema>
 export type RaffleSharedType = z.infer<typeof raffleSchemaShared>

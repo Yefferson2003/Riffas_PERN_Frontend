@@ -1128,6 +1128,7 @@ function RaffleNumbersView() {
                     refechtExpenseTotalByUser={refechtExpenseTotalByUser}
                 />
                 <ShareURLRaffleModal
+                    raffleColor={raffle.color || '#1976d2'}
                 />
                 <RafflePayMethodsModal
                     raffleId={raffleId!}

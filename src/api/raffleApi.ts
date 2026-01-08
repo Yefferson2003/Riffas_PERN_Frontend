@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { CreateRaffleForm, raffleByIdSchema, raffleSchemaShared, responseGetRafflesSchema, responseGetUsersByRaffle, responseRafflesDetailsNumbers, totalByVendedorSchema, totalSchema, UpdateRaffleForm, URLSchema } from "../types";
+import { CreateRaffleForm, raffleByIdSchema, raffleSchemaShared, responseGetRafflesSchema, responseGetUsersByRaffle, responseRafflesDetailsNumbers, responseURLSchema, responseURLsSchema, totalByVendedorSchema, totalSchema, UpdateRaffleForm } from "../types";
 
 export async function getRaffles(params = {}) {
     try {
@@ -40,13 +40,42 @@ export async function getRaffleShared({ token} : { token: string,}) {
     }
 }
 
-export async function createURLRaffle({ raffleId } : {raffleId: string}) {
+export async function getURLsRaffle({ raffleId } : {raffleId: string}) {
     try {
-        const {data} = await api.post(`/raffles/${raffleId}/URL`, )
-        const response = URLSchema.safeParse(data)
+        const {data} = await api.get(`/raffles/${raffleId}/URL`)
+        const response = responseURLsSchema.safeParse(data)
+        
         if (response.success) {
             return response.data
         }
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+export async function createURLRaffle({ raffleId, expirationDays } : {raffleId: string, expirationDays: number}) {
+    try {
+        const {data} = await api.post(`/raffles/${raffleId}/URL`, {
+            expirationDays
+        } )
+        const response = responseURLSchema.safeParse(data)
+        if (response.success) {
+            return response.data
+        }
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+
+export async function deleteURLRaffle({ raffleId, urlId } : {raffleId: string, urlId: number}) {
+    try {
+        const {data} = await api.delete<string>(`/raffles/${raffleId}/URL/${urlId}`)
+        return data
     } catch (error) {
         if (isAxiosError(error) && error.response) {
             console.log(error);
