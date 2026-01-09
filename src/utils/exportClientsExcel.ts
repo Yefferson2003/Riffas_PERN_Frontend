@@ -1,14 +1,14 @@
-import { getClientsForExport } from '../api/clientApi';
+import { ClientApi, getClientsForExport } from '../api/clientApi';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import dayjs from 'dayjs';
 import { formatCurrencyCOP, translateRaffleStatus, formatWithLeadingZeros } from './index';
 import { toast } from 'react-toastify';
 
-export async function exportClientsToExcel() {
+export async function exportClientsToExcel({ search, order, startDate, endDate } : Pick<ClientApi, "search" | 'order' | 'startDate' | 'endDate'>) {
     toast.info('Iniciando proceso de descarga...', { position: 'top-right', autoClose: 2000 });
     try {
-        const data = await getClientsForExport();
+        const data = await getClientsForExport({ search, order, startDate, endDate });
         if (!data || !data.clients || data.clients.length === 0) {
             toast.error('No hay datos de clientes para exportar', { position: 'top-right', autoClose: 3000 });
             console.error('No hay datos de clientes para exportar');

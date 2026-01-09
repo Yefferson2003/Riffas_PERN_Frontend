@@ -81,6 +81,10 @@ function ClientView () {
         refetch();
     }
 
+    const handleExportClientsToExcel = async () => {
+        await exportClientsToExcel({ search: debouncedSearch, order, startDate: startDate?.format('YYYY-MM-DD'), endDate: endDate?.format('YYYY-MM-DD') });
+    }
+
     return (
         <Box sx={{ width: '100%', pb: 8, px: { xs: 1, md: 4 }, textAlign: 'center' }}>
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, alignItems: 'center', justifyContent: 'space-between', mb: 6, gap: 3 }}>
@@ -157,7 +161,7 @@ function ClientView () {
                         <IconButton
                             color="success"
                             sx={{ borderRadius: 2, boxShadow: 1, transition: 'transform 0.2s', '&:hover': { bgcolor: '#e8f5e9', color: 'success.main', transform: 'scale(1.12)' } }}
-                            onClick={exportClientsToExcel}
+                            onClick={handleExportClientsToExcel}
                         >
                             <DownloadIcon sx={{ fontSize: 28 }} />
                         </IconButton>

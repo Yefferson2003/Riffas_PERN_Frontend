@@ -5,7 +5,7 @@ import { isAxiosError } from "axios";
 import api from "../lib/axios";
 import { ClientFormType, ClientSelectSchema, ClientsListForExportSchema, ClientType, responseClientSchema, responseClientsSchema } from "../types";
 
-type ClientApi = { 
+export type ClientApi = { 
     page: number;
     order: number;
     limit: number;
@@ -101,9 +101,14 @@ export async function updateClient( { clientId, formData } : Pick<ClientApi, 'cl
 }
 
 // Exportar todos los clientes y sus datos completos (sin paginación)
-export async function getClientsForExport() {
+export async function getClientsForExport({ search, order, startDate, endDate} : Pick<ClientApi, "search" | 'order' | 'startDate' | 'endDate'> ) {
     try {
-        const { data } = await api.get("/clients/export-all");
+        const { data } = await api.get("/clients/export-all", { params: { 
+            search,
+            order,
+            startDate,
+            endDate
+        } });
         // No paginación, retorna todos los clientes
         const response = ClientsListForExportSchema.safeParse(data);
         if (response.success) {
