@@ -840,5 +840,42 @@ export const ClientSelectSchema = ResponsePaginationSchema.extend({
     }))
 })
 
+const SharedRaffleNumberSchema =  RaffleNumberSchema.pick({
+    id: true,
+    number: true,
+    reservedDate: true,
+    paymentAmount: true,
+    paymentDue: true,
+    status: true,
+}).extend({
+    raffle: raffleSchema.pick({
+        id: true,
+        name: true,
+        playDate: true,
+        price: true,
+        color: true,
+    }).extend({
+        totalNumbers: z.number().optional()
+    })
+})
+
+export const ClientSharedLinkSchema = ClientSchema.pick({
+    id: true,
+    firstName: true,
+    lastName: true,
+    phone: true,
+    address: true,
+}).extend({
+    raffleNumbers: z.array(
+        SharedRaffleNumberSchema
+    )
+})
+
+export const responseClientsSharedLinkSchema = ResponsePaginationSchema.extend({
+    clients: z.array(ClientSharedLinkSchema)
+})
+
 export type ClientSelectType = z.infer<typeof ClientSelectSchema>
+export type ClientSharedLinkType = z.infer<typeof ClientSharedLinkSchema>
+export type SharedRaffleNumberType = z.infer<typeof SharedRaffleNumberSchema>
 export type ResponseClientType = z.infer<typeof ResponseClientSchema>

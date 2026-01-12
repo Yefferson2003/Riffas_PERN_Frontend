@@ -27,7 +27,7 @@ export default function RaffleSelect({ value, onChange, error, helperText, show 
     });
 
     useEffect(() => {
-        if (data) {
+        if (data && Array.isArray(data.raffles)) {
             setRaffles(
                 data.raffles.map((r) => ({
                     id: r.id,
@@ -36,13 +36,15 @@ export default function RaffleSelect({ value, onChange, error, helperText, show 
                     totalNumbers: r.totalNumbers || 0,
                 }))
             );
-            
 
             if (data.total) {
                 setTotalPages(Math.ceil(data.total / PAGE_SIZE));
             } else {
                 setTotalPages(data.raffles.length === PAGE_SIZE ? page + 1 : page);
             }
+        } else {
+            setRaffles([]);
+            setTotalPages(1);
         }
     }, [data, page]);
 
@@ -51,6 +53,18 @@ export default function RaffleSelect({ value, onChange, error, helperText, show 
             setPage(value);
         }
     };
+
+
+    if (isFetching) {
+        return (
+            <Box sx={{ mt: 2, mb: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <LinearProgress color="primary" sx={{ width: '100%', mb: 2 }} />
+                <Typography variant="body2" color="text.secondary">
+                    Cargando rifas...
+                </Typography>
+            </Box>
+        );
+    }
 
     if (!isFetching && raffles.length === 0) {
         return (

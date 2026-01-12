@@ -2,6 +2,11 @@ import { isAxiosError } from "axios";
 import api from "../lib/axios";
 import { PayNumberForm, PayNumbersForm, PayNumbersSharedFormType, RaffleNumberSchema, raffleNumbersExelFilterSchema, raffleNumberSharedSchema, RaffleNumberUpdateForm, RafflePayResponseSchema, ramdomNumberSchema, responseRaffleNumbersExelSchema, responseRaffleNumbersPendingSchema, responseRaffleNumbersSchema, responseRaffleNumbersSchemaShared } from "../types";
 
+type raffleNumberApiType = {
+    raffleId: number;
+    raffleNumberId: number;
+}
+
 export async function getRaffleNumers({params, raffleId} : {params : object, raffleId: string}) {
     try { 
         // console.log(params);
@@ -225,6 +230,33 @@ export async function getRandomAvailableNumberShared({ token }: { token: string}
         if (response.success) {
             return response.data;
         }
+
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+
+export async function acceptRaffleNumberShared({ raffleId, raffleNumberId }: Pick<raffleNumberApiType, 'raffleId' | 'raffleNumberId'>) {
+    try {
+        const { data } = await api.put<string>(`/raffles-numbers/${raffleId}/accept-shared-number/${raffleNumberId}`);
+
+        return data;
+
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+export async function rejectRaffleNumberShared({ raffleId, raffleNumberId }: Pick<raffleNumberApiType, 'raffleId' | 'raffleNumberId'>) {
+    try {
+        const { data } = await api.put<string>(`/raffles-numbers/${raffleId}/reject-shared-number/${raffleNumberId}`);
+
+        return data;
 
     } catch (error) {
         if (isAxiosError(error) && error.response) {

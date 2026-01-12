@@ -13,6 +13,7 @@ import PayMethodeView from "./views/indexView/PayMethodeView"
 import ClientView from "./views/indexView/ClientView"
 import WhatsAppView from "./views/indexView/WhatsAppView"
 import PdfView from "./views/PdfView"
+import ClientWebView from "./views/indexView/ClientWebView"
 
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
                     <Route path="/raffle/:raffleId" element={<RaffleNumbersView/>} index/>
                     <Route path="/pay-methods" element={<PayMethodeView/>} index/>
                     <Route path="/clients" element={<ClientView/>} index/>
+                    <Route path="/clients-web" element={<ClientWebView/>} index/>
                     <Route path="/whatsapp" element={<WhatsAppView/>} />
                 </Route>
 

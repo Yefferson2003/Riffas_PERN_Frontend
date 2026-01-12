@@ -3,7 +3,7 @@
 
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { ClientFormType, ClientSelectSchema, ClientsListForExportSchema, ClientType, responseClientSchema, responseClientsSchema } from "../types";
+import { ClientFormType, ClientSelectSchema, ClientsListForExportSchema, ClientType, responseClientSchema, responseClientsSchema, responseClientsSharedLinkSchema } from "../types";
 
 export type ClientApi = { 
     page: number;
@@ -33,6 +33,30 @@ export async function buyNumbersForClient({ clientId, buyNumberForClientFormData
             console.log(error);
             throw new Error(error.response.data.error);
 
+        }
+    }
+}
+
+export async function getClientsSharedLinkAll( { page, limit, search, order, startDate, endDate } : Pick<ClientApi, 'page' | 'limit' | 'search' | 'order' | 'startDate' | 'endDate'>) {
+    try {
+        const { data } = await api.get("/clients/shared-link", { params: { 
+            page, 
+            limit, 
+            search, 
+            order,
+            startDate,
+            endDate
+        } });
+        
+        const response = responseClientsSharedLinkSchema.safeParse(data);
+        
+        if (response.success) {
+            return response.data;
+        }
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
         }
     }
 }

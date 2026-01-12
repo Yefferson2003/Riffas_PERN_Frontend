@@ -37,19 +37,21 @@ const navConfig = {
     base: [
         { key: 'index', name: 'Inicio', url: '/' },
         { key: 'clients', name: 'Clientes', url: '/clients' },
-        { key: 'logout', name: 'Cerrar Sesión', url: '/' }
+        { key: 'clients-web', name: 'Ventas Web', url: '/clients-web' },
+        { key: 'logout', name: 'Cerrar Sesión', url: '/' },
     ],
     responsable: [
         { key: 'index', name: 'Inicio', url: '/' },
         { key: 'users', name: 'Usuarios', url: '/users' },
         { key: 'clients', name: 'Clientes', url: '/clients' },
+        { key: 'clients-web', name: 'Ventas Web', url: '/clients-web' },
         { key: 'whatsapp', name: 'Whatsapp', url: '/whatsapp' },
         { key: 'logout', name: 'Cerrar Sesión', url: '/' },
     ],
     admin: [
         { key: 'index', name: 'Inicio', url: '/' },
         { key: 'users', name: 'Usuarios', url: '/users' },
-        { key: 'clients', name: 'Clientes', url: '/clients' },
+        { key: 'clients-web', name: 'Ventas Web', url: '/clients-web' },
         { key: 'payMethods', name: 'Métodos de Pago', url: '/pay-methods' },
         { key: 'whatsapp', name: 'Whatsapp', url: '/whatsapp' },
         { key: 'logout', name: 'Cerrar Sesión', url: '/' },
