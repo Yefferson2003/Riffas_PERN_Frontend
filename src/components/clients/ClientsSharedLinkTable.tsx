@@ -17,7 +17,7 @@ import {
     Typography,
     useMediaQuery,
 } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ClientSharedLinkType } from "../../types";
 import {
@@ -123,12 +123,14 @@ const ClientsSharedLinkTable: React.FC<ClientsSharedLinkTableProps> = ({
     clients,
     onRefetch
 }) => {
+
     const navigate = useNavigate();
     const isMobile = useMediaQuery("(max-width:600px)");
     const handleViewPayments = (raffleId: number, raffleNumberId: number) => {
         navigate(`?viewPayments=${raffleId}__${raffleNumberId}`);
     };
     const [openRows, setOpenRows] = React.useState<Record<number, boolean>>({});
+    const [openCards, setOpenCards] = useState<Record<number, boolean>>({});
 
     if (!clients || clients.length === 0) {
         return (
@@ -143,162 +145,176 @@ const ClientsSharedLinkTable: React.FC<ClientsSharedLinkTableProps> = ({
     }
 
     if (isMobile) {
-        // Vista móvil: tarjetas
+        // Vista móvil: tarjetas desplegables
         return (
-        <Box
-            sx={{
-            width: "100%",
-            mt: 2,
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            }}
-        >
-            {clients.map((client) => {
-            const groupedByRaffle = (client.raffleNumbers || []).reduce(
-                (acc, num) => {
-                const raffleId = num.raffle?.id;
-                if (!acc[raffleId]) acc[raffleId] = [];
-                acc[raffleId].push(num);
-                return acc;
-                },
-                {} as Record<string, typeof client.raffleNumbers>
-            );
-            return (
-                <Paper key={client.id} sx={{ p: 2, borderRadius: 3, boxShadow: 3 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-                    {client.firstName} {client.lastName}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                    Teléfono: {client.phone || "Sin teléfono"}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                    Dirección: {client.address || "Sin dirección"}
-                </Typography>
-                {Object.keys(groupedByRaffle).length === 0 ? (
-                    <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mt: 1 }}
-                    >
-                    No tiene números asociados.
-                    </Typography>
-                ) : (
-                    Object.entries(groupedByRaffle).map(([raffleId, numbers]) => {
-                    const raffleColor = numbers[0].raffle?.color || undefined;
-                    return (
-                        <Box
-                        key={raffleId}
-                        sx={{
-                            mt: 2,
-                            mb: 2,
-                            p: 2,
-                            border: `2px solid ${raffleColor || "#1976d2"}`,
-                            borderRadius: 2,
-                            background: raffleColor
-                            ? `${raffleColor}11`
-                            : undefined,
-                        }}
-                        >
-                        <Typography
-                            sx={{
-                            fontWeight: 700,
-                            color: raffleColor || "primary.main",
-                            mb: 1,
-                            }}
-                        >
-                            Rifa:{" "}
-                            {capitalize(numbers[0].raffle?.name) ||
-                            `ID ${raffleId}`}
-                        </Typography>
-                        <Typography
-                            sx={{ fontSize: 14, color: "text.secondary", mb: 1 }}
-                        >
-                            Precio:{" "}
-                            {formatCurrencyCOP(Number(numbers[0].raffle?.price))} |
-                            Fecha de juego:{" "}
-                            {formatDateTimeLarge(numbers[0].raffle?.playDate)}
-                        </Typography>
-                        {numbers.map((num) => (
-                            <Paper
-                            key={num.id}
-                            sx={{
-                                mb: 1,
-                                p: 1.5,
-                                borderRadius: 2,
-                                background: "#fafafa",
-                                boxShadow: 1,
-                            }}
-                            >
-                            <Box
-                                sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 0.5,
-                                }}
-                            >
-                                <Box
-                                sx={{
-                                    display: "flex",
-                                    gap: 1,
-                                    alignItems: "center",
-                                }}
-                                >
-                                <Chip
-                                    label={`#${num.number}`}
-                                    size="small"
-                                    sx={{
-                                    fontWeight: 700,
-                                    bgcolor: "primary.light",
-                                    color: "primary.main",
-                                    }}
-                                />
-                                {renderStatusChip(num.status)}
-                                </Box>
-                                <Typography
-                                variant="body2"
-                                sx={{ color: "text.secondary" }}
-                                >
-                                Fecha reserva:{" "}
-                                {formatDateTimeLarge(num.reservedDate)}
-                                </Typography>
-                                <Typography
-                                variant="body2"
-                                sx={{ color: "success.main", fontWeight: 700 }}
-                                >
-                                Abono:{" "}
-                                {formatCurrencyCOP(Number(num.paymentAmount))}
-                                </Typography>
-                                <Typography
-                                variant="body2"
-                                sx={{ color: "error.main", fontWeight: 700 }}
-                                >
-                                Deuda: {formatCurrencyCOP(Number(num.paymentDue))}
-                                </Typography>
-                                <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                                <Tooltip title="Ver pagos">
-                                    <IconButton
-                                        color="info"
-                                        onClick={() => handleViewPayments(num.raffle?.id, num.id)}
-                                    >
-                                        <ReceiptLongIcon />
-                                    </IconButton>
-                                </Tooltip>
-                                </Box>
-                            </Box>
-                            </Paper>
-                        ))}
-                        </Box>
+            <Box
+                sx={{
+                    width: "100%",
+                    mt: 2,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
+                }}
+            >
+                {clients.map((client) => {
+                    const groupedByRaffle = (client.raffleNumbers || []).reduce(
+                        (acc, num) => {
+                            const raffleId = num.raffle?.id;
+                            if (!acc[raffleId]) acc[raffleId] = [];
+                            acc[raffleId].push(num);
+                            return acc;
+                        },
+                        {} as Record<string, typeof client.raffleNumbers>
                     );
-                    })
-                )}
-                </Paper>
-            );
-            })}
-            <ViewPaymentsModal
-                onRefetch={onRefetch}
-            />
-        </Box>
+                    const isOpen = !!openCards[client.id];
+                    return (
+                        <Paper key={client.id} sx={{ p: 2, borderRadius: 3, boxShadow: 3 }}>
+                            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <Box>
+                                    <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                                        {client.firstName} {client.lastName}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Teléfono: {client.phone || "Sin teléfono"}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Dirección: {client.address || "Sin dirección"}
+                                    </Typography>
+                                </Box>
+                                <IconButton
+                                    aria-label="expand card"
+                                    size="small"
+                                    onClick={() =>
+                                        setOpenCards((prev) => ({
+                                            ...prev,
+                                            [client.id]: !isOpen,
+                                        }))
+                                    }
+                                >
+                                    {isOpen ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                </IconButton>
+                            </Box>
+                            <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                                <Box sx={{ mt: 2 }}>
+                                    {Object.keys(groupedByRaffle).length === 0 ? (
+                                        <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                            sx={{ mt: 1 }}
+                                        >
+                                            No tiene números asociados.
+                                        </Typography>
+                                    ) : (
+                                        Object.entries(groupedByRaffle).map(([raffleId, numbers]) => {
+                                            const raffleColor = numbers[0].raffle?.color || undefined;
+                                            return (
+                                                <Box
+                                                    key={raffleId}
+                                                    sx={{
+                                                        mt: 2,
+                                                        mb: 2,
+                                                        p: 2,
+                                                        border: `2px solid ${raffleColor || "#1976d2"}`,
+                                                        borderRadius: 2,
+                                                        background: raffleColor
+                                                            ? `${raffleColor}11`
+                                                            : undefined,
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        sx={{
+                                                            fontWeight: 700,
+                                                            color: raffleColor || "primary.main",
+                                                            mb: 1,
+                                                        }}
+                                                    >
+                                                        Rifa: {capitalize(numbers[0].raffle?.name) || `ID ${raffleId}`}
+                                                    </Typography>
+                                                    <Typography
+                                                        sx={{ fontSize: 14, color: "text.secondary", mb: 1 }}
+                                                    >
+                                                        Precio: {formatCurrencyCOP(Number(numbers[0].raffle?.price))} |
+                                                        Fecha de juego: {formatDateTimeLarge(numbers[0].raffle?.playDate)}
+                                                    </Typography>
+                                                    {numbers.map((num) => (
+                                                        <Paper
+                                                            key={num.id}
+                                                            sx={{
+                                                                mb: 1,
+                                                                p: 1.5,
+                                                                borderRadius: 2,
+                                                                background: "#fafafa",
+                                                                boxShadow: 1,
+                                                            }}
+                                                        >
+                                                            <Box
+                                                                sx={{
+                                                                    display: "flex",
+                                                                    flexDirection: "column",
+                                                                    gap: 0.5,
+                                                                }}
+                                                            >
+                                                                <Box
+                                                                    sx={{
+                                                                        display: "flex",
+                                                                        gap: 1,
+                                                                        alignItems: "center",
+                                                                    }}
+                                                                >
+                                                                    <Chip
+                                                                        label={`#${num.number}`}
+                                                                        size="small"
+                                                                        sx={{
+                                                                            fontWeight: 700,
+                                                                            bgcolor: "primary.light",
+                                                                            color: "primary.main",
+                                                                        }}
+                                                                    />
+                                                                    {renderStatusChip(num.status)}
+                                                                    <Tooltip title="Ver pagos">
+                                                                        <IconButton
+                                                                            color="info"
+                                                                            onClick={() => handleViewPayments(num.raffle?.id, num.id)}
+                                                                            sx={{ ml: 1 }}
+                                                                        >
+                                                                            <ReceiptLongIcon />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                </Box>
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    sx={{ color: "text.secondary" }}
+                                                                >
+                                                                    Fecha reserva: {formatDateTimeLarge(num.reservedDate)}
+                                                                </Typography>
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    sx={{ color: "success.main", fontWeight: 700 }}
+                                                                >
+                                                                    Abono: {formatCurrencyCOP(Number(num.paymentAmount))}
+                                                                </Typography>
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    sx={{ color: "error.main", fontWeight: 700 }}
+                                                                >
+                                                                    Deuda: {formatCurrencyCOP(Number(num.paymentDue))}
+                                                                </Typography>
+                                                            </Box>
+                                                        </Paper>
+                                                    ))}
+                                                </Box>
+                                            );
+                                        })
+                                    )}
+                                </Box>
+                            </Collapse>
+                        </Paper>
+                    );
+                })}
+                <ViewPaymentsModal
+                    onRefetch={onRefetch}
+                />
+            </Box>
         );
     }
 
