@@ -7,8 +7,7 @@ import { Dayjs } from 'dayjs';
 import { useEffect, useState } from "react";
 import { getClientsSharedLinkAll } from "../../api/clientApi";
 import ClientsSharedLinkTable from "../../components/clients/ClientsSharedLinkTable";
-import { statusRaffleNumbersEnum, StatusRaffleNumbersType } from '../../types';
-import { translateRaffleStatusSelect } from '../../utils';
+import { StatusRaffleNumbersType } from '../../types';
 
 function ClientWebView() {
     const [search, setSearch] = useState("");
@@ -87,11 +86,7 @@ function ClientWebView() {
                                 onChange={handleFilterChange}
                             >
                                 <MenuItem value="">Todos</MenuItem>
-                                {statusRaffleNumbersEnum.map((status) => (
-                                    <MenuItem key={status} value={status}>
-                                        {translateRaffleStatusSelect(status)}
-                                    </MenuItem>
-                                ))}
+                                <MenuItem value="apartado">Por confirmar (apartado)</MenuItem>
                             </Select>
                         </FormControl>
                     </Box>
