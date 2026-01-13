@@ -735,15 +735,17 @@ export const generateTicketPreviewImage = async ({
 
     // HTML del ticket estilo recibo/tiquete
     container.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="display:flex;flex-direction:row;align-items:center;gap:18px;">
             <img
                 src="${currentImgIconURL}"
                 crossorigin="anonymous"
-                style="width:38px;height:38px;object-fit:contain;margin-bottom:2px;filter: grayscale(100%);"
+                style="width:70px;height:70px;object-fit:contain;margin-bottom:2px;filter: grayscale(100%);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.10);border:1.5px dashed #222;"
             />
-            <div style="font-size:1.1rem;font-weight:900;color:#111;letter-spacing:1px;">${raffle.name}</div>
-            <div style="font-size:0.95rem;font-weight:700;color:#222;">${raffle.nameResponsable}</div>
-            <div style="font-size:0.85rem;font-weight:600;color:#222;">Sorteo: ${formatDateTimeLarge(raffle.playDate)}</div>
+            <div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;">
+                <div style="font-size:1.1rem;font-weight:900;color:#111;letter-spacing:1px;">${raffle.name}</div>
+                <div style="font-size:0.95rem;font-weight:700;color:#222;">${raffle.nameResponsable}</div>
+                <div style="font-size:0.85rem;font-weight:600;color:#222;">${formatDateTimeLarge(raffle.playDate)}</div>
+            </div>
         </div>
         <div style="border-top:1.5px dashed #222;margin:10px 0 8px 0;width:100%;"></div>
         <div style="display:flex;flex-direction:column;gap:2px;">
@@ -757,7 +759,7 @@ export const generateTicketPreviewImage = async ({
             <div style="font-size:0.9rem;font-weight:700;color:#111;">Valor total: <span style='font-weight:900;'>${formatCurrencyCOP(total)}</span></div>
             <div style="font-size:0.9rem;font-weight:700;color:#111;">Abonado: <span style='font-weight:900;'>${formatCurrencyCOP(abonado)}</span></div>
             <div style="font-size:0.9rem;font-weight:700;color:#111;">Deuda: <span style='font-weight:900;'>${formatCurrencyCOP(deuda)}</span></div>
-            ${lastPaymentDate ? `<div style="font-size:0.85rem;font-weight:600;color:#1976d2;">Último abono: <span style='font-weight:900;'>${formatDateTimeLarge(lastPaymentDate)}</span></div>` : ''}
+            ${lastPaymentDate ? `<div style="font-size:0.9rem;font-weight:700;color:#111;">Fecha: <span style='font-weight:900;'>${formatDateTimeLarge(lastPaymentDate)}</span></div>` : ''}
         </div>
         <div style="border-top:1.5px dashed #222;margin:10px 0 8px 0;width:100%;"></div>
         <div style="font-size:0.85rem;color:#222;font-weight:700;text-align:center;">¡Gracias por su compra!</div>
