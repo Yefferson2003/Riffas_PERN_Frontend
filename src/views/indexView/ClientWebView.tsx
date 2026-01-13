@@ -7,14 +7,16 @@ import { Dayjs } from 'dayjs';
 import { useEffect, useState } from "react";
 import { getClientsSharedLinkAll } from "../../api/clientApi";
 import ClientsSharedLinkTable from "../../components/clients/ClientsSharedLinkTable";
+import { statusRaffleNumbersEnum, StatusRaffleNumbersType } from '../../types';
+import { translateRaffleStatusSelect } from '../../utils';
 
 function ClientWebView() {
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [page, setPage] = useState(1);
-    const [order, setOrder] = useState(3);
     const [startDate, setStartDate] = useState<Dayjs | null>(null);
     const [endDate, setEndDate] = useState<Dayjs | null>(null);
+    const [filter, setFilter] = useState<StatusRaffleNumbersType | string>(''); // '' para todos
     const limit = 10;
 
     useEffect(() => {
@@ -24,11 +26,6 @@ function ClientWebView() {
         return () => clearTimeout(handler);
     }, [search]);
 
-    const handleOrderChange = (e: SelectChangeEvent<number>) => {
-        setOrder(Number(e.target.value));
-        setPage(1);
-    };
-
     const {
         data,
         isLoading,
@@ -36,9 +33,20 @@ function ClientWebView() {
         error,
         refetch
     } = useQuery({
-        queryKey: ["clients-shared-link", { page, limit, search: debouncedSearch, order, startDate: startDate?.format('YYYY-MM-DD'), endDate: endDate?.format('YYYY-MM-DD') }],
-        queryFn: () => getClientsSharedLinkAll({ page, limit, search: debouncedSearch, order, startDate: startDate?.format('YYYY-MM-DD'), endDate: endDate?.format('YYYY-MM-DD') }),
+        queryKey: ["clients-shared-link", { page, limit, search: debouncedSearch, filter, startDate: startDate?.format('YYYY-MM-DD'), endDate: endDate?.format('YYYY-MM-DD') }],
+        queryFn: () => getClientsSharedLinkAll({
+            page,
+            limit,
+            search: debouncedSearch,
+            filter: filter ? filter : '',
+            startDate: startDate?.format('YYYY-MM-DD'),
+            endDate: endDate?.format('YYYY-MM-DD')
+        }),
     });
+    const handleFilterChange = (event: SelectChangeEvent<string>) => {
+        setFilter(event.target.value);
+        setPage(1);
+    };
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(e.target.value);
@@ -70,18 +78,20 @@ function ClientWebView() {
                             sx={{ width: { xs: '100%', md: 300 } }}
                         />
                         <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 180 } }}>
-                            <InputLabel id="order-select-label">Ordenar por</InputLabel>
+                            <InputLabel id="status-filter-label">Estado</InputLabel>
                             <Select
-                                labelId="order-select-label"
-                                id="order-select"
-                                value={order}
-                                label="Ordenar por"
-                                onChange={handleOrderChange}
+                                labelId="status-filter-label"
+                                id="status-filter"
+                                value={filter}
+                                label="Estado"
+                                onChange={handleFilterChange}
                             >
-                                <MenuItem value={1}>Alfabético (Apellido) (A-Z)</MenuItem>
-                                <MenuItem value={2}>Alfabético (Apellido) (Z-A)</MenuItem>
-                                <MenuItem value={3}>Fecha creación (más reciente primero)</MenuItem>
-                                <MenuItem value={4}>Fecha creación (más antiguo primero)</MenuItem>
+                                <MenuItem value="">Todos</MenuItem>
+                                {statusRaffleNumbersEnum.map((status) => (
+                                    <MenuItem key={status} value={status}>
+                                        {translateRaffleStatusSelect(status)}
+                                    </MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
                     </Box>

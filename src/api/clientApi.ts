@@ -3,11 +3,12 @@
 
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { ClientFormType, ClientSelectSchema, ClientsListForExportSchema, ClientType, responseClientSchema, responseClientsSchema, responseClientsSharedLinkSchema } from "../types";
+import { ClientFormType, ClientSelectSchema, ClientsListForExportSchema, ClientType, responseClientSchema, responseClientsSchema, responseClientsSharedLinkSchema, StatusRaffleNumbersType } from "../types";
 
 export type ClientApi = { 
     page: number;
     order: number;
+    filter: StatusRaffleNumbersType | string;
     limit: number;
     search: string;
     clientId: ClientType['id'];
@@ -37,13 +38,13 @@ export async function buyNumbersForClient({ clientId, buyNumberForClientFormData
     }
 }
 
-export async function getClientsSharedLinkAll( { page, limit, search, order, startDate, endDate } : Pick<ClientApi, 'page' | 'limit' | 'search' | 'order' | 'startDate' | 'endDate'>) {
+export async function getClientsSharedLinkAll( { page, limit, search, filter, startDate, endDate } : Pick<ClientApi, 'page' | 'limit' | 'search' | 'filter' | 'startDate' | 'endDate'>) {
     try {
         const { data } = await api.get("/clients/shared-link", { params: { 
             page, 
             limit, 
             search, 
-            order,
+            filter,
             startDate,
             endDate
         } });
