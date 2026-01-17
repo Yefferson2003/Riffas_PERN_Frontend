@@ -840,7 +840,8 @@ export const ClientSelectSchema = ResponsePaginationSchema.extend({
     }))
 })
 
-const SharedRaffleNumberSchema =  RaffleNumberSchema.pick({
+
+const SharedRaffleNumberSchema = RaffleNumberSchema.pick({
     id: true,
     number: true,
     reservedDate: true,
@@ -856,8 +857,29 @@ const SharedRaffleNumberSchema =  RaffleNumberSchema.pick({
         color: true,
     }).extend({
         totalNumbers: z.number().optional()
-    })
-})
+    }),
+    lastValidPayment: PaymentSchema.pick({
+        id: true,
+        amount: true,
+        paidAt: true,
+        createdAt: true,
+        reference: true,
+    }).extend({
+        rafflePayMethode: rafflePayMethodeSchema.pick({
+            id: true,
+            accountHolder: true,
+            accountNumber: true,
+            bankName: true,
+            isActive: true
+        }).extend({
+            payMethode: payMethodeSchema.pick({
+                id: true,
+                name: true,
+                isActive: true
+            })
+        }).nullable().optional()
+    }).nullable().optional()
+});
 
 export const ClientSharedLinkSchema = ClientSchema.pick({
     id: true,
@@ -866,16 +888,14 @@ export const ClientSharedLinkSchema = ClientSchema.pick({
     phone: true,
     address: true,
 }).extend({
-    raffleNumbers: z.array(
-        SharedRaffleNumberSchema
-    )
-})
+    raffleNumbers: z.array(SharedRaffleNumberSchema)
+});
 
 export const responseClientsSharedLinkSchema = ResponsePaginationSchema.extend({
     clients: z.array(ClientSharedLinkSchema)
-})
+});
 
-export type ClientSelectType = z.infer<typeof ClientSelectSchema>
-export type ClientSharedLinkType = z.infer<typeof ClientSharedLinkSchema>
-export type SharedRaffleNumberType = z.infer<typeof SharedRaffleNumberSchema>
-export type ResponseClientType = z.infer<typeof ResponseClientSchema>
+export type ClientSelectType = z.infer<typeof ClientSelectSchema>;
+export type ClientSharedLinkType = z.infer<typeof ClientSharedLinkSchema>;
+export type SharedRaffleNumberType = z.infer<typeof SharedRaffleNumberSchema>;
+export type ResponseClientType = z.infer<typeof ResponseClientSchema>;

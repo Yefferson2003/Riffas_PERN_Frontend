@@ -1,6 +1,3 @@
-
-
-
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
 import { ClientFormType, ClientSelectSchema, ClientsListForExportSchema, ClientType, responseClientSchema, responseClientsSchema, responseClientsSharedLinkSchema, StatusRaffleNumbersType } from "../types";

@@ -1,6 +1,8 @@
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
 import {
     Box,
     Chip,
@@ -27,6 +29,9 @@ import {
     formatWithLeadingZeros,
 } from "../../utils";
 import ViewPaymentsModal from "./ViewPaymentsModal";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+import { acceptRaffleNumberShared, rejectRaffleNumberShared } from "../../api/raffleNumbersApi";
 
 // interface RaffleNumberShared {
 //     id: number;
@@ -83,12 +88,12 @@ function renderStatusChip(status: string) {
             color="warning"
             size="small"
             sx={{
-            fontWeight: 700,
-            px: 1.5,
-            borderRadius: 2,
-            minWidth: 90,
-            bgcolor: "#fffde7",
-            color: "#fbc02d",
+                fontWeight: 700,
+                px: 1.5,
+                borderRadius: 2,
+                minWidth: 90,
+                bgcolor: "#fffde7",
+                color: "#fbc02d",
             }}
         />
         );
@@ -131,6 +136,36 @@ const ClientsSharedLinkTable: React.FC<ClientsSharedLinkTableProps> = ({
     };
     const [openRows, setOpenRows] = React.useState<Record<number, boolean>>({});
     const [openCards, setOpenCards] = useState<Record<number, boolean>>({});
+
+
+    const {mutate : acceptSharedNumberMutate, isPending: isAcceptingSharedNumberPending} = useMutation({
+            mutationFn: acceptRaffleNumberShared,
+            onError(error) {
+                toast.error(`Error al aceptar el número compartido: ${error}`);
+            },
+            onSuccess(data) {
+                toast.success(data);
+                onRefetch();
+            },
+        })
+    
+        const {mutate : rejectSharedNumberMutate, isPending: isRejectingSharedNumberPending} = useMutation({
+            mutationFn: rejectRaffleNumberShared,
+            onError(error) {
+                toast.error(`Error al rechazar el número compartido: ${error}`);
+            },
+            onSuccess(data) {
+                toast.success(data);
+                onRefetch();
+            },
+        })
+    
+        const handleOnAcceptSharedNumber = (raffleId: number, raffleNumberId: number) => {
+            acceptSharedNumberMutate({ raffleId, raffleNumberId });
+        }
+        const handleOnRejectSharedNumber = (raffleId: number, raffleNumberId: number) => {
+            rejectSharedNumberMutate({ raffleId, raffleNumberId });
+        }
 
     if (!clients || clients.length === 0) {
         return (
@@ -280,6 +315,38 @@ const ClientsSharedLinkTable: React.FC<ClientsSharedLinkTableProps> = ({
                                                                             <ReceiptLongIcon />
                                                                         </IconButton>
                                                                     </Tooltip>
+                                                                    <Tooltip title="Aceptar pago">
+                                                                        <span>
+                                                                            <IconButton color="success"
+                                                                                onClick={() => {
+                                                                                    if (num.raffle?.id !== undefined) {
+                                                                                        handleOnAcceptSharedNumber(num.raffle.id, num.id);
+                                                                                    } else {
+                                                                                        toast.error("ID de rifa no disponible");
+                                                                                    }
+                                                                                }}
+                                                                                disabled={num.status !== 'apartado' || isAcceptingSharedNumberPending}
+                                                                            >
+                                                                                <CheckCircleIcon />
+                                                                            </IconButton>
+                                                                        </span>
+                                                                    </Tooltip>
+                                                                    <Tooltip title="Rechazar pago">
+                                                                        <span>
+                                                                            <IconButton color="error"
+                                                                                onClick={() => {
+                                                                                    if (num.raffle?.id !== undefined) {
+                                                                                        handleOnRejectSharedNumber(num.raffle.id, num.id);
+                                                                                    } else {
+                                                                                        toast.error("ID de rifa no disponible");
+                                                                                    }
+                                                                                }}
+                                                                                disabled={num.status !== 'apartado' || isRejectingSharedNumberPending}
+                                                                            >
+                                                                                <CancelIcon />
+                                                                            </IconButton>
+                                                                        </span>
+                                                                    </Tooltip>
                                                                 </Box>
                                                                 <Typography
                                                                     variant="body2"
@@ -299,6 +366,45 @@ const ClientsSharedLinkTable: React.FC<ClientsSharedLinkTableProps> = ({
                                                                 >
                                                                     Deuda: {formatCurrencyCOP(Number(num.paymentDue))}
                                                                 </Typography>
+                                                                {/* Sección de pago debajo de cada número en móvil */}
+                                                                {num.lastValidPayment && (
+                                                                    <Box sx={{ mt: 1, p: 1, borderRadius: 2, background: '#f5f5f5', display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                                                        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: 'primary.main' }}>
+                                                                            Último pago válido
+                                                                        </Typography>
+                                                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                                                                            {num.lastValidPayment.amount && (
+                                                                                <Chip label={`Monto: ${formatCurrencyCOP(Number(num.lastValidPayment.amount))}`} color="success" sx={{ fontWeight: 600 }} />
+                                                                            )}
+                                                                            {num.lastValidPayment.reference && (
+                                                                                <Chip label={`Referencia: ${num.lastValidPayment.reference}`} color="info" sx={{ fontWeight: 600 }} />
+                                                                            )}
+                                                                            {num.lastValidPayment.paidAt && (
+                                                                                <Chip label={`Fecha pago: ${formatDateTimeLarge(num.lastValidPayment.paidAt)}`} color="primary" sx={{ fontWeight: 600 }} />
+                                                                            )}
+                                                                            {num.lastValidPayment.createdAt && (
+                                                                                <Chip label={`Creado: ${formatDateTimeLarge(num.lastValidPayment.createdAt)}`} color="default" sx={{ fontWeight: 600 }} />
+                                                                            )}
+                                                                        </Box>
+                                                                        {num.lastValidPayment.rafflePayMethode && (
+                                                                            <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+                                                                                <Typography variant="body2" sx={{ fontWeight: 600, color: 'secondary.main' }}>
+                                                                                    Método de pago:
+                                                                                </Typography>
+                                                                                <Chip label={capitalize(num.lastValidPayment.rafflePayMethode.payMethode?.name) || 'Sin método'} color="secondary" sx={{ fontWeight: 600 }} />
+                                                                                {num.lastValidPayment.rafflePayMethode.accountHolder && (
+                                                                                    <Chip label={`Titular: ${num.lastValidPayment.rafflePayMethode.accountHolder}`} sx={{ fontWeight: 600 }} />
+                                                                                )}
+                                                                                {num.lastValidPayment.rafflePayMethode.accountNumber && (
+                                                                                    <Chip label={`Cuenta: ${num.lastValidPayment.rafflePayMethode.accountNumber}`} sx={{ fontWeight: 600 }} />
+                                                                                )}
+                                                                                {num.lastValidPayment.rafflePayMethode.bankName && (
+                                                                                    <Chip label={`Banco: ${num.lastValidPayment.rafflePayMethode.bankName}`} sx={{ fontWeight: 600 }} />
+                                                                                )}
+                                                                            </Box>
+                                                                        )}
+                                                                    </Box>
+                                                                )}
                                                             </Box>
                                                         </Paper>
                                                     ))}
@@ -561,68 +667,125 @@ const ClientsSharedLinkTable: React.FC<ClientsSharedLinkTableProps> = ({
                                         </TableHead>
                                         <TableBody>
                                             {numbers.map((num) => (
-                                            <TableRow key={num.id}>
-                                                <TableCell>
-                                                {formatWithLeadingZeros(
-                                                    num.number,
-                                                    numbers[0].raffle
-                                                    ?.totalNumbers || 0
-                                                )}
-                                                </TableCell>
-                                                <TableCell>
-                                                {formatDateTimeLarge(
-                                                    num.reservedDate
-                                                )}
-                                                </TableCell>
-                                                <TableCell>
-                                                {renderStatusChip(num.status)}
-                                                </TableCell>
-                                                <TableCell>
-                                                <Typography
-                                                    component="span"
-                                                    sx={{
-                                                    color: "success.main",
-                                                    fontWeight: 700,
-                                                    }}
-                                                >
-                                                    {formatCurrencyCOP(
-                                                    Number(num.paymentAmount)
+                                                <React.Fragment key={num.id}>
+                                                    <TableRow>
+                                                        <TableCell>
+                                                            #{formatWithLeadingZeros(
+                                                                num.number,
+                                                                numbers[0].raffle?.totalNumbers || 0
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {formatDateTimeLarge(num.reservedDate)}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {renderStatusChip(num.status)}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Typography
+                                                                component="span"
+                                                                sx={{ color: "success.main", fontWeight: 700 }}
+                                                            >
+                                                                {formatCurrencyCOP(Number(num.paymentAmount))}
+                                                            </Typography>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Typography
+                                                                component="span"
+                                                                sx={{ color: "error.main", fontWeight: 700 }}
+                                                            >
+                                                                {formatCurrencyCOP(Number(num.paymentDue))}
+                                                            </Typography>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Box sx={{ display: "inline-flex", gap: 1 }}>
+                                                                <Tooltip title="Ver pagos">
+                                                                    <IconButton
+                                                                        color="info"
+                                                                        onClick={() => handleViewPayments(num.raffle?.id, num.id)}
+                                                                    >
+                                                                        <ReceiptLongIcon />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                                <Tooltip title="Aceptar pago">
+                                                                    <span>
+                                                                        <IconButton color="success"
+                                                                            onClick={() => {
+                                                                                if (num.raffle?.id !== undefined) {
+                                                                                    handleOnAcceptSharedNumber(num.raffle.id, num.id);
+                                                                                } else {
+                                                                                    toast.error("ID de rifa no disponible");
+                                                                                }
+                                                                            }}
+                                                                            disabled={num.status !== 'apartado' || isAcceptingSharedNumberPending}
+                                                                        >
+                                                                            <CheckCircleIcon />
+                                                                        </IconButton>
+                                                                    </span>
+                                                                </Tooltip>
+                                                                <Tooltip title="Rechazar pago">
+                                                                    <span>
+                                                                        <IconButton color="error"
+                                                                            onClick={() => {
+                                                                                if (num.raffle?.id !== undefined) {
+                                                                                    handleOnRejectSharedNumber(num.raffle.id, num.id);
+                                                                                } else {
+                                                                                    toast.error("ID de rifa no disponible");
+                                                                                }
+                                                                            }}
+                                                                            disabled={num.status !== 'apartado' || isRejectingSharedNumberPending}
+                                                                        >
+                                                                            <CancelIcon />
+                                                                        </IconButton>
+                                                                    </span>
+                                                                </Tooltip>
+                                                            </Box>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                    {/* Sección de pago debajo de cada número */}
+                                                    {num.lastValidPayment && (
+                                                        <TableRow>
+                                                            <TableCell colSpan={6} sx={{ p: 0, background: '#f5f5f5' }}>
+                                                                <Box sx={{ p: 2, borderRadius: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                                                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: 'primary.main' }}>
+                                                                        Último pago válido
+                                                                    </Typography>
+                                                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                                                                        {num.lastValidPayment.amount && (
+                                                                            <Chip label={`Monto: ${formatCurrencyCOP(Number(num.lastValidPayment.amount))}`} color="success" sx={{ fontWeight: 600 }} />
+                                                                        )}
+                                                                        {num.lastValidPayment.reference && (
+                                                                            <Chip label={`Referencia: ${num.lastValidPayment.reference}`} color="info" sx={{ fontWeight: 600 }} />
+                                                                        )}
+                                                                        {num.lastValidPayment.paidAt && (
+                                                                            <Chip label={`Fecha pago: ${formatDateTimeLarge(num.lastValidPayment.paidAt)}`} color="primary" sx={{ fontWeight: 600 }} />
+                                                                        )}
+                                                                        {num.lastValidPayment.createdAt && (
+                                                                            <Chip label={`Creado: ${formatDateTimeLarge(num.lastValidPayment.createdAt)}`} color="default" sx={{ fontWeight: 600 }} />
+                                                                        )}
+                                                                    </Box>
+                                                                    {num.lastValidPayment.rafflePayMethode && (
+                                                                        <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+                                                                            <Typography variant="body2" sx={{ fontWeight: 600, color: 'secondary.main' }}>
+                                                                                Método de pago:
+                                                                            </Typography>
+                                                                            <Chip label={capitalize(num.lastValidPayment.rafflePayMethode.payMethode?.name) || 'Sin método'} color="secondary" sx={{ fontWeight: 600 }} />
+                                                                            {num.lastValidPayment.rafflePayMethode.accountHolder && (
+                                                                                <Chip label={`Titular: ${num.lastValidPayment.rafflePayMethode.accountHolder}`} sx={{ fontWeight: 600 }} />
+                                                                            )}
+                                                                            {num.lastValidPayment.rafflePayMethode.accountNumber && (
+                                                                                <Chip label={`Cuenta: ${num.lastValidPayment.rafflePayMethode.accountNumber}`} sx={{ fontWeight: 600 }} />
+                                                                            )}
+                                                                            {num.lastValidPayment.rafflePayMethode.bankName && (
+                                                                                <Chip label={`Banco: ${num.lastValidPayment.rafflePayMethode.bankName}`} sx={{ fontWeight: 600 }} />
+                                                                            )}
+                                                                        </Box>
+                                                                    )}
+                                                                </Box>
+                                                            </TableCell>
+                                                        </TableRow>
                                                     )}
-                                                </Typography>
-                                                </TableCell>
-                                                <TableCell>
-                                                <Typography
-                                                    component="span"
-                                                    sx={{
-                                                    color: "error.main",
-                                                    fontWeight: 700,
-                                                    }}
-                                                >
-                                                    {formatCurrencyCOP(
-                                                    Number(num.paymentDue)
-                                                    )}
-                                                </Typography>
-                                                </TableCell>
-                                                <TableCell>
-                                                <Box
-                                                    sx={{
-                                                    display: "inline-flex",
-                                                    gap: 1,
-                                                    }}
-                                                >
-                                                    <Tooltip title="Ver pagos">
-                                                    <IconButton
-                                                        color="info"
-                                                        onClick={() =>
-                                                            handleViewPayments(num.raffle?.id, num.id)
-                                                        }
-                                                    >
-                                                        <ReceiptLongIcon />
-                                                    </IconButton>
-                                                    </Tooltip>
-                                                </Box>
-                                                </TableCell>
-                                            </TableRow>
+                                                </React.Fragment>
                                             ))}
                                         </TableBody>
                                         </Table>
