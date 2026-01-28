@@ -864,199 +864,21 @@ export const handleViewAndDownloadPDF = async ({
     userName?: string;
     userLastName?: string;
 }) => {
-    const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: [80, 150],
+
+
+    //Generar blob usando la función separada
+    const pdfBlob = generatePDFBlob({
+        raffle,
+        awards,
+        pdfData,
+        totalNumbers
     });
 
-    const LINE_SPACING = 4;
-    const SECTION_SPACING = 6;
-
-    pdfData.forEach((entry, index) => {
-        if (index > 0) doc.addPage([80, 150]);
-        let y = 10;
-
-        // 🧾 Encabezado
-        doc.setFont("courier", "bold");
-        doc.setFontSize(11);
-        doc.text(raffle.name, 40, y, { align: "center" });
-        y += LINE_SPACING + 1;
-
-        // Responsable (como título)
-        doc.setFont("courier", "normal");
-        doc.text("Responsable", 40, y, { align: "center" });
-        y += LINE_SPACING - 1;
-        doc.line(5, y, 75, y); // línea separadora
-        y += LINE_SPACING;
-
-        // Nombre y NIT debajo
-        doc.setFont("courier", "normal");
-        doc.setFontSize(9);
-        doc.text(`${raffle.nameResponsable}`, 40, y, { align: "center" });
-        y += LINE_SPACING;
-        doc.text(`NIT: ${raffle.nitResponsable}`, 40, y, { align: "center" });
-        y += SECTION_SPACING;
-
-        const cleanDescription = raffle.description.trim();
-        // Descripción multilínea (centrada y ajustada)
-        doc.setFont("courier", "italic");
-        doc.setFontSize(9);
-        y = addMultilineText(doc, `"${cleanDescription}"`, 40, y, 70, LINE_SPACING, 'center');
-        y += SECTION_SPACING;
-
-        doc.setDrawColor(0);
-        doc.setLineWidth(0.2);
-        doc.line(5, y, 75, y);
-        y += LINE_SPACING;
-
-        // 👤 Detalles del comprador
-        doc.setFont("courier", "bold");
-        doc.text("Detalles del Comprador", 40, y, { align: "center" });
-        y += LINE_SPACING - 1;
-        doc.line(5, y, 75, y);
-        y += LINE_SPACING;
-
-        doc.setFont("courier", "normal");
-        doc.text("Boleto #:", 5, y);
-        doc.setFont("courier", "bold");
-        doc.text(`${formatWithLeadingZeros(entry.number, totalNumbers)}`, 30, y);
-        y += LINE_SPACING;
-
-        doc.setFont("courier", "normal");
-        doc.text("Nombre:", 5, y);
-        doc.setFont("courier", "bold");
-        doc.text(`${entry.firstName ?? ""} ${entry.lastName ?? ""}`, 30, y);
-        y += LINE_SPACING;
-
-        // doc.setFont("courier", "normal");
-        // doc.text("ID:", 5, y);
-        // doc.setFont("courier", "bold");
-        // doc.text(`${entry.identificationType ?? ""} ${entry.identificationNumber ?? ""}`, 30, y);
-        // y += LINE_SPACING;
-
-        doc.setFont("courier", "normal");
-        doc.text("Teléfono:", 5, y);
-        doc.setFont("courier", "bold");
-        doc.text(`${entry.phone ?? ""}`, 30, y);
-        y += LINE_SPACING;
-
-        doc.setFont("courier", "normal");
-        doc.text("Dirección:", 5, y);
-        doc.setFont("courier", "bold");
-        doc.text(`${entry.address || "No registrada"}`, 30, y);
-        y += SECTION_SPACING;
-
-        // 🎯 Detalles de la rifa
-        doc.setFont("courier", "bold");
-        doc.text("Detalles de la Rifa", 40, y, { align: "center" });
-        y += LINE_SPACING - 1;
-        doc.line(5, y, 75, y);
-        y += LINE_SPACING;
-
-        doc.setFont("courier", "normal");
-        doc.text("Fecha Juego:", 5, y);
-        doc.setFont("courier", "bold");
-        doc.text(`${formatDateTimeLarge(raffle.playDate)}`, 30, y);
-        y += LINE_SPACING;
-
-        doc.setFont("courier", "normal");
-        doc.text("Valor Rifa:", 5, y);
-        doc.setFont("courier", "bold");
-        doc.text(`${formatCurrencyCOP(+raffle.price)}`, 30, y);
-        y += SECTION_SPACING;
-
-        // 🏆 Premios
-        if (awards.length > 0) {
-            doc.setFont("courier", "bold");
-            doc.text("Premios", 40, y, { align: "center" });
-            y += LINE_SPACING - 1;
-            doc.line(5, y, 75, y);
-            y += LINE_SPACING;
-
-            awards.forEach((award) => {
-                doc.setFont("courier", "normal");
-                y = addMultilineText(doc, `• ${award.name}`, 5, y, 70, LINE_SPACING, undefined);
-
-                doc.setFont("courier", "italic");
-                y = addMultilineText(doc, `${formatDateTimeLarge(award.playDate)}`, 10, y, 65, LINE_SPACING, undefined);
-                y += SECTION_SPACING;
-            });
-        }else {
-            doc.setFont("courier", "italic");
-            doc.text("Sin premios registrados", 40, y, { align: "center" });
-            y += SECTION_SPACING;
-        }
-
-        // 💰 Resumen de pago
-        doc.setFont("courier", "bold");
-        doc.text("Resumen de Pago", 40, y, { align: "center" });
-        y += LINE_SPACING - 1;
-        doc.line(5, y, 75, y);
-        y += LINE_SPACING;
-
-        doc.setFont("courier", "normal");
-        doc.text("Valor:", 5, y);
-        doc.setFont("courier", "bold");
-        doc.text(`${formatCurrencyCOP(+entry.paymentAmount)}`, 30, y);
-        y += LINE_SPACING;
-
-        const abonado = entry.payments
-            .filter((p) => p.isValid)
-            .reduce((sum, p) => sum + parseFloat(p.amount), 0);
-
-        doc.setFont("courier", "normal");
-        doc.text("Abonado:", 5, y);
-        doc.setFont("courier", "bold");
-        doc.text(`${formatCurrencyCOP(abonado)}`, 30, y);
-        y += LINE_SPACING;
-
-        doc.setFont("courier", "normal");
-        doc.text("Deuda:", 5, y);
-        doc.setFont("courier", "bold");
-        doc.text(`${formatCurrencyCOP(+entry.paymentDue)}`, 30, y);
-        y += SECTION_SPACING;
-
-        // 📄 Pagos realizados
-        if (entry.payments.length > 0) {
-            doc.setFont("courier", "bold");
-            doc.text("Pagos (Ultimos 3)", 40, y, { align: "center" });
-            y += LINE_SPACING - 1;
-            doc.line(5, y, 75, y);
-            y += LINE_SPACING;
-
-            doc.setFont("courier", "normal");
-            entry.payments
-                .filter((p) => p.isValid)
-                .forEach((p) => {
-                    doc.text(`${formatCurrencyCOP(+p.amount)} - ${p.user?.firstName ?? ''}`, 5, y);
-                    y += LINE_SPACING;
-                });
-        } else {
-            doc.setFont("courier", "italic");
-            doc.text("Sin pagos registrados", 40, y, { align: "center" });
-            y += LINE_SPACING;
-        }
-
-        // 🙏 Pie de página
-        y += SECTION_SPACING;
-        doc.setFont("courier", "italic");
-        doc.text(`Reservado: ${formatDateTimeLarge(entry.reservedDate ?? "")}`, 5, y);
-        y += LINE_SPACING;
-        doc.setFont("courier", "bold");
-        doc.text("¡Gracias por su compra!", 40, y, { align: "center" });
-
-        // 📄 Número de página
-        doc.setFontSize(8);
-        doc.text(`Página ${index + 1}`, 75, 145, { align: "right" });
-    });
-
-    // 📥 Descargar PDF directamente
+    //Crear nombre del archivo y descargar
     // const todayDate = dayjs().format('DDMMYYYY');
     // const filename = `Resumen_Rifa_${userLastName || 'responsable'}_${userName || ''}_${todayDate}.pdf`;
 
-    // ✅ Generar blob y descargar
-    const pdfBlob = doc.output('blob');
+    
 
     const url = URL.createObjectURL(pdfBlob);
 
