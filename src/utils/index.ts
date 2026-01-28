@@ -507,10 +507,11 @@ export const generatePDFBlob = ({
         y += SECTION_SPACING;
 
         const cleanDescription = raffle.description.trim();
-        // Descripción multilínea (centrada y ajustada, salto de página si es necesario)
+        // Descripción multilínea (centrada, salto de página si es necesario, nunca desbordada)
         doc.setFont("courier", "italic");
         doc.setFontSize(9);
-        y = addMultilineText(doc, `"${cleanDescription}"`, 40, y, 70, LINE_SPACING, "center", doc, PAGE_HEIGHT, BOTTOM_MARGIN);
+        // Usar un ancho menor para evitar desborde visual (por ejemplo, 60mm en vez de 70mm)
+        y = addMultilineText(doc, `"${cleanDescription}"`, 40, y, 60, LINE_SPACING, "center", doc, PAGE_HEIGHT, BOTTOM_MARGIN);
         y += SECTION_SPACING;
 
         doc.setDrawColor(0);
@@ -567,17 +568,17 @@ export const generatePDFBlob = ({
         // 🏆 Premios
         if (awards.length > 0) {
             doc.setFont("courier", "bold");
-            y = addMultilineText(doc, "Premio", 40, y, 70, LINE_SPACING, "center", doc, PAGE_HEIGHT, BOTTOM_MARGIN);
+            y = addMultilineText(doc, "Premios", 40, y, 70, LINE_SPACING, "center", doc, PAGE_HEIGHT, BOTTOM_MARGIN);
             doc.line(5, y, 75, y);
             y += LINE_SPACING;
 
-            // Solo mostrar el primer premio
-            const award = awards[0];
-            doc.setFont("courier", "normal");
-            y = addMultilineText(doc, `• ${award.name}`, 5, y, 70, LINE_SPACING, undefined, doc, PAGE_HEIGHT, BOTTOM_MARGIN);
-
-            doc.setFont("courier", "italic");
-            y = addMultilineText(doc, `${formatDateTimeLarge(award.playDate)}`, 10, y, 65, LINE_SPACING, undefined, doc, PAGE_HEIGHT, BOTTOM_MARGIN);
+            awards.forEach((award) => {
+                doc.setFont("courier", "normal");
+                y = addMultilineText(doc, `• ${award.name}`, 5, y, 70, LINE_SPACING, undefined, doc, PAGE_HEIGHT, BOTTOM_MARGIN);
+                doc.setFont("courier", "italic");
+                y = addMultilineText(doc, `${formatDateTimeLarge(award.playDate)}`, 10, y, 65, LINE_SPACING, undefined, doc, PAGE_HEIGHT, BOTTOM_MARGIN);
+                y += LINE_SPACING;
+            });
             y += SECTION_SPACING;
         } else {
             doc.setFont("courier", "italic");
