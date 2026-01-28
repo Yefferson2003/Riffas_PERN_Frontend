@@ -81,7 +81,7 @@ function ViewRaffleNumberModal({ clientSelectInput, clientPage, clientSearch, se
     };
 
     const initialValues: PayNumberForm  = {
-        amount: raffleNumber.status === 'available' ? 0 : (+raffleNumber.paymentDue),
+        amount: 0, // Siempre inicia en 0
         firstName: raffleNumber.firstName || '',
         lastName: raffleNumber.lastName || '',
         // identificationType: raffleNumber.identificationType || 'CC',
