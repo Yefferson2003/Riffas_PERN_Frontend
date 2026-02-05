@@ -15,8 +15,6 @@ export async function login(formData: UserLoginForm) {
             console.log(error);
             throw new Error(error.response.data.error);
             // console.log(error.response.data.message);
-            
-            
         }
     }
 }

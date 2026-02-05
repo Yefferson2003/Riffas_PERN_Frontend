@@ -99,7 +99,7 @@ function ViewRaffleNumberModal({ clientSelectInput, clientPage, clientSearch, se
     const paymentMethodField = register('paymentMethod', {
         required: 'Debe seleccionar un método de pago'
     });
-    const { address, phone, paymentMethod} = watch();
+    const { address, phone, paymentMethod, firstName, lastName } = watch();
 
     // Establecer método de pago por defecto cuando se cargen los datos
     useEffect(() => {
@@ -262,7 +262,9 @@ function ViewRaffleNumberModal({ clientSelectInput, clientPage, clientSearch, se
     const handelUpdateNumber = () => {
         const formData={
             phone,
-            address
+            address,
+            firstName,
+            lastName,
         }
         
         const data ={

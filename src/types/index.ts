@@ -50,6 +50,7 @@ export const AuthSchema = z.object({
     identificationNumber: z.string(),
     phone: z.string(),
     address: z.string(),
+    organizationId: z.string().nullable().optional(),
     rolName: z.enum(rolNameEnum),
     createdAt: z.string(),
     updatedAt: z.string(),
@@ -66,6 +67,7 @@ export const userSchema = AuthSchema.pick({
     lastName:true,
     identificationType:true,
     identificationNumber:true,
+    organizationId:true,
     phone:true,
     address:true,
     email:true,
@@ -487,6 +489,8 @@ export const raffleNumberSchema  = z.object({
 })
 
 export const updateRaffleNumberCustomer = payNumbersSchema.pick({
+    firstName: true,
+    lastName: true,
     address: true,
     phone: true
 })
@@ -899,3 +903,16 @@ export type ClientSelectType = z.infer<typeof ClientSelectSchema>;
 export type ClientSharedLinkType = z.infer<typeof ClientSharedLinkSchema>;
 export type SharedRaffleNumberType = z.infer<typeof SharedRaffleNumberSchema>;
 export type ResponseClientType = z.infer<typeof ResponseClientSchema>;
+
+// EngageLab types
+
+export const engagelaSdkConfigSchema = z.object({
+    organizationId: z.string(),
+    devKey: z.string(),
+    userId: z.number(),
+    logo: z.string(),
+    bspName: z.string(),
+    locale: z.string(),
+})
+
+export type EngageLabOrgResponseType = z.infer<typeof engagelaSdkConfigSchema>;
