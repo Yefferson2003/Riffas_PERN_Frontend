@@ -6,6 +6,7 @@ import { useNavigate, useOutletContext } from "react-router-dom"
 import { toast } from "react-toastify"
 import { getRaffles } from "../../api/raffleApi"
 import AddRaffleModal from "../../components/indexView/AddRaffleModal"
+import TasasModal from "../../components/indexView/TasasModal"
 import socket from "../../socket"
 import { User } from "../../types"
 import { formatCurrencyCOP, formatDateTimeLarge } from "../../utils"
@@ -17,6 +18,9 @@ function IndexView() {
     const [page, setPage] = useState<number>(1);
     const [rowsPerPage] = useState<number>(4);
     const user : User = useOutletContext();
+
+    // Estado para el modal de tasas
+    const [openTasasModal, setOpenTasasModal] = useState(false);
 
     const isSmallDevice = useMediaQuery({ maxWidth: 768 });
 
@@ -67,6 +71,7 @@ function IndexView() {
     if (user) return (
         <section className="w-full pb-10 text-center">
             <div className="flex flex-col items-center justify-between mb-10 lg:flex-row gap-y-5 ">
+                {/* ...botones antiguos... */}
                 {/* <h2 className="text-3xl font-bold text-center underline lg:text-4xl lg:text-start text-azul w-full max-w-[400px]">INICIO</h2> */}
                 <TextField id="search" label="Buscar..." variant="outlined"  size="small"
                     value={search}
@@ -100,7 +105,26 @@ function IndexView() {
                         Crear Rifa
                     </Button>
                 }
+
+                
+
             </div>
+
+            {/* Sección de botones de iconos debajo de los botones antiguos */}
+            {user.rol.name !== 'vendedor' &&
+                <div className="flex flex-row items-center justify-start w-full gap-4 mb-6">
+                    <Button
+                        variant="outlined"
+                        color="primary"
+                        size={isSmallDevice ? 'small' : 'medium'}
+                        onClick={() => setOpenTasasModal(true)}
+                        sx={{ minWidth: 120 }}
+                    >
+                        Tasas de moneda y cambio
+                    </Button>
+                    {/* Aquí puedes agregar más botones en el futuro */}
+                </div>
+            }
 
             {isLoading && <CircularProgress/>}
 
@@ -174,6 +198,12 @@ function IndexView() {
             rowsPerPage={rowsPerPage}
         />
 
+        {/* Modal de Tasas */}
+        <TasasModal 
+            open={openTasasModal} 
+            onClose={() => setOpenTasasModal(false)}
+            rol={user.rol.name}
+        />
         
         </section>
     )

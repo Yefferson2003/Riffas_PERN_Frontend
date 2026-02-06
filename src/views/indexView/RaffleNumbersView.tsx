@@ -36,6 +36,7 @@ import RaffleOffersModal from '../../components/indexView/modal/RaffleOffersModa
 import RaffleProgressBar from '../../components/indexView/RaffleProgressBar';
 import MobileErrorBoundary from '../../components/shared/MobileErrorBoundary';
 import MobileSafePagination from '../../components/shared/MobileSafePagination';
+import TasasSupportButton from '../../components/indexView/TasasSupportButton';
 import socket from '../../socket';
 import { RaffleNumber, RaffleNumbersPayments, statusRaffleNumbersEnum, User } from "../../types";
 import { capitalize, colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros, getChipStyles, translateRaffleStatusSelect } from "../../utils";
@@ -1142,6 +1143,8 @@ function RaffleNumbersView() {
         {/* Botón de debug para móviles */}
         {/* <MobileDebugButton /> */}
 
+        {/* Botón fijo de soporte de tasas */}
+        <TasasSupportButton raffleColor={raffle?.color || '#1976d2'} />
         </section>
     )
 }
