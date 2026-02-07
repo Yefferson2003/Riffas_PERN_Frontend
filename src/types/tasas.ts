@@ -29,5 +29,7 @@ export const responseTasaSchema = z.object({
 
 
 
+
 export type MonedaType = z.infer<typeof MonedaSchema>;
 export type TasaType = z.infer<typeof TasaSchema>;
+export type TasaResponseType = z.infer<typeof responseTasaSchema>['tasas'][number];

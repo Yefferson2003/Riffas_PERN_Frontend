@@ -12,6 +12,7 @@ import RaffleNumbersShared from "../../components/shared/RaffleNumbersShared";
 import RaffleProgressBar from "../../components/indexView/RaffleProgressBar";
 import RaffleOffersPublic from "../../components/shared/RaffleOffersPublic";
 import { ToastContainer } from "react-toastify";
+import TasasSupportSharedButton from '../../components/indexView/TasasSupportSharedButton';
 
 function RaffleSharedView() {
     const { token } = useParams<{ token: string }>();
@@ -55,6 +56,13 @@ function RaffleSharedView() {
                 py: { xs: 3, sm: 4 }
             }}
         >
+            {/* Botón de tasas de apoyo flotante, ajustado para no interferir con WhatsApp */}
+            <TasasSupportSharedButton
+                raffleId={raffle.id}
+                raffleColor={raffle.color || '#1976d2'}
+                bottom={20}
+                right={24}
+            />
             <div className="max-w-6xl mx-auto">
                 <section className="flex flex-col w-full space-y-6 text-center lg:space-y-8">
                     {/* CONTENEDOR PRINCIPAL */}
