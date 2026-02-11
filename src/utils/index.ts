@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import html2canvas from "html2canvas";
 import jsPDF from 'jspdf';
+import { uploadImageToImgbb } from "../api/imgbbApi";
 import { PaymentSellNumbersModalProps } from "../components/indexView/PaymentSellNumbersModal";
 import { InfoRaffleType } from "../components/indexView/ViewRaffleNumberData";
 import { AwardType, StatusRaffleNumbersType } from "../types";
@@ -941,6 +942,7 @@ export const handleSendMessageToWhatsApp = async ({
 }) => {
 
     // let pdfUrl: string | undefined;
+    let imgUrl: string | undefined;
     let pdfError = false;
     let imageError = false;
     let pdfBlob: Blob | undefined;
@@ -982,25 +984,11 @@ export const handleSendMessageToWhatsApp = async ({
             imgIconURL: raffle.imgIconoUrl ?? undefined
         });
 
-        if (imgPrev) {
-            // Descargar la imagen automáticamente
-            const response = await fetch(imgPrev.src);
-            const blob = await response.blob();
-            const todayDate = dayjs().format('DDMMYYYY_HHmmss');
-            const numbersText = pdfData.map(entry => formatWithLeadingZeros(entry.number, totalNumbers)).join('_');
-            const filename = `Ticket_${numbersText}_${todayDate}.png`;
-            
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
-        }
+        imgUrl = await uploadImageToImgbb(imgPrev);
     } catch (err) {
         imageError = true;
-        console.warn("⚠️ Error generando o descargando imagen:", err);
+        imgUrl = undefined;
+        console.warn("⚠️ Error generando o subiendo imagen:", err);
     }
 
     // 📌 Mensaje general
@@ -1036,6 +1024,14 @@ export const handleSendMessageToWhatsApp = async ({
             resumen: true
         });
     }
+
+
+    // Agregar primero la imagen (preview), ocultar el PDF
+    if (imgUrl) {
+        defaultMessage += `\n\n🖼️ Vista previa del recibo:\n${imgUrl}`;
+    } else if (imageError) {
+        defaultMessage += `\n\n🖼️ Vista previa del recibo no disponible.`;
+    }
     // PDF oculto para el usuario:
     // if (pdfUrl) {
     //     defaultMessage += `\n📄 Recibo PDF para descargar:\n${pdfUrl}`;
@@ -1048,7 +1044,7 @@ export const handleSendMessageToWhatsApp = async ({
         message.normalize('NFC')
     )}`;
     window.open(whatsappUrl, '_blank');
-    return { success: true, pdfBlob, whatsappUrl, message, pdfError, imageError };
+    return { success: true, pdfBlob, imgUrl, whatsappUrl, message, pdfError, imageError };
 };
 
 
