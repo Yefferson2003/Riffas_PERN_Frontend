@@ -13,6 +13,7 @@ import ButtonsRaffleModal from "./raffleNumber/ButtonsRaffleModal";
 import ClientSelectInput from "./raffleNumber/ClientSelectInput";
 import RaflleNumberPaymentsHistory from "./RaflleNumberPaymentsHistory";
 import { InfoRaffleType } from "./ViewRaffleNumberData";
+import { TasaResponseType } from "../../types/tasas";
 
 const style = {
     position: 'absolute',
@@ -47,9 +48,10 @@ type ViewRaffleNumberModalProps = {
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
     refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
     setUrlWasap: React.Dispatch<React.SetStateAction<string>>
+    tasas: TasaResponseType[]
 }
 
-function ViewRaffleNumberModal({ clientSelectInput, clientPage, clientSearch, setClientPage, setClientSearch, isLoadingClients, awards, pdfData, raffle, totalNumbers, infoRaffle, raffleNumber,setPaymentsSellNumbersModal, setPdfData, refetch, setUrlWasap} : ViewRaffleNumberModalProps) {
+function ViewRaffleNumberModal({ clientSelectInput, clientPage, clientSearch, setClientPage, setClientSearch, isLoadingClients, awards, pdfData, raffle, totalNumbers, infoRaffle, raffleNumber,setPaymentsSellNumbersModal, setPdfData, refetch, setUrlWasap, tasas} : ViewRaffleNumberModalProps) {
     const navigate = useNavigate(); 
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -385,52 +387,177 @@ function ViewRaffleNumberModal({ clientSelectInput, clientPage, clientSearch, se
                             <Typography variant="h6" sx={{ color: raffle?.color || '#1976d2', fontWeight: 'bold', mb: 2 }}>
                                 Valor de la Rifa: {formatCurrencyCOP(+raffleNumber.paymentDue)}
                             </Typography>
-                            <FormControlLabel  
-                                labelPlacement="bottom" 
-                                control={
-                                    <Switch 
-                                        checked={priceEspecial} 
-                                        onChange={handleChange}
+                            <div className="flex flex-col items-center justify-center">
+                                {/* Recuadro de tasas de conversión */}
+                                {tasas && tasas.length > 0 && (
+                                    <Box
                                         sx={{
-                                            '& .MuiSwitch-switchBase.Mui-checked': {
-                                                color: raffle?.color || '#1976d2',
-                                            },
-                                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                                backgroundColor: raffle?.color || '#1976d2',
-                                            },
+                                            display: 'inline-block',
+                                            bgcolor: '#f1f5f9',
+                                            border: `1px solid ${raffle?.color || '#1976d2'}40`,
+                                            borderRadius: 2,
+                                            px: 2,
+                                            py: 1,
+                                            mb: 2,
+                                            boxShadow: '0 2px 8px 0 rgb(0 0 0 / 0.04)',
+                                            fontSize: '0.95em',
                                         }}
-                                    />
-                                } 
-                                label="Aplicar Precio Especial"
-                                sx={{ 
-                                    '& .MuiFormControlLabel-label': { 
-                                        fontSize: '0.875rem',
-                                        color: '#64748b'
-                                    }
-                                }}
-                            />
+                                    >
+                                        <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 500, mb: 0.5, fontSize: '0.95em' }}>
+                                            Equivalente en otras monedas:
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
+                                            {tasas.map((tasa) => {
+                                                // Evitar mostrar COP si ya está en el valor principal
+                                                if (tasa.moneda.symbol === 'COP') return null;
+                                                const valor = Number(raffleNumber.paymentDue) * Number(tasa.value);
+                                                return (
+                                                    <Box key={tasa.id} sx={{ mx: 0.5, color: '#334155', fontWeight: 500, fontSize: '0.95em' }}>
+                                                        {tasa.moneda.symbol} {valor.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ color: '#64748b', fontSize: '0.85em' }}>({tasa.moneda.name})</span>
+                                                    </Box>
+                                                );
+                                            })}
+                                        </Box>
+                                    </Box>
+                                )}
+                                <FormControlLabel  
+                                    labelPlacement="bottom" 
+                                    control={
+                                        <Switch 
+                                            checked={priceEspecial} 
+                                            onChange={handleChange}
+                                            sx={{
+                                                '& .MuiSwitch-switchBase.Mui-checked': {
+                                                    color: raffle?.color || '#1976d2',
+                                                },
+                                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                                    backgroundColor: raffle?.color || '#1976d2',
+                                                },
+                                            }}
+                                        />
+                                    } 
+                                    label="Aplicar Precio Especial"
+                                    sx={{ 
+                                        '& .MuiFormControlLabel-label': { 
+                                            fontSize: '0.875rem',
+                                            color: '#64748b'
+                                        }
+                                    }}
+                                />
+
+                            </div>
                         </Box>
                     ) : (
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, textAlign: 'center' }}>
-                            <Box>
-                                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
-                                    Total Abonado:
-                                </Typography>
-                                <Typography variant="h6" sx={{ color: '#059669', fontWeight: 'bold' }}>
-                                    {formatCurrencyCOP(+raffleNumber.paymentAmount)}
-                                </Typography>
+                        <Box sx={{
+                            mb: 2,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                        }}>
+                            <Box sx={{
+                                width: '100%',
+                                display: 'grid',
+                                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                                gap: 2,
+                                mb: 2,
+                                textAlign: 'center',
+                            }}>
+                                <Box>
+                                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                        Total Abonado:
+                                    </Typography>
+                                    <Typography variant="h6" sx={{ color: '#059669', fontWeight: 'bold' }}>
+                                        {formatCurrencyCOP(+raffleNumber.paymentAmount)}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                        Saldo Pendiente:
+                                    </Typography>
+                                    <Typography variant="h6" sx={{
+                                        color: Number(raffleNumber.paymentDue) > 0 ? '#dc2626' : '#059669',
+                                        fontWeight: 'bold'
+                                    }}>
+                                        {formatCurrencyCOP(+raffleNumber.paymentDue)}
+                                    </Typography>
+                                </Box>
                             </Box>
-                            <Box>
-                                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
-                                    Saldo Pendiente:
-                                </Typography>
-                                <Typography variant="h6" sx={{ 
-                                    color: Number(raffleNumber.paymentDue) > 0 ? '#dc2626' : '#059669', 
-                                    fontWeight: 'bold' 
-                                }}>
-                                    {formatCurrencyCOP(+raffleNumber.paymentDue)}
-                                </Typography>
-                            </Box>
+                            {/* Conversión de valores en otras monedas */}
+                            {tasas && tasas.length > 0 && (
+                                <Box
+                                    sx={{
+                                        display: 'grid',
+                                        gridTemplateColumns: {
+                                            xs: '1fr',
+                                            sm: 'repeat(2, 1fr)',
+                                            md: 'repeat(3, 1fr)',
+                                        },
+                                        gap: 1,
+                                        bgcolor: '#f1f5f9',
+                                        border: `1px solid ${raffle?.color || '#1976d2'}40`,
+                                        borderRadius: 2,
+                                        px: 2,
+                                        py: 1,
+                                        boxShadow: '0 2px 8px 0 rgb(0 0 0 / 0.04)',
+                                        fontSize: '0.95em',
+                                        width: '100%',
+                                        maxWidth: 600,
+                                    }}
+                                >
+                                    <Box sx={{ gridColumn: '1 / -1', textAlign: 'center', mb: { xs: 1, sm: 0 } }}>
+                                        <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 500, fontSize: '0.95em' }}>
+                                            Equivalente en otras monedas:
+                                        </Typography>
+                                    </Box>
+                                    {tasas.map((tasa) => {
+                                        const tasaValor = Number(tasa.value);
+                                        if (!tasaValor || isNaN(tasaValor)) return null;
+                                        // Mostrar abono y deuda en cada moneda
+                                        const paymentAmount = Number(raffleNumber.paymentAmount);
+                                        const paymentDue = Number(raffleNumber.paymentDue);
+                                        let abono, deuda;
+                                        if (tasa.moneda.symbol === 'COP') {
+                                            abono = paymentAmount;
+                                            deuda = paymentDue;
+                                        } else {
+                                            abono = paymentAmount * tasaValor;
+                                            deuda = paymentDue * tasaValor;
+                                        }
+                                        return (
+                                            <Box key={tasa.id} sx={{ color: '#334155', fontWeight: 500, fontSize: '0.95em', textAlign: 'center', px: 1 }}>
+                                                <Box>
+                                                    <span style={{
+                                                        color: '#4ade80', // verde
+                                                        background: '#e7f9f1',
+                                                        fontSize: '0.85em',
+                                                        borderRadius: 4,
+                                                        padding: '1px 6px',
+                                                        marginRight: 4,
+                                                        fontWeight: 600,
+                                                        opacity: 0.8
+                                                    }}>Abonado:</span>
+                                                    <b>{tasa.moneda.symbol} {abono.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b>
+                                                </Box>
+                                                <Box>
+                                                    <span style={{
+                                                        color: '#f87171', // rojo
+                                                        background: '#fbeaea',
+                                                        fontSize: '0.85em',
+                                                        borderRadius: 4,
+                                                        padding: '1px 6px',
+                                                        marginRight: 4,
+                                                        fontWeight: 600,
+                                                        opacity: 0.8
+                                                    }}>Pendiente:</span>
+                                                    <b>{tasa.moneda.symbol} {deuda.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b>
+                                                </Box>
+                                                {/* Eliminado detalle de operación de conversión */}
+                                                <span style={{ color: '#64748b', fontSize: '0.80em', display: 'block' }}>({tasa.moneda.name})</span>
+                                            </Box>
+                                        );
+                                    })}
+                                </Box>
+                            )}
                         </Box>
                     )}
                 </Box>

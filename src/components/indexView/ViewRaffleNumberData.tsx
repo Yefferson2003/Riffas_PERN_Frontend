@@ -2,6 +2,7 @@ import { QueryObserverResult, RefetchOptions, useQuery } from "@tanstack/react-q
 import { Navigate, useParams } from "react-router-dom"
 import { getRaffleNumberById } from "../../api/raffleNumbersApi"
 import { AwardType, ClientSelectType, Raffle, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types"
+import { TasaResponseType } from "../../types/tasas"
 import ViewRaffleNumberModal from "./ViewRaffleNumberModal"
 
 export type InfoRaffleType = {
@@ -28,6 +29,7 @@ type ViewRaffleNumberDataProps = {
     setPdfData: React.Dispatch<React.SetStateAction<RaffleNumbersPayments | undefined>>
     refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
     setUrlWasap: React.Dispatch<React.SetStateAction<string>>
+    tasas: TasaResponseType[]
     // refectRaffle: {
     //     search: string;
     //     raffleId: string | undefined;
@@ -37,7 +39,7 @@ type ViewRaffleNumberDataProps = {
     // }
 }
 
-function ViewRaffleNumberData({clientSelectInput, clientPage, clientSearch, setClientPage, setClientSearch, isLoadingClients, awards, raffle, totalNumbers, infoRaffle, setPaymentsSellNumbersModal, setPdfData, refetch, setUrlWasap,} : ViewRaffleNumberDataProps) {
+function ViewRaffleNumberData({clientSelectInput, clientPage, clientSearch, setClientPage, setClientSearch, isLoadingClients, awards, raffle, totalNumbers, infoRaffle, setPaymentsSellNumbersModal, setPdfData, refetch, setUrlWasap, tasas} : ViewRaffleNumberDataProps) {
     const queryParams = new URLSearchParams(location.search)
     const modalviewRaffleNumber = queryParams.get('viewRaffleNumber')
     const raffleNumberId = Number(modalviewRaffleNumber)
@@ -68,6 +70,7 @@ function ViewRaffleNumberData({clientSelectInput, clientPage, clientSearch, setC
         setPdfData={setPdfData}
         refetch={refetch}
         setUrlWasap={setUrlWasap}
+        tasas={tasas}
     />
 }
 

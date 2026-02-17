@@ -44,6 +44,7 @@ import { exelRaffleNumbersFilter, exelRaffleNumbersFilterDetails } from '../../u
 import LoaderView from "../LoaderView";
 import '../../styles/mobile-fixes.css';
 import { getClientsForSelect } from '../../api/clientApi';
+import { getAllUserTasas } from '../../api/tasasApi';
 
 export type NumbersSelectedType = {
     numberId: number, 
@@ -248,7 +249,7 @@ function RaffleNumbersView() {
     const [clientRowsPerPage] = useState<number>(10);
     const [clientSearch, setClientSearch] = useState<string>('');
 
-    const [raffleNumbersData, raffleData, awardsData, expensesTotalData, expensesTotalByUserData, usersRaffleData, payMethodsData, clientSelectInputData] = useQueries({
+    const [raffleNumbersData, raffleData, awardsData, expensesTotalData, expensesTotalByUserData, usersRaffleData, payMethodsData, clientSelectInputData, tasasData] = useQueries({
         queries: [
             {
                 queryKey: ['raffleNumbers', searchParams.search, raffleId, filter, page, rowsPerPage, searchParams.searchAmount, paymentMethodFilter, startDate?.format('YYYY-MM-DD'), endDate?.format('YYYY-MM-DD'), userFilter],
@@ -292,7 +293,7 @@ function RaffleNumbersView() {
             {
                 queryKey: ['usersRaffle', raffleId],
                 queryFn: () => getUsersByRaffle(+raffleId!),
-                enabled: !!raffleId,
+                enabled: !!raffleId || user.rol.name !== 'admin',
                 retry: false
             },
             {
@@ -305,6 +306,11 @@ function RaffleNumbersView() {
                 queryFn: () => getClientsForSelect({limit: clientRowsPerPage, page: clientPage, search: clientSearch}),
                 enabled: !!raffleId,
                 
+            },
+            {
+                queryKey: ['tasas', 'support'],
+                queryFn: getAllUserTasas,
+                enabled: !!raffleId
             }
         ]
     });
@@ -317,6 +323,7 @@ function RaffleNumbersView() {
     const { data: usersRaffle,} = usersRaffleData
     const { data: payMethods, isLoading: isLoadingPayMethods} = payMethodsData
     const { data: clientSelectInput, isLoading: isLoadingClientSelectInput} = clientSelectInputData
+    const { data: tasas} = tasasData
     
     
     
@@ -1115,6 +1122,7 @@ function RaffleNumbersView() {
                 setPdfData={setPdfData}
                 refetch={refetch}
                 setUrlWasap={setUrlWasap}
+                tasas={tasas?.tasas || []}
                 // refectRaffle={{ search, raffleId, filter, page, limit : rowsPerPage}}
             />}
             {/* {raffle && raffleNumbers && <ViewNumbersSoldModal/>} */}
