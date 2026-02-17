@@ -409,7 +409,6 @@ function ViewRaffleNumberModal({ clientSelectInput, clientPage, clientSearch, se
                                         <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
                                             {tasas.map((tasa) => {
                                                 // Evitar mostrar COP si ya está en el valor principal
-                                                if (tasa.moneda.symbol === 'COP') return null;
                                                 const valor = Number(raffleNumber.paymentDue) * Number(tasa.value);
                                                 return (
                                                     <Box key={tasa.id} sx={{ mx: 0.5, color: '#334155', fontWeight: 500, fontSize: '0.95em' }}>

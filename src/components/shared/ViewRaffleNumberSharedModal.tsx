@@ -11,6 +11,7 @@ import { AwardType, PayNumbersSharedFormType, Raffle } from "../../types";
 import { capitalizeWords, formatCurrencyCOP, formatWithLeadingZeros } from "../../utils";
 import ButtonCloseModal from "../ButtonCloseModal";
 import PhoneNumberInput from "../PhoneNumberInput";
+import { getAllUserTasasSharedUrl } from "../../api/tasasApi";
 
 const style = {
     position: 'absolute',
@@ -38,6 +39,7 @@ type ViewRaffleNumberSharedModalProps = {
     raffleColor?: string
     offers?: Array<{ id: number, minQuantity: number, discountedPrice: string }>
     getTotalWithOffers?: (selectedCount: number) => { total: number, unitPrice: number }
+    
 }
 
 type SelectedNumber = {
@@ -74,6 +76,12 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
         queryFn: () => getActiveRafflePayMethods(raffle.id.toString()),
         enabled: !!raffle.id,
     })
+
+    const { data: tasasData, isLoading: tasasLoading, isError: tasasError } = useQuery({
+        queryKey: ['userTasasShared', raffle.id],
+        queryFn: () => getAllUserTasasSharedUrl({ raffleId: raffle.id }),
+        enabled: !!raffle.id,
+    });
 
     const initialValues: PayNumbersSharedFormType = {
         amount: 0,
@@ -248,6 +256,33 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                             <span className="block mt-1 text-xs font-medium" style={{ color: primaryColor }}>
                                 Precio unitario: {formatCurrencyCOP(getTotalWithOffers(selectedNumbers.length).unitPrice)}
                             </span>
+                        )}
+                        {/* Recuadro de conversiones */}
+                        {tasasLoading ? (
+                            <div className="mt-3 text-sm text-gray-500">Cargando tasas...</div>
+                        ) : tasasError ? (
+                            <div className="mt-3 text-sm text-red-500">Error al cargar tasas</div>
+                        ) : tasasData && tasasData.tasas && tasasData.tasas.length > 0 && (
+                            <div className="p-3 mt-4 bg-white border border-gray-200 rounded-lg shadow-md">
+                                <div className="mb-2 text-sm font-semibold" style={{ color: primaryColor }}>Conversiones a otras monedas:</div>
+                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+                                    {tasasData.tasas.map((tasa) => {
+                                        const totalCOP = getTotalWithOffers
+                                            ? getTotalWithOffers(selectedNumbers.length).total
+                                            : +raffle.price * selectedNumbers.length;
+                                        const tasaValue = parseFloat(tasa.value);
+                                        const conversion = totalCOP * tasaValue;
+                                        return (
+                                            <div key={tasa.id} className="flex flex-col items-start p-2 rounded shadow bg-gray-50">
+                                                <span className="text-xs font-semibold text-gray-700">{tasa.moneda.name} ({tasa.moneda.symbol})</span>
+                                                <span className="text-base font-bold" style={{ color: primaryColor }}>
+                                                    {tasa.moneda.symbol} {conversion.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         )}
                     </div>
 

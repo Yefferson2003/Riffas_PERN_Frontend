@@ -1,17 +1,16 @@
+import CasinoIcon from '@mui/icons-material/Casino';
 import LocalActivityIcon from '@mui/icons-material/LocalActivity';
 import SearchIcon from '@mui/icons-material/Search';
-import CasinoIcon from '@mui/icons-material/Casino';
-import { Chip, Pagination, Skeleton, Button, TextField, InputAdornment, Tooltip } from "@mui/material";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { Button, Chip, InputAdornment, Pagination, Skeleton, TextField, Tooltip } from "@mui/material";
+import { useMutation, useQuery, useQuery as useQueryRQ } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { getRaffleNumersShared, getRandomAvailableNumberShared } from "../../api/raffleNumbersApi";
-import { colorStatusRaffleNumber, formatCurrencyCOP, formatWithLeadingZeros, getChipStyles } from "../../utils";
-import ViewRaffleNumberSharedModal from './ViewRaffleNumberSharedModal';
-import RaffleOffersPublic from './RaffleOffersPublic';
 import { getRaffleOffers } from '../../api/raffleOfferApi';
-import { useQuery as useQueryRQ } from '@tanstack/react-query';
 import { AwardType, RaffleSharedType } from '../../types';
+import { colorStatusRaffleNumber, formatCurrencyCOP, formatWithLeadingZeros, getChipStyles } from "../../utils";
+import RaffleOffersPublic from './RaffleOffersPublic';
+import ViewRaffleNumberSharedModal from './ViewRaffleNumberSharedModal';
 
 type RaffleNumbersSharedProps = {
     awards: AwardType[]
@@ -21,7 +20,7 @@ type RaffleNumbersSharedProps = {
     raffleColor?: string
 }
 
-function RaffleNumbersShared({ token, raffle, price, awards, raffleColor}: RaffleNumbersSharedProps) {
+function RaffleNumbersShared({ token, raffle, price, awards, raffleColor }: RaffleNumbersSharedProps) {
     // Obtener ofertas activas de la rifa
     const { data: offers } = useQueryRQ({
         queryKey: ['raffleOffersForCalc', raffle.id],
@@ -631,6 +630,7 @@ function RaffleNumbersShared({ token, raffle, price, awards, raffleColor}: Raffl
 
 
             {raffleNumbers && token && <ViewRaffleNumberSharedModal
+                    
                 totalNumbers={raffle.totalNumbers || 0}
                 awards={awards}
                 raffle={raffle}
