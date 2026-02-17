@@ -511,17 +511,11 @@ function ViewRaffleNumberModal({ clientSelectInput, clientPage, clientSearch, se
                                     {tasas.map((tasa) => {
                                         const tasaValor = Number(tasa.value);
                                         if (!tasaValor || isNaN(tasaValor)) return null;
-                                        // Mostrar abono y deuda en cada moneda
+                                        // Siempre multiplicar, sin importar la moneda
                                         const paymentAmount = Number(raffleNumber.paymentAmount);
                                         const paymentDue = Number(raffleNumber.paymentDue);
-                                        let abono, deuda;
-                                        if (tasa.moneda.symbol === 'COP') {
-                                            abono = paymentAmount;
-                                            deuda = paymentDue;
-                                        } else {
-                                            abono = paymentAmount * tasaValor;
-                                            deuda = paymentDue * tasaValor;
-                                        }
+                                        const abono = paymentAmount * tasaValor;
+                                        const deuda = paymentDue * tasaValor;
                                         return (
                                             <Box key={tasa.id} sx={{ color: '#334155', fontWeight: 500, fontSize: '0.95em', textAlign: 'center', px: 1 }}>
                                                 <Box>
