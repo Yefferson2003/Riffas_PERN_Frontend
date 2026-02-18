@@ -571,7 +571,7 @@ function ViewRaffleNumberSharedModal({ token, awards, raffle, totalNumbers, raff
                             <PhoneNumberInput
                                 value={phone}
                                 onChange={(value) => {
-                                    setValue('phone', value);
+                                    setValue('phone', value || '');
                                 }}
                                 primaryColor={primaryColor}
                             />

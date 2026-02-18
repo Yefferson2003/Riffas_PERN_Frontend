@@ -834,7 +834,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                                 value={phone}
                                 onChange={(value) => {
                                     if (!isReadOnlyMode) {
-                                        setValue('phone', value);
+                                        setValue('phone', value || '');
                                     }
                                 }}
                             />

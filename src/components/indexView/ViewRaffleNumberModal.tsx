@@ -808,7 +808,7 @@ function ViewRaffleNumberModal({ clientSelectInput, clientPage, clientSearch, se
                         <PhoneNumberInput
                             value={phone}
                             onChange={(value) => {
-                                setValue('phone', value);
+                                setValue('phone', value || '');
                             }}
                         />
                     </Box>
