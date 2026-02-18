@@ -1,5 +1,5 @@
 import CircularProgress from '@mui/material/CircularProgress';
-import { Box, Button, FormControl, FormControlLabel, InputLabel, MenuItem, Modal, Select, SelectChangeEvent, Switch, TextField } from "@mui/material";
+import { Box, Button, FormControl, FormControlLabel, IconButton, InputLabel, MenuItem, Modal, Select, SelectChangeEvent, Switch, TextField, Tooltip, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useState, useEffect } from "react";
 // Importar el componente ClientSelectInput
@@ -11,8 +11,9 @@ import { getActiveRafflePayMethods } from "../../api/payMethodeApi";
 import { getRaffleNumbersPending, sellNumbers } from "../../api/raffleNumbersApi";
 import { getRaffleById } from "../../api/raffleApi";
 import { AwardType, ClientSelectType, PayNumbersForm, RaffleNumbersPayments } from "../../types";
-import { capitalize, formatCurrencyCOP, formatWithLeadingZeros, handleSendMessageToWhatsApp, redirectToWhatsApp } from "../../utils";
+import { capitalize, formatCurrencyCOP, formatWithLeadingZeros, handleSendMessageToWhatsApp, redirectToWhatsApp, sendPaymentReminderWhatsApp } from "../../utils";
 import { NumbersSelectedType } from "../../views/indexView/RaffleNumbersView";
+import { TasaResponseType } from "../../types/tasas";
 import ButtonCloseModal from "../ButtonCloseModal";
 import PhoneNumberInput from "../PhoneNumberInput";
 import { InfoRaffleType } from "./ViewRaffleNumberData";
@@ -51,12 +52,12 @@ type PayNumbersModalProps = {
     clientSearch: string
     setClientSearch: React.Dispatch<React.SetStateAction<string>>
     isLoadingClientSelectInput?: boolean
+    tasas?: TasaResponseType[]
 }
     
 
 type ActionModeType = 'buy' | 'separate';
-
-function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap, clientPage, setClientPage, clientSearch, setClientSearch, isLoadingClientSelectInput, clientSelectInput } : PayNumbersModalProps) {
+function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSeleted, raffleId, rafflePrice, setNumbersSeleted, setPaymentsSellNumbersModal, setPdfData, setUrlWasap, clientPage, setClientPage, clientSearch, setClientSearch, isLoadingClientSelectInput, clientSelectInput, tasas } : PayNumbersModalProps) {
 
     const queryClient = useQueryClient()
 
@@ -235,6 +236,7 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
             paymentMethod: 0
         })
         setIsInitialized(false); // También resetear cuando se abre/cierra el modal
+        setSelectedClientId(''); // Resetear el cliente seleccionado
     }, [show, reset]);
     
     
@@ -388,12 +390,60 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
             <ButtonCloseModal/>
             
             <div className="flex flex-col items-center w-full mb-6">
-                <h2
-                    className="mb-2 text-3xl font-extrabold tracking-tight text-center drop-shadow-sm"
-                    style={raffle?.color ? { color: raffle.color } : {}}
-                >
-                    Comprar Números
-                </h2>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', mb: 2 }}>
+                    <Box sx={{ flex: 1 }} />
+                    <h2
+                        className="mb-0 text-3xl font-extrabold tracking-tight text-center drop-shadow-sm"
+                        style={raffle?.color ? { color: raffle.color } : {}}
+                    >
+                        Comprar Números
+                    </h2>
+                    <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                        {/* Botón de recordatorio para números pendientes */}
+                        {isReadOnlyMode && pendingNumbers && pendingNumbers.length > 0 && pendingNumbers[0].phone && (
+                            <IconButton
+                                component="a"
+                                href={sendPaymentReminderWhatsApp({
+                                    totalNumbers: numbersSeleted.length,
+                                    amount: totalAbonado,
+                                    numbers: numbersSeleted.map(n => ({ numberId: n.numberId, number: n.number })),
+                                    phone: pendingNumbers[0].phone,
+                                    name: `${pendingNumbers[0].firstName} ${pendingNumbers[0].lastName}`,
+                                    infoRaffle: {
+                                        name: raffle?.description || infoRaffle.name,
+                                        description: raffle?.description || infoRaffle.description,
+                                        amountRaffle: raffle?.price || infoRaffle.amountRaffle,
+                                        responsable: raffle?.nameResponsable || infoRaffle.responsable,
+                                        playDate: raffle?.playDate || infoRaffle.playDate,
+                                        contactRifero: raffle?.contactRifero ?? undefined,
+                                    },
+                                    reservedDate: pendingNumbers[0].reservedDate,
+                                    abonosPendientes: totalDebtToPay,
+                                    awards,
+                                })}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{ 
+                                    bgcolor: '#fee2e2', 
+                                    '&:hover': { bgcolor: '#fecaca' }, 
+                                    borderRadius: 2,
+                                    width: 40,
+                                    height: 40
+                                }}
+                            >
+                                <Tooltip title={`Enviar recordatorio de pago`}>
+                                    <img
+                                        src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+                                        alt="WhatsApp"
+                                        width={20}
+                                        height={20}
+                                        style={{ display: 'block' }}
+                                    />
+                                </Tooltip>
+                            </IconButton>
+                        )}
+                    </Box>
+                </Box>
                 <p
                     className="mb-1 text-lg font-semibold text-center"
                     style={raffle?.color ? { color: raffle.color } : {}}
@@ -497,6 +547,39 @@ function PayNumbersModal({ refetch, awards, totalNumbers,infoRaffle, numbersSele
                     </span>
                 </div>
             </div>
+
+            {/* Tasas de conversión */}
+            {tasas && tasas.length > 0 && (
+                <Box
+                    sx={{
+                        display: 'inline-block',
+                        bgcolor: '#f1f5f9',
+                        border: `1px solid ${raffle?.color || '#1976d2'}40`,
+                        borderRadius: 2,
+                        px: 2,
+                        py: 1,
+                        mb: 2,
+                        boxShadow: '0 2px 8px 0 rgb(0 0 0 / 0.04)',
+                        fontSize: '0.95em',
+                        width: '100%',
+                        textAlign: 'center'
+                    }}
+                >
+                    <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 500, mb: 1, fontSize: '0.95em' }}>
+                        Equivalente en otras monedas:
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 2 }}>
+                        {tasas.map((tasa) => {
+                            const valor = totalToPay * Number(tasa.value);
+                            return (
+                                <Box key={tasa.id} sx={{ mx: 0.5, color: '#334155', fontWeight: 500, fontSize: '0.95em' }}>
+                                    {tasa.moneda.symbol} {valor.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ color: '#64748b', fontSize: '0.85em' }}>({tasa.moneda.name})</span>
+                                </Box>
+                            );
+                        })}
+                    </Box>
+                </Box>
+            )}
 
 
             {!pendingNumbers &&

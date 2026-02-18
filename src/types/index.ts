@@ -530,6 +530,7 @@ export const raffleNumberPendingSchema = RaffleNumberSchema.pick({
     firstName: true,
     lastName: true,
     status: true,
+    reservedDate: true,
 })
 
 export const responseRaffleNumbersPendingSchema = z.array(raffleNumberPendingSchema)

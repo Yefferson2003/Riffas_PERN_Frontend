@@ -1096,6 +1096,7 @@ function RaffleNumbersView() {
                 setPaymentsSellNumbersModal={setPaymentsSellNumbersModal}
                 setPdfData={setPdfData}
                 setUrlWasap={setUrlWasap}
+                tasas={tasas?.tasas || []}
             />}
             {raffle && raffleNumbers && pdfData && <PaymentSellNumbersModal
                 totalNumbers={raffle.totalNumbers || 0}

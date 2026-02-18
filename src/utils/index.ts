@@ -399,25 +399,7 @@ export const sendPaymentReminderWhatsApp = ({
 }: redirectToWhatsAppType): string => {
     if (!phone) return "";
 
-    // const rafflePrice = +infoRaffle.amountRaffle;
     const valorPendiente = abonosPendientes || 0;
-
-    // if (typeof abonosPendientes === 'number') {
-    //     valorPendiente = abonosPendientes;
-    // } else if (statusRaffleNumber === "pending" && payments) {
-    //     const abonosValidos = payments
-    //         .filter(p => p.isValid)
-    //         .reduce((acc, p) => acc + Number(p.amount), 0);
-    //     valorPendiente = Math.max((rafflePrice * numbers.length) - abonosValidos, 0);
-    // } else if (payments && payments.length > 0) {
-    //     const abonosValidos = payments
-    //         .filter(p => p.isValid)
-    //         .reduce((acc, p) => acc + Number(p.amount), 0);
-    //     const totalAbonado = abonosValidos + amount;
-    //     valorPendiente = Math.max((rafflePrice * numbers.length) - totalAbonado, 0);
-    // } else {
-    //     valorPendiente = Math.max((rafflePrice * numbers.length) - amount, 0);
-    // }
 
     const numbersList = numbers
         .map(n => formatWithLeadingZeros(n.number, totalNumbers))
