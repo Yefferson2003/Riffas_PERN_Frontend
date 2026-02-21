@@ -420,7 +420,6 @@ export const sendPaymentReminderWhatsApp = ({
 🗓 Fecha del sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*
 
 🍀 ¡Mucha suerte!
-*${infoRaffle.name.trim()}*
 `.trim();
 
     // Normalizar Unicode para compatibilidad con iOS
