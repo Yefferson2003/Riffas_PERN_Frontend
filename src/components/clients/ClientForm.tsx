@@ -39,7 +39,7 @@ export default function ClientForm({ register, errors, setValue, watch }: Client
                 </Typography>
                 <PhoneNumberInput
                     value={typeof (watch) === 'function' ? watch('phone') ?? '' : ''}
-                    onChange={(value) => setValue && setValue('phone', value)}
+                    onChange={(value) => setValue && setValue('phone', value ?? null)}
                 />
                 <Typography variant="caption" color="error">
                     {errors.phone?.message}

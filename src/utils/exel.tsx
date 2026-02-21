@@ -577,13 +577,13 @@ export const exportRaffleNumbers = async (raffleId: string | undefined, nitRespo
         // Asignar la fórmula para la columna de "Valor abonado" y "Valor a deber"
         totalRow.getCell("paymentAmount").value = {
             formula: `SUM(I2:I${lastRowNumber})`, // Asumiendo que la columna E tiene los valores
-        };
+        } as ExcelJS.CellFormulaValue;
         totalRow.getCell("paymentDue").value = {
             formula: `SUM(J2:J${lastRowNumber})`, // Asumiendo que la columna F tiene los valores
-        };
+        } as ExcelJS.CellFormulaValue;
         totalRow.getCell("payments").value = {
             formula: `SUM(K2:K${lastRowNumber})`, // Asumiendo que la columna F tiene los valores
-        };
+        } as ExcelJS.CellFormulaValue;
 
         // Aplicar estilos a la fila de total
         totalRow.eachCell((cell) => {
