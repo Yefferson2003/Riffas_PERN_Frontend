@@ -419,9 +419,6 @@ export const sendPaymentReminderWhatsApp = ({
 🗓 Fecha de la reservación: *${formatDateTimeLarge(reservedDate)}*
 🗓 Fecha del sorteo: *${formatDateTimeLarge(infoRaffle.playDate)}*
 
-Por favor realiza tu abono o pago para asegurar tu participación ✅
-⏳ Los números no abonados no participan.
-
 🍀 ¡Mucha suerte!
 *${infoRaffle.name.trim()}*
 `.trim();
