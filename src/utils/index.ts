@@ -711,6 +711,7 @@ export const generateTicketPreviewImage = async ({
                 <div style="font-size:1.1rem;font-weight:900;color:#111;letter-spacing:1px;">${raffle.name}</div>
                 <div style="font-size:0.95rem;font-weight:700;color:#222;">${raffle.nameResponsable}</div>
                 <div style="font-size:0.85rem;font-weight:600;color:#222;">${formatDateTimeLarge(raffle.playDate)}</div>
+                <div style="font-size:0.82rem;font-weight:600;color:#444;">Lotería: ${raffle.loteria || 'No aplica'}</div>
             </div>
         </div>
         <div style="border-top:1.5px dashed #222;margin:10px 0 8px 0;width:100%;"></div>

@@ -172,3 +172,17 @@ export async function getClientsForSelect({ page, limit, search } : Pick<ClientA
 }
 
 
+export async function deleteClient({ clientId } : Pick<ClientApi, 'clientId'>) {
+    try {
+        const {data} = await api.delete<string>(`/clients/${clientId}`);
+        return data;
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+        throw error;
+    }
+}
+
+

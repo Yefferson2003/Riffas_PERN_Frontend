@@ -6,15 +6,16 @@ import { Box, Button, CircularProgress, Fade, Pagination, TextField, Tooltip, Ty
 import { Dayjs } from 'dayjs';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getClients } from "../../api/clientApi";
+import { deleteClient, getClients } from "../../api/clientApi";
 import ClientsListTable from "../../components/clients/ClientsListTable";
 import BuyNumbersForClientModal from "../../components/clients/modal/BuyNumbersForClientModal";
 import CreateClientModal from "../../components/clients/modal/CreateClientModal";
 import EditClientModal from "../../components/clients/modal/EditClientModal";
 import { ClientType } from "../../types";
+import { toast } from 'react-toastify';
 
 
 
@@ -79,6 +80,23 @@ function ClientView () {
 
     const handleRefetch = () => {
         refetch();
+    }
+
+    const { mutate: deleteClientMutation , isPending: isDeleting } = useMutation({
+        mutationFn: deleteClient,
+        onError(error) {
+            toast.error(error.message || 'Error al eliminar el cliente');
+        },
+        onSuccess: () => {
+            handleRefetch();
+            toast.success('Cliente eliminado exitosamente');
+        },
+    });
+
+    const handleDeleteClient = (client: ClientType) => {
+        if (window.confirm(`¿Estás seguro de que deseas eliminar al cliente ${client.firstName} ${client.lastName}?`)) {
+            deleteClientMutation({ clientId: client.id });
+        }
     }
 
     const handleExportClientsToExcel = async () => {
@@ -210,6 +228,8 @@ function ClientView () {
                         clients={clients} 
                         onEdit={handleNavigateEditClient}
                         onBuyNumbers={handleNavigateBuyNumbers}
+                        onDelete={handleDeleteClient}
+                        isDeleting={isDeleting}
                     />
                 </Box>
             )}

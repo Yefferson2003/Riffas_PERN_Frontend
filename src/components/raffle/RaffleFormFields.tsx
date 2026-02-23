@@ -89,6 +89,12 @@ const RaffleFormFields = ({
                 })}
             />
 
+            <TextField id="loteria" label="Lotería" variant="outlined" 
+                error={!!errors.loteria}
+                helperText={errors.loteria?.message}
+                {...register('loteria', {required: 'Lotería Obligatoria'})}
+            />
+
             <div>
                 <p className="mb-2 text-sm font-medium text-gray-700">Número de contacto para clientes</p>
                 <PhoneNumberInput

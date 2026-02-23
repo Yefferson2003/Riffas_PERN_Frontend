@@ -68,6 +68,7 @@ function UpdateRaffleModal({raffle, refechtRaffle} : UpdateRaffleModalProps) {
         imgIconoUrl: raffle.imgIconoUrl,
         color: raffle.color || '#1976d2',
         contactRifero: raffle.contactRifero || '',
+        loteria: raffle.loteria || '',
     }
 
     const {register, handleSubmit, setValue, watch, reset, formState: {errors}} = useForm({
@@ -135,7 +136,6 @@ function UpdateRaffleModal({raffle, refechtRaffle} : UpdateRaffleModalProps) {
     };
 
 
-
     const handleUpdateRaffle = async (data: UpdateRaffleForm) => {
         const dateValidationError = validateDates();
         if (dateValidationError) {
@@ -159,6 +159,7 @@ function UpdateRaffleModal({raffle, refechtRaffle} : UpdateRaffleModalProps) {
                 banerMovileImgUrl: raffle.banerMovileImgUrl,
                 color: raffle.color || '#1976d2',
                 contactRifero: raffle.contactRifero || '',
+                loteria: raffle.loteria || '',
             })
         }
     }, [raffle, reset])

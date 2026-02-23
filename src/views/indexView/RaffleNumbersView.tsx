@@ -324,6 +324,13 @@ function RaffleNumbersView() {
     const { data: payMethods, isLoading: isLoadingPayMethods} = payMethodsData
     const { data: clientSelectInput, isLoading: isLoadingClientSelectInput} = clientSelectInputData
     const { data: tasas} = tasasData
+    const hasActiveFilters =
+        !!searchParams.search ||
+        !!searchParams.searchAmount ||
+        Object.keys(filter).length > 0 ||
+        !!paymentMethodFilter ||
+        !!userFilter ||
+        (!!startDate && !!endDate);
     
     
     
@@ -949,7 +956,7 @@ function RaffleNumbersView() {
                     }
                     
                     {/* Switch de selección */}
-                    <div className="mt-2">
+                    <div className="flex flex-row items-center justify-center gap-2 mt-2">
                         <FormControlLabel 
                             control={
                                 <Switch 
@@ -975,6 +982,20 @@ function RaffleNumbersView() {
                             }
                             className="select-none"
                         />
+                        {hasActiveFilters && !isLoadingRaffleNumbers && raffleNumbers && (
+                            <div
+                                className="inline-flex items-center gap-2 px-3 py-1 mt-2 text-sm font-semibold text-gray-700 border rounded-full shadow-sm"
+                                style={{
+                                    borderColor: `${raffle?.color || '#1976d2'}40`,
+                                    background: `linear-gradient(90deg, ${raffle?.color || '#1976d2'}14, transparent)`
+                                }}
+                            >
+                                <span className="text-xs">Resultados:</span>
+                                <span className="text-base" style={{ color: raffle?.color || '#1976d2' }}>
+                                    {raffleNumbers.total}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
                 

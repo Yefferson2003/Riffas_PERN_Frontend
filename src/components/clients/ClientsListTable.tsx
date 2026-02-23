@@ -9,6 +9,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import LocalAtmIcon from '@mui/icons-material/LocalAtm';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
@@ -42,10 +43,12 @@ function formatDateShort(dateStr?: string) {
 interface ClientsListTableProps {
     clients: ResponseClientType[];
     onEdit: (client: ClientType) => void;
-    onBuyNumbers: (client: ClientType) => void
+    onBuyNumbers: (client: ClientType) => void;
+    onDelete: (client: ClientType) => void;
+    isDeleting: boolean;
 }
 
-function Row({ client, onEdit, onBuyNumbers }: Pick<ClientsListTableProps, 'onEdit' | 'onBuyNumbers'> & { client: ResponseClientType }) {
+function Row({ client, onEdit, onBuyNumbers, onDelete, isDeleting }: Pick<ClientsListTableProps, 'onEdit' | 'onBuyNumbers' | 'onDelete' | 'isDeleting'> & { client: ResponseClientType }) {
     const [open, setOpen] = React.useState(false);
 
     // Agrupar los números por rifa
@@ -114,6 +117,13 @@ function Row({ client, onEdit, onBuyNumbers }: Pick<ClientsListTableProps, 'onEd
                             <LocalAtmIcon />
                         </IconButton>
                     </Tooltip>
+                    <Tooltip title="Eliminar cliente" arrow>
+                        <IconButton color="error" onClick={() => onDelete(client)} size="small"
+                            disabled={isDeleting}
+                        >
+                            <DeleteIcon />
+                        </IconButton>
+                    </Tooltip>
                 </TableCell>
             </TableRow>
             <TableRow>
@@ -131,6 +141,8 @@ function Row({ client, onEdit, onBuyNumbers }: Pick<ClientsListTableProps, 'onEd
                             ) : (
                                 groupedByRaffle.map(([raffleId, numbers]) => {
                                     const raffleColor = numbers[0].raffle?.color || undefined;
+                                    const raffleTotalNumbers = numbers.length;
+                                    const raffleTotalDebt = numbers.reduce((sum, num) => sum + (Number(num.paymentDue) || 0), 0);
                                     return (
                                         <Box
                                             key={raffleId}
@@ -147,6 +159,36 @@ function Row({ client, onEdit, onBuyNumbers }: Pick<ClientsListTableProps, 'onEd
                                             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1, color: raffleColor || 'primary.main', fontSize: { xs: 15, sm: 17 } }}>
                                                 Rifa: {numbers[0].raffle?.name || `ID ${raffleId}`}
                                             </Typography>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    gap: 2,
+                                                    flexWrap: 'wrap',
+                                                    alignItems: 'center',
+                                                    mb: 1.5,
+                                                }}
+                                            >
+                                                <Chip
+                                                    label={`Total numeros: ${raffleTotalNumbers}`}
+                                                    size="small"
+                                                    sx={{
+                                                        fontWeight: 700,
+                                                        borderRadius: 2,
+                                                        bgcolor: '#e3f2fd',
+                                                        color: '#1565c0'
+                                                    }}
+                                                />
+                                                <Chip
+                                                    label={`Deuda total: ${formatCurrencyCOP(raffleTotalDebt)}`}
+                                                    size="small"
+                                                    sx={{
+                                                        fontWeight: 700,
+                                                        borderRadius: 2,
+                                                        bgcolor: '#ffebee',
+                                                        color: '#c62828'
+                                                    }}
+                                                />
+                                            </Box>
                                             <Table size="small" aria-label="números" sx={{ minWidth: 420 }}>
                                                 <TableHead>
                                                     <TableRow>
@@ -193,7 +235,7 @@ function Row({ client, onEdit, onBuyNumbers }: Pick<ClientsListTableProps, 'onEd
     );
 }
 
-export default function ClientsListTable({ clients, onEdit, onBuyNumbers }: ClientsListTableProps) {
+export default function ClientsListTable({ clients, onEdit, onBuyNumbers, onDelete, isDeleting }: ClientsListTableProps) {
     const isMobile = useMediaQuery('(max-width:600px)');
 
     if (isMobile) {
@@ -238,11 +280,35 @@ export default function ClientsListTable({ clients, onEdit, onBuyNumbers }: Clie
                                             Object.entries(groupedByRaffle).map(([raffleId, numbers]) => {
                                                 if (!numbers || numbers.length === 0) return null;
                                                 const raffleColor = numbers[0].raffle?.color || undefined;
+                                                const raffleTotalNumbers = numbers.length;
+                                                const raffleTotalDebt = numbers.reduce((sum, num) => sum + (Number(num.paymentDue) || 0), 0);
                                                 return (
                                                     <Box key={raffleId} sx={{ mb: 1.5, p: 1, border: `2px solid ${raffleColor || '#1976d2'}`, borderRadius: 2, background: raffleColor ? `${raffleColor}11` : undefined }}>
                                                         <Typography variant="body2" sx={{ fontWeight: 700, color: raffleColor || 'primary.main', mb: 0.5 }}>
                                                             Rifa: {numbers[0].raffle?.name || `ID ${raffleId}`}
                                                         </Typography>
+                                                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1 }}>
+                                                            <Chip
+                                                                label={`Total numeros: ${raffleTotalNumbers}`}
+                                                                size="small"
+                                                                sx={{
+                                                                    fontWeight: 700,
+                                                                    borderRadius: 2,
+                                                                    bgcolor: '#e3f2fd',
+                                                                    color: '#1565c0'
+                                                                }}
+                                                            />
+                                                            <Chip
+                                                                label={`Deuda total: ${formatCurrencyCOP(raffleTotalDebt)}`}
+                                                                size="small"
+                                                                sx={{
+                                                                    fontWeight: 700,
+                                                                    borderRadius: 2,
+                                                                    bgcolor: '#ffebee',
+                                                                    color: '#c62828'
+                                                                }}
+                                                            />
+                                                        </Box>
                                                         <Stack spacing={0.5} divider={<Divider flexItem />}>
                                                             {numbers.map(num => (
                                                                 <Box key={num.id} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, py: 0.5 }}>
@@ -295,6 +361,13 @@ export default function ClientsListTable({ clients, onEdit, onBuyNumbers }: Clie
                                         <LocalAtmIcon />
                                     </IconButton>
                                 </Tooltip>
+                                <Tooltip title="Eliminar cliente" arrow>
+                                    <IconButton color="error" onClick={() => onDelete(client)} size="small"
+                                        disabled={isDeleting}
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </Tooltip>
                             </CardActions>
                         </Card>
                     );
@@ -324,6 +397,8 @@ export default function ClientsListTable({ clients, onEdit, onBuyNumbers }: Clie
                                 client={client} 
                                 onEdit={onEdit}
                                 onBuyNumbers={onBuyNumbers}
+                                onDelete={onDelete}
+                                isDeleting={isDeleting}
                             />
                         ))}
                     </TableBody>

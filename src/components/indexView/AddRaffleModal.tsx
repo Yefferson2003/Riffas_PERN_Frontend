@@ -42,27 +42,27 @@ function AddRaffleModal({search, page, rowsPerPage} : AddRaffleModalProps) {
     
     const [colorPickerAnchor, setColorPickerAnchor] = useState<HTMLElement | null>(null);
 
-const initialValues: CreateRaffleForm   = {
-    name: '',
-    nitResponsable: '',
-    nameResponsable: '',
-    description: '',
-    startDate: dayjs().startOf('day'),
-    editDate: null,
-    playDate: null,
-    price: '',
-    banerImgUrl: '',
-    quantity: 1000,
-    banerMovileImgUrl: '',
-    imgIconoUrl: '',
-    color: '#1976d2',
-    contactRifero: '',
-    
-}
+    const initialValues: CreateRaffleForm   = {
+        name: '',
+        nitResponsable: '',
+        nameResponsable: '',
+        description: '',
+        startDate: dayjs().startOf('day'),
+        editDate: null,
+        playDate: null,
+        price: '',
+        banerImgUrl: '',
+        quantity: 1000,
+        banerMovileImgUrl: '',
+        imgIconoUrl: '',
+        color: '#1976d2',
+        contactRifero: '',
+        loteria: '',
+    }
 
-const {register, handleSubmit, setValue, watch, reset, formState: {errors}} = useForm({
-    defaultValues : initialValues
-})
+    const {register, handleSubmit, setValue, watch, reset, formState: {errors}} = useForm({
+        defaultValues : initialValues
+    })
 
     
     const startDate = watch("startDate");
