@@ -511,6 +511,7 @@ export const raffleNumbersSchema = RaffleNumberSchema.pick({
     firstName: true,
     lastName: true,
     status: true,
+    paymentAmount: true,
 }).extend({
     payments: z.array(PaymentSchema.pick({
         userId: true,

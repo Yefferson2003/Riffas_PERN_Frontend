@@ -9,6 +9,23 @@ type PhoneNumberInputProps = {
 };
 
 const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({ value, onChange, primaryColor = '#1976d2' }) => {
+    const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        e.preventDefault();
+        const pastedText = e.clipboardData.getData('text');
+        // Limpiar espacios, guiones, paréntesis y caracteres especiales
+        const cleanedPhone = pastedText.replace(/[\s\-\(\)\.]/g, '');
+        // Verificar si es un número válido (al menos 7 dígitos)
+        if (/^\d{7,}$/.test(cleanedPhone)) {
+            // Si empieza con 0, agregamos +57 (Colombia)
+            let formattedPhone = cleanedPhone.startsWith('0') 
+                ? '+57' + cleanedPhone.slice(1)
+                : cleanedPhone.startsWith('+') 
+                    ? cleanedPhone 
+                    : '+57' + cleanedPhone;
+                onChange(formattedPhone);
+        }
+    };
+
     return (
         <PhoneInput
             international
@@ -53,7 +70,8 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({ value, onChange, pr
                 onBlur: (e: React.FocusEvent<HTMLInputElement>) => {
                     e.target.style.borderColor = `${primaryColor}40`;
                     e.target.style.boxShadow = 'none';
-                }
+                },
+                onPaste: handlePaste,
             }}
         />
     );

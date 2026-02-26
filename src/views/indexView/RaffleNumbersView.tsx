@@ -1,50 +1,50 @@
-import LocalActivityIcon from '@mui/icons-material/LocalActivity';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CasinoIcon from '@mui/icons-material/Casino';
+import LocalActivityIcon from '@mui/icons-material/LocalActivity';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { Chip, FormControl, FormControlLabel, MenuItem, Select, SelectChangeEvent, Skeleton, Switch, TextField } from "@mui/material";
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import  { Dayjs } from 'dayjs';
 import { useQueries } from '@tanstack/react-query';
+import { Dayjs } from 'dayjs';
 import debounce from 'lodash.debounce';
 import { useCallback, useEffect, useState } from "react";
 import { useMediaQuery } from 'react-responsive';
 import { Navigate, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { toast } from 'react-toastify';
 import { getAwards } from '../../api/awardsApi';
+import { getClientsForSelect } from '../../api/clientApi';
 import { getExpensesTotal, getExpensesTotalByUser } from '../../api/expensesApi';
 import { getActiveRafflePayMethods } from '../../api/payMethodeApi';
 import { getRaffleById, getUsersByRaffle } from '../../api/raffleApi';
 import { getRaffleNumers } from '../../api/raffleNumbersApi';
+import { getAllUserTasas } from '../../api/tasasApi';
 import NumbersSeleted from '../../components/indexView/NumbersSeleted';
 import PayNumbersModal from '../../components/indexView/PayNumbersModal';
 import PaymentSellNumbersModal from '../../components/indexView/PaymentSellNumbersModal';
+import RaffleProgressBar from '../../components/indexView/RaffleProgressBar';
 import Recaudo from '../../components/indexView/Recaudo';
 import RecaudoByVendedor from '../../components/indexView/RecaudoByVendedor';
+import TasasSupportButton from '../../components/indexView/TasasSupportButton';
 import UpdateRaffleModal from '../../components/indexView/UpdateRaffleModal';
 import ViewRaffleNumberData from '../../components/indexView/ViewRaffleNumberData';
 import ViewUsersOfRaffleModal from '../../components/indexView/ViewUsersOfRaffleModal';
 import ViewAdminExpensesModal from '../../components/indexView/modal/Expenses/ViewAdminExpensesModal';
 import ViewExpensesByUserModal from '../../components/indexView/modal/Expenses/ViewExpensesByUserModal';
-import ShareURLRaffleModal from '../../components/indexView/modal/ShareURLRaffleModal';
+import RaffleOffersModal from '../../components/indexView/modal/RaffleOffersModal';
 import RafflePayMethodsModal from '../../components/indexView/modal/RafflePayMethodsModal';
+import ShareURLRaffleModal from '../../components/indexView/modal/ShareURLRaffleModal';
 import Awards from '../../components/indexView/raffle/Awards';
 import RaffleSideBar from '../../components/indexView/raffle/RaffleSideBar';
-import RaffleOffersModal from '../../components/indexView/modal/RaffleOffersModal';
-import RaffleProgressBar from '../../components/indexView/RaffleProgressBar';
 import MobileErrorBoundary from '../../components/shared/MobileErrorBoundary';
 import MobileSafePagination from '../../components/shared/MobileSafePagination';
-import TasasSupportButton from '../../components/indexView/TasasSupportButton';
 import socket from '../../socket';
-import { RaffleNumber, RaffleNumbersPayments, statusRaffleNumbersEnum, User } from "../../types";
-import { capitalize, colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros, getChipStyles, translateRaffleStatusSelect } from "../../utils";
+import '../../styles/mobile-fixes.css';
+import { RaffleNumber, RaffleNumbersPayments, User } from "../../types";
+import { capitalize, colorStatusRaffleNumber, formatCurrencyCOP, formatDateTimeLarge, formatWithLeadingZeros, getChipStyles } from "../../utils";
 import { exelRaffleNumbersFilter, exelRaffleNumbersFilterDetails } from '../../utils/exel';
 import LoaderView from "../LoaderView";
-import '../../styles/mobile-fixes.css';
-import { getClientsForSelect } from '../../api/clientApi';
-import { getAllUserTasas } from '../../api/tasasApi';
 
 export type NumbersSelectedType = {
     numberId: number, 
@@ -64,6 +64,14 @@ const styleForm = {
         sm: 'repeat(2, 1fr)',         // Dos columnas en pantallas medianas
         md: 'repeat(3, 1fr)',         // Cuatro columnas en pantallas grandes
     },
+}
+
+type FilterOptions = {
+    sold?: boolean;
+    available?: boolean;
+    pending1?: boolean;
+    pending2?: boolean;
+    apartado?: boolean;
 }
 
 function RaffleNumbersView() {
@@ -86,7 +94,7 @@ function RaffleNumbersView() {
     const [optionSeleted, setOptionSeleted] = useState(false)
     const [numbersSeleted, setNumbersSeleted] = useState<NumbersSelectedType[]>([])
 
-    const [filter, setFilter] = useState<{ sold?: boolean; available?: boolean; pending?: boolean }>({});
+    const [filter, setFilter] = useState<FilterOptions>({});
     const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('');
     const [userFilter, setUserFilter] = useState<string>('');
     const [inputValues, setInputValues] = useState({ 
@@ -145,18 +153,14 @@ function RaffleNumbersView() {
 
     const handleFilterChange = (e: SelectChangeEvent<string>) => {
         // Definir un tipo específico para los filtros
-        interface FilterOptions {
-            sold?: boolean;
-            available?: boolean;
-            pending?: boolean;
-            apartado?: boolean;
-        }
+        
 
         const filters: Record<string, FilterOptions> = {
             all: {},
             sold: { sold: true },
             available: { available: true },
-            pending: { pending: true },
+            pending1: { pending1: true },
+            pending2: { pending2: true },
             apartado: { apartado: true },
         };
 
@@ -617,17 +621,18 @@ function RaffleNumbersView() {
                                 fullWidth
                             >
                                 <MenuItem value={'all'}>Todos</MenuItem>
-                                {statusRaffleNumbersEnum.map(status => (
+                                {/* {statusRaffleNumbersEnum.map(status => (
                                     <MenuItem key={status} value={status}>
                                         {translateRaffleStatusSelect(status)}
                                     </MenuItem>
-                                ))}
+                                ))} */}
                                     
                                     
-                                {/* <MenuItem value={'available'}>Disponibles</MenuItem>
-                                <MenuItem value={'pending'}>Pendientes</MenuItem>
-                                <MenuItem value={'sold'}>Vendidos</MenuItem>
-                                <MenuItem value={'apartado'}>Apartados</MenuItem> */}
+                                <MenuItem value={'available'}>Disponibles</MenuItem>
+                                <MenuItem value={'pending1'}>Apartados</MenuItem>
+                                <MenuItem value={'pending2'}>Abonados</MenuItem>
+                                <MenuItem value={'sold'}>Pagados</MenuItem>
+                                <MenuItem value={'apartado'}>Por Confirmar</MenuItem>
                             </Select>
                             
                             <Select
@@ -716,7 +721,7 @@ function RaffleNumbersView() {
                                 }}
                             />
                             
-                            {filter.pending === true && (
+                            {filter.pending2 === true && (
                                 <TextField 
                                     id='searchAmount' 
                                     label="Buscar por Monto" 
@@ -1075,7 +1080,7 @@ function RaffleNumbersView() {
                                         isVisibleRaffleNumbes(raffleNumber.payments) &&
                                         !isOptionSelectedNumber(raffleNumber.status)
                                     }
-                                    color={colorStatusRaffleNumber[raffleNumber.status]}
+                                    color={colorStatusRaffleNumber(raffleNumber.status, raffleNumber.paymentAmount)}
                                     onClick={handleChipClick}
                                 />
                             );

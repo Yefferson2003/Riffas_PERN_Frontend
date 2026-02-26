@@ -557,7 +557,7 @@ function RaffleNumbersShared({ token, raffle, price, awards, raffleColor }: Raff
                                 variant="filled" 
                                 size="small"
                                 disabled={!isAvailable}
-                                color={isSelected ? undefined : colorStatusRaffleNumber[raffleNumber.status]}
+                                color={isSelected ? undefined : colorStatusRaffleNumber(raffleNumber.status)}
                                 onClick={() => {
                                     if (isAvailable) {
                                         toggleSelectNumber(raffleNumber);

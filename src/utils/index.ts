@@ -72,7 +72,7 @@ export function translateRaffleStatus(status: StatusRaffleNumbersType): string {
     return translations[status] || status;
 }
 
-export function translateRaffleStatusSelect(status: StatusRaffleNumbersType): string {
+export function     translateRaffleStatusSelect(status: StatusRaffleNumbersType): string {
     const translations: Record<typeof status, string> = {
         available: "Disponibles",
         sold: "Pagados",
@@ -84,12 +84,22 @@ export function translateRaffleStatusSelect(status: StatusRaffleNumbersType): st
 
 export const rifflesNumbersStatusEnum = ['available', 'sold', 'pending', 'apartado'] as const;
 
-export const colorStatusRaffleNumber : {[key: string] : "warning" | "default" | "success" | undefined } = {
-    available: 'default',
-    sold: 'success',
-    pending: 'warning',
-    reserved: undefined, 
-}
+export const colorStatusRaffleNumber = (
+    status: string,
+    paymentAmount?: number | string
+): "warning" | "default" | "success" | "error" | undefined => {
+    if (status === 'pending') {
+        const amount = typeof paymentAmount === 'string' ? parseFloat(paymentAmount) : paymentAmount;
+        if (amount !== undefined && !Number.isNaN(amount) && amount > 0) {
+            return 'warning';
+        }
+        return 'error';
+    }
+
+    if (status === 'sold') return 'success';
+    if (status === 'available') return 'default';
+    return undefined;
+};
 
 // Función para abrir WhatsApp compatible con iOS y Android
 export function openWhatsAppUrl(url: string) {
