@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import api from "../lib/axios";
-import { PayNumberForm, PayNumbersForm, PayNumbersSharedFormType, RaffleNumberSchema, raffleNumbersExelFilterSchema, raffleNumberSharedSchema, RaffleNumberUpdateForm, RafflePayResponseSchema, ramdomNumberSchema, responseRaffleNumbersExelSchema, responseRaffleNumbersPendingSchema, responseRaffleNumbersSchema, responseRaffleNumbersSchemaShared } from "../types";
+import { PayNumberForm, PayNumbersForm, PayNumbersSharedFormType, RaffleNumberAvisoSchema, RaffleNumberSchema, raffleNumbersExelFilterSchema, raffleNumberSharedSchema, RaffleNumberUpdateForm, RafflePayResponseSchema, ramdomNumberSchema, responseRaffleNumbersExelSchema, responseRaffleNumbersPendingSchema, responseRaffleNumbersSchema, responseRaffleNumbersSchemaShared } from "../types";
 
 type raffleNumberApiType = {
     raffleId: number;
@@ -139,6 +139,23 @@ export async function getRaffleNumberByIdShared({token, raffleNumberId} : {token
     }
     
 }
+
+export async function getDataRaffleNumberAvisoWhatsapp({raffleId, raffleNumberId}: {raffleId: number, raffleNumberId: number}) {
+    try {
+        const {data} = await api.get(`/raffles-numbers/${raffleId}/number/${raffleNumberId}/whatsapp-aviso`)
+        const response = RaffleNumberAvisoSchema.safeParse(data)
+
+        if (response.success) {
+            return response.data
+        }
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            console.log(error);
+            throw new Error(error.response.data.error);
+        }
+    }
+}
+
 
 export async function sellNumbers({formData, raffleId, params}: {
     formData: PayNumbersForm,

@@ -5,9 +5,9 @@ import { useForm } from "react-hook-form";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getActiveRafflePayMethods } from "../../api/payMethodeApi";
-import { amountNumber, updateNumber } from "../../api/raffleNumbersApi";
+import { amountNumber, getDataRaffleNumberAvisoWhatsapp, updateNumber } from "../../api/raffleNumbersApi";
 import { AwardType, ClientSelectType, PayNumberForm, Raffle, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../types";
-import { capitalize, formatCurrencyCOP, formatWithLeadingZeros, handleSendMessageToWhatsApp, redirectToWhatsApp, sendPaymentReminderWhatsApp } from "../../utils";
+import { capitalize, formatCurrencyCOP, formatWithLeadingZeros, handleMessageToWhatsAppAviso, handleSendMessageToWhatsApp, redirectToWhatsApp, sendPaymentReminderWhatsApp } from "../../utils";
 import PhoneNumberInput from "../PhoneNumberInput";
 import ButtonsRaffleModal from "./raffleNumber/ButtonsRaffleModal";
 import ClientSelectInput from "./raffleNumber/ClientSelectInput";
@@ -261,6 +261,25 @@ function ViewRaffleNumberModal({ clientSelectInput, clientPage, clientSearch, se
         }
     }
 
+    const handleAvisoWhatsApp = async () => {
+        try {
+            const data = await getDataRaffleNumberAvisoWhatsapp({
+                raffleId,
+                raffleNumberId
+            });
+
+            if (!data) {
+                toast.error('No se pudieron obtener los datos para el aviso.');
+                return;
+            }
+
+            handleMessageToWhatsAppAviso(data);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Hubo un error al generar el aviso.';
+            toast.error(message);
+        }
+    }
+
     const handelUpdateNumber = () => {
         const formData={
             phone,
@@ -356,9 +375,6 @@ function ViewRaffleNumberModal({ clientSelectInput, clientPage, clientSearch, se
                         width: { xs: '100%', sm: 'auto' }
                     }}>
                         <ButtonsRaffleModal
-                            name={raffleNumber.firstName || ''}
-                            number={raffleNumber.number}
-                            telefono={raffleNumber.phone || ''}
                             awards={awards}
                             totalNumbers={totalNumbers}
                             pdfData={pdfData}
@@ -368,6 +384,7 @@ function ViewRaffleNumberModal({ clientSelectInput, clientPage, clientSearch, se
                             refetch={refetch}
                             raffleNumberStatus={raffleNumber.status}
                             handleToWasap={handleToWasap}
+                            handleAvisoWhatsApp={handleAvisoWhatsApp}
                             handleSendPaymentReminderWhatsApp={handleSendPaymentReminderWhatsApp}
                         />
                     </Box>

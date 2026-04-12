@@ -8,6 +8,8 @@ export type ClientApi = {
     filter: StatusRaffleNumbersType | string;
     limit: number;
     search: string;
+    raffleId: number | undefined;
+    semaforo: string | undefined;
     clientId: ClientType['id'];
     formData: ClientFormType;
     buyNumberForClientFormData: BuyNumberForClientFormType;
@@ -59,7 +61,7 @@ export async function getClientsSharedLinkAll( { page, limit, search, filter, st
     }
 }
 
-export async function getClients( { page, limit, search, order, startDate, endDate } : Pick<ClientApi, 'page' | 'limit' | 'search' | 'order' | 'startDate' | 'endDate'>) {
+export async function getClients( { page, limit, search, order, startDate, endDate, raffleId, semaforo } : Pick<ClientApi, 'page' | 'limit' | 'search' | 'order' | 'startDate' | 'endDate' | 'raffleId' | 'semaforo'>) {
     try {
         const { data } = await api.get("/clients", { params: { 
             page, 
@@ -67,7 +69,9 @@ export async function getClients( { page, limit, search, order, startDate, endDa
             search, 
             order,
             startDate,
-            endDate
+            endDate,
+            raffleId,
+            semaforo
         } });
         
         const response = responseClientsSchema.safeParse(data);
@@ -123,13 +127,15 @@ export async function updateClient( { clientId, formData } : Pick<ClientApi, 'cl
 }
 
 // Exportar todos los clientes y sus datos completos (sin paginación)
-export async function getClientsForExport({ search, order, startDate, endDate} : Pick<ClientApi, "search" | 'order' | 'startDate' | 'endDate'> ) {
+export async function getClientsForExport({ search, order, startDate, endDate, raffleId, semaforo} : Pick<ClientApi, "search" | 'order' | 'startDate' | 'endDate' | 'raffleId' | 'semaforo'> ) {
     try {
         const { data } = await api.get("/clients/export-all", { params: { 
             search,
             order,
             startDate,
-            endDate
+            endDate,
+            raffleId,
+            semaforo
         } });
         // No paginación, retorna todos los clientes
         const response = ClientsListForExportSchema.safeParse(data);

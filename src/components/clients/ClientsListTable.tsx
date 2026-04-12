@@ -17,8 +17,8 @@ import Paper from '@mui/material/Paper';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { ClientType, ResponseClientType } from '../../types';
-import { Chip } from '@mui/material';
-import { formatCurrencyCOP, formatWithLeadingZeros } from '../../utils';
+import { Chip, CircularProgress } from '@mui/material';
+import { formatCurrencyCOP, formatWithLeadingZeros, handleMessageToWhatsAppAviso, redirectToWhatsApp } from '../../utils';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -28,16 +28,336 @@ import Stack from '@mui/material/Stack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LockIcon from '@mui/icons-material/Lock';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CircleIcon from '@mui/icons-material/Circle';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemText from '@mui/material/ListItemText';
+import CampaignIcon from '@mui/icons-material/Campaign';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import { useQuery } from '@tanstack/react-query';
+import { getDataRaffleNumberAvisoWhatsapp } from '../../api/raffleNumbersApi';
+import { getAwards } from '../../api/awardsApi';
+import { sendPaymentReminderWhatsApp } from '../../utils';
+import { toast } from 'react-toastify';
 
 // Utilidad para fecha corta (solo fecha, no hora)
 function formatDateShort(dateStr?: string) {
     if (!dateStr) return '-';
     const d = new Date(dateStr);
     return d.toLocaleDateString();
+}
+
+function getTrafficLightLabel(semaforo?: string) {
+    if (semaforo === 'blue') return 'Azul';
+    if (semaforo === 'green') return 'Verde';
+    if (semaforo === 'orange') return 'Naranja';
+    return 'Rojo';
+}
+
+function getTrafficLightChipStyles(semaforo?: string) {
+    if (semaforo === 'blue') {
+        return { bgcolor: '#e3f2fd', color: '#1565c0', borderColor: '#90caf9' };
+    }
+    if (semaforo === 'green') {
+        return { bgcolor: '#e8f5e9', color: '#2e7d32', borderColor: '#81c784' };
+    }
+    if (semaforo === 'orange') {
+        return { bgcolor: '#fff3e0', color: '#ef6c00', borderColor: '#ffb74d' };
+    }
+    return { bgcolor: '#ffebee', color: '#c62828', borderColor: '#ef9a9a' };
+}
+
+function getTrafficLightColor(semaforo?: string) {
+    if (semaforo === 'blue') return '#1565c0';
+    if (semaforo === 'green') return '#2e7d32';
+    if (semaforo === 'orange') return '#ef6c00';
+    return '#c62828';
+}
+
+function NumberAvisoButton({ raffleId, raffleNumberId }: { raffleId: number; raffleNumberId: number }) {
+    const [isSending, setIsSending] = React.useState(false);
+
+    const { data, isFetching, isError, refetch } = useQuery({
+        queryKey: ['whatsapp-aviso', raffleId, raffleNumberId],
+        queryFn: () => getDataRaffleNumberAvisoWhatsapp({ raffleId, raffleNumberId }),
+        enabled: false,
+        retry: false,
+        staleTime: Infinity,
+    });
+
+    const handleClick = async () => {
+        if (isSending) return;
+
+        try {
+            setIsSending(true);
+
+            let avisoData = data;
+
+            if (!avisoData) {
+                const response = await refetch();
+                avisoData = response.data;
+            }
+
+            if (!avisoData) {
+                throw new Error('No se pudieron obtener los datos para el aviso');
+            }
+
+            handleMessageToWhatsAppAviso(avisoData);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsSending(false);
+        }
+    };
+
+    return (
+        <Tooltip
+            title={isError ? 'Sin cliente asignado o error al obtener datos' : 'Enviar aviso por WhatsApp'}
+            arrow
+        >
+            <span>
+                <IconButton
+                    size="small"
+                    onClick={handleClick}
+                    disabled={isFetching || isSending}
+                    sx={{ color: isError ? 'error.main' : '#FF6B00' }}
+                >
+                    {isFetching || isSending
+                        ? <CircularProgress size={16} sx={{ color: '#FF6B00' }} />
+                        : <CampaignIcon fontSize="small" />}
+                </IconButton>
+            </span>
+        </Tooltip>
+    );
+}
+
+function NumberPaymentReminderButton({
+    raffleId,
+    raffleName,
+    rafflePlayDate,
+    rafflePrice,
+    totalNumbers,
+    raffleNumber,
+    phone,
+    name,
+    reservedDate,
+    paymentDue,
+}: {
+    raffleId: number;
+    raffleName: string;
+    rafflePlayDate: string;
+    rafflePrice: string;
+    totalNumbers: number;
+    raffleNumber: number;
+    phone: string;
+    name: string;
+    reservedDate: string | null;
+    paymentDue: number;
+}) {
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+
+    const { data: awards = [], isLoading: isLoadingAwards } = useQuery({
+        queryKey: ['client-reminder-awards', raffleId],
+        queryFn: () => getAwards({ raffleId: String(raffleId) }),
+        enabled: open,
+        retry: false,
+        staleTime: 5 * 60 * 1000,
+    });
+
+    const openWhatsAppUrl = (url: string) => {
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+            window.location.href = url;
+        } else {
+            window.open(url, '_blank');
+        }
+    };
+
+    const handleSendReminder = (award?: { id: number; name: string; playDate: string }) => {
+        if (!phone) {
+            toast.warn('El número no tiene teléfono asignado.');
+            return;
+        }
+
+        try {
+            const url = sendPaymentReminderWhatsApp({
+                totalNumbers,
+                numbers: [{ numberId: 0, number: raffleNumber }],
+                phone,
+                name,
+                amount: 0,
+                infoRaffle: {
+                    name: raffleName,
+                    amountRaffle: rafflePrice,
+                    playDate: rafflePlayDate,
+                    description: '',
+                    responsable: '',
+                },
+                awards: [],
+                reservedDate,
+                award,
+                abonosPendientes: paymentDue,
+            });
+
+            if (!url) {
+                toast.error('No se pudo generar el mensaje de recordatorio.');
+                return;
+            }
+
+            openWhatsAppUrl(url);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Hubo un error al enviar recordatorio.';
+            toast.error(message);
+        }
+    };
+
+    return (
+        <>
+            <Tooltip title="Recordar pago" arrow>
+                <span>
+                    <IconButton
+                        size="small"
+                        onClick={(event) => setAnchorEl(event.currentTarget)}
+                        sx={{ color: '#059669' }}
+                    >
+                        <AttachMoneyIcon fontSize="small" />
+                    </IconButton>
+                </span>
+            </Tooltip>
+
+            <Menu
+                anchorEl={anchorEl}
+                open={open}
+                onClose={() => setAnchorEl(null)}
+                PaperProps={{
+                    sx: {
+                        width: 360,
+                        maxWidth: '90vw',
+                        borderRadius: 2,
+                    },
+                }}
+            >
+                {isLoadingAwards ? (
+                    <MenuItem disabled>Cargando premios...</MenuItem>
+                ) : awards.length === 0 ? (
+                    <MenuItem
+                        onClick={() => {
+                            handleSendReminder(undefined);
+                            setAnchorEl(null);
+                        }}
+                    >
+                        <ListItemText primary="Recordar pago (sin premio)" secondary="No hay premios disponibles" />
+                    </MenuItem>
+                ) : (
+                    awards.map((award) => (
+                        <MenuItem
+                            key={award.id}
+                            onClick={() => {
+                                handleSendReminder(award);
+                                setAnchorEl(null);
+                            }}
+                        >
+                            <ListItemText primary={award.name} secondary={new Date(award.playDate).toLocaleString()} />
+                        </MenuItem>
+                    ))
+                )}
+            </Menu>
+        </>
+    );
+}
+
+function NumberWhatsappButton({
+    totalNumbers,
+    raffleNumber,
+    phone,
+    name,
+    raffleName,
+    rafflePlayDate,
+    rafflePrice,
+    reservedDate,
+    status,
+    paymentAmount,
+    paymentDue,
+    raffleDescription,
+    raffleResponsable,
+}: {
+    totalNumbers: number;
+    raffleNumber: number;
+    phone: string;
+    name: string;
+    raffleName: string;
+    rafflePlayDate: string;
+    rafflePrice: string;
+    reservedDate: string | null;
+    status: 'sold' | 'pending' | 'apartado' | 'available';
+    paymentAmount: number;
+    paymentDue: number;
+    raffleDescription: string;
+    raffleResponsable: string;
+}) {
+    const handleSendUserMessage = () => {
+        if (!phone) {
+            toast.warn('El cliente no tiene teléfono asignado.');
+            return;
+        }
+
+        try {
+            const url = redirectToWhatsApp({
+                totalNumbers,
+                amount: paymentAmount,
+                numbers: [{ numberId: 0, number: raffleNumber }],
+                phone,
+                name,
+                infoRaffle: {
+                    name: raffleName,
+                    amountRaffle: rafflePrice,
+                    playDate: rafflePlayDate,
+                    description: raffleDescription,
+                    responsable: raffleResponsable,
+                },
+                payments: [],
+                awards: [],
+                reservedDate,
+                statusRaffleNumber: status === 'available' ? undefined : status,
+                priceRaffleNumber: paymentAmount + paymentDue,
+            });
+
+            if (!url) {
+                toast.error('No se pudo generar el mensaje para WhatsApp.');
+                return;
+            }
+
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile) {
+                window.location.href = url;
+            } else {
+                window.open(url, '_blank');
+            }
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Error al generar el mensaje de WhatsApp.';
+            toast.error(message);
+        }
+    };
+
+    return (
+        <Tooltip title="Mensaje al usuario" arrow>
+            <span>
+                <IconButton
+                    size="small"
+                    onClick={handleSendUserMessage}
+                    sx={{ color: '#16a34a' }}
+                >
+                    <WhatsAppIcon fontSize="small" />
+                </IconButton>
+            </span>
+        </Tooltip>
+    );
 }
 
 interface ClientsListTableProps {
@@ -50,6 +370,8 @@ interface ClientsListTableProps {
 
 function Row({ client, onEdit, onBuyNumbers, onDelete, isDeleting }: Pick<ClientsListTableProps, 'onEdit' | 'onBuyNumbers' | 'onDelete' | 'isDeleting'> & { client: ResponseClientType }) {
     const [open, setOpen] = React.useState(false);
+    const clientPhone = client.phone || '';
+    const clientName = `${client.firstName || ''} ${client.lastName || ''}`.trim();
 
     // Agrupar los números por rifa
     const groupedByRaffle = React.useMemo(() => {
@@ -106,6 +428,29 @@ function Row({ client, onEdit, onBuyNumbers, onDelete, isDeleting }: Pick<Client
                         <span style={{ wordBreak: 'break-all' }}>{client.address || 'Sin dirección'}</span>
                     </Box>
                 </TableCell>
+                <TableCell>
+                    {client.status ? (
+                        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 0.5, alignItems: 'flex-start' }}>
+                            <Chip
+                                icon={<CircleIcon sx={{ color: getTrafficLightColor(client.status.semaforo), opacity: 1 }} />}
+                                label={`${client.status.soldPercentage.toFixed(2)}%`}
+                                size="small"
+                                variant="outlined"
+                                sx={{
+                                    fontWeight: 700,
+                                    borderRadius: 2,
+                                    ...getTrafficLightChipStyles(client.status.semaforo),
+                                    '& .MuiChip-icon': {
+                                        color: `${getTrafficLightColor(client.status.semaforo)} !important`,
+                                        opacity: 1,
+                                    },
+                                }}
+                            />
+                        </Box>
+                    ) : (
+                        <Chip label="Sin datos" size="small" variant="outlined" sx={{ borderRadius: 2 }} />
+                    )}
+                </TableCell>
                 <TableCell align="center" sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
                     <Tooltip title="Editar cliente" arrow>
                         <IconButton color="primary" onClick={() => onEdit(client)} size="small">
@@ -127,7 +472,7 @@ function Row({ client, onEdit, onBuyNumbers, onDelete, isDeleting }: Pick<Client
                 </TableCell>
             </TableRow>
             <TableRow>
-                <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={5}>
+                <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
                     <Collapse in={open} timeout="auto" unmountOnExit>
                         <Box sx={{ margin: 2, overflowX: 'auto' }}>
                             <Typography variant="h6" gutterBottom component="div">
@@ -189,7 +534,7 @@ function Row({ client, onEdit, onBuyNumbers, onDelete, isDeleting }: Pick<Client
                                                     }}
                                                 />
                                             </Box>
-                                            <Table size="small" aria-label="números" sx={{ minWidth: 420 }}>
+                                                <Table size="small" aria-label="números" sx={{ minWidth: 480 }}>
                                                 <TableHead>
                                                     <TableRow>
                                                         <TableCell sx={{ minWidth: 70 }}>Número</TableCell>
@@ -197,6 +542,7 @@ function Row({ client, onEdit, onBuyNumbers, onDelete, isDeleting }: Pick<Client
                                                         <TableCell sx={{ minWidth: 80 }}>Estado</TableCell>
                                                         <TableCell sx={{ minWidth: 90 }}>Abonos</TableCell>
                                                         <TableCell sx={{ minWidth: 90 }}>Deuda</TableCell>
+                                                        <TableCell sx={{ minWidth: 60 }}>Aviso</TableCell>
                                                     </TableRow>
                                                 </TableHead>
                                                 <TableBody>
@@ -218,6 +564,40 @@ function Row({ client, onEdit, onBuyNumbers, onDelete, isDeleting }: Pick<Client
                                                             </TableCell>
                                                             <TableCell sx={{ bgcolor: '#ffebee', color: '#d32f2f', fontWeight: 700 }}>
                                                                 {formatCurrencyCOP(+num.paymentDue)}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                    <NumberAvisoButton raffleId={num.raffleId} raffleNumberId={num.id} />
+                                                                    <NumberWhatsappButton
+                                                                        totalNumbers={num.raffle?.totalNumbers || numbers.length}
+                                                                        raffleNumber={num.number}
+                                                                        phone={clientPhone}
+                                                                        name={clientName}
+                                                                        raffleName={num.raffle?.name || `Rifa ${num.raffleId}`}
+                                                                        rafflePlayDate={num.raffle?.playDate || new Date().toISOString()}
+                                                                        rafflePrice={num.raffle?.price || '0'}
+                                                                        reservedDate={num.reservedDate || null}
+                                                                        status={num.status}
+                                                                        paymentAmount={+num.paymentAmount}
+                                                                        paymentDue={+num.paymentDue}
+                                                                        raffleDescription={num.raffle?.description || ''}
+                                                                        raffleResponsable={num.raffle?.nameResponsable || ''}
+                                                                    />
+                                                                    {(num.status === 'apartado' || num.status === 'pending') && (
+                                                                        <NumberPaymentReminderButton
+                                                                            raffleId={num.raffleId}
+                                                                            raffleName={num.raffle?.name || `Rifa ${num.raffleId}`}
+                                                                            rafflePlayDate={num.raffle?.playDate || new Date().toISOString()}
+                                                                            rafflePrice={num.raffle?.price || '0'}
+                                                                            totalNumbers={num.raffle?.totalNumbers || numbers.length}
+                                                                            raffleNumber={num.number}
+                                                                            phone={clientPhone}
+                                                                            name={clientName}
+                                                                            reservedDate={num.reservedDate || null}
+                                                                            paymentDue={+num.paymentDue}
+                                                                        />
+                                                                    )}
+                                                                </Box>
                                                             </TableCell>
                                                         </TableRow>
                                                     ))}
@@ -243,6 +623,8 @@ export default function ClientsListTable({ clients, onEdit, onBuyNumbers, onDele
         return (
             <Stack spacing={2} sx={{ mt: 2, alignItems: 'flex-start' }}>
                 {clients.map((client: ResponseClientType) => {
+                    const clientPhone = client.phone || '';
+                    const clientName = `${client.firstName || ''} ${client.lastName || ''}`.trim();
                     // Agrupar números por rifa
                     const groupedByRaffle = (client.raffleNumbers || []).reduce((acc, num) => {
                         const raffleId = num.raffle?.id || num.raffleId;
@@ -257,6 +639,36 @@ export default function ClientsListTable({ clients, onEdit, onBuyNumbers, onDele
                                     <Typography variant="h6" sx={{ fontWeight: 700, fontSize: 17 }}>
                                         {client.firstName} {client.lastName}
                                     </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', mb: 1 }}>
+                                    {client.status ? (
+                                        <>
+                                            <Chip
+                                                label={getTrafficLightLabel(client.status.semaforo)}
+                                                size="small"
+                                                variant="outlined"
+                                                sx={{
+                                                    fontWeight: 700,
+                                                    borderRadius: 2,
+                                                    ...getTrafficLightChipStyles(client.status.semaforo),
+                                                }}
+                                            />
+                                            <Chip
+                                                label={`Vendidos: ${client.status.soldNumbers}/${client.status.totalNumbers}`}
+                                                size="small"
+                                                variant="outlined"
+                                                sx={{ fontWeight: 700, borderRadius: 2 }}
+                                            />
+                                            <Chip
+                                                label={`${client.status.soldPercentage.toFixed(2)}%`}
+                                                size="small"
+                                                variant="outlined"
+                                                sx={{ fontWeight: 700, borderRadius: 2 }}
+                                            />
+                                        </>
+                                    ) : (
+                                        <Chip label="Estado: Sin datos" size="small" variant="outlined" sx={{ borderRadius: 2 }} />
+                                    )}
                                 </Box>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mb: 1 }}>
                                     <Typography variant="body2" color="text.secondary">
@@ -339,6 +751,39 @@ export default function ClientsListTable({ clients, onEdit, onBuyNumbers, onDele
                                                                         <Box sx={{ flex: '1 1 45%', minWidth: 120, mb: 0.5, color: '#d32f2f', fontWeight: 700 }}>
                                                                             <b>Deuda:</b> {formatCurrencyCOP(+num.paymentDue)}
                                                                         </Box>
+                                                                        <Box sx={{ flex: '1 1 100%', display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                                                                            <Typography variant="caption" color="text.secondary"><b>Aviso:</b></Typography>
+                                                                            <NumberAvisoButton raffleId={num.raffleId} raffleNumberId={num.id} />
+                                                                            <NumberWhatsappButton
+                                                                                totalNumbers={num.raffle?.totalNumbers || numbers.length}
+                                                                                raffleNumber={num.number}
+                                                                                phone={clientPhone}
+                                                                                name={clientName}
+                                                                                raffleName={num.raffle?.name || `Rifa ${num.raffleId}`}
+                                                                                rafflePlayDate={num.raffle?.playDate || new Date().toISOString()}
+                                                                                rafflePrice={num.raffle?.price || '0'}
+                                                                                reservedDate={num.reservedDate || null}
+                                                                                status={num.status}
+                                                                                paymentAmount={+num.paymentAmount}
+                                                                                paymentDue={+num.paymentDue}
+                                                                                raffleDescription={num.raffle?.description || ''}
+                                                                                raffleResponsable={num.raffle?.nameResponsable || ''}
+                                                                            />
+                                                                            {(num.status === 'apartado' || num.status === 'pending') && (
+                                                                                <NumberPaymentReminderButton
+                                                                                    raffleId={num.raffleId}
+                                                                                    raffleName={num.raffle?.name || `Rifa ${num.raffleId}`}
+                                                                                    rafflePlayDate={num.raffle?.playDate || new Date().toISOString()}
+                                                                                    rafflePrice={num.raffle?.price || '0'}
+                                                                                    totalNumbers={num.raffle?.totalNumbers || numbers.length}
+                                                                                    raffleNumber={num.number}
+                                                                                    phone={clientPhone}
+                                                                                    name={clientName}
+                                                                                    reservedDate={num.reservedDate || null}
+                                                                                    paymentDue={+num.paymentDue}
+                                                                                />
+                                                                            )}
+                                                                        </Box>
                                                                     </Box>
                                                                 </Box>
                                                             ))}
@@ -387,11 +832,12 @@ export default function ClientsListTable({ clients, onEdit, onBuyNumbers, onDele
                             <TableCell sx={{ minWidth: 120, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 700, fontSize: 16, letterSpacing: 0.5, borderBottom: '2px solid #1976d2' }}>Nombre</TableCell>
                             <TableCell sx={{ minWidth: 120, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 700, fontSize: 16, letterSpacing: 0.5, borderBottom: '2px solid #1976d2' }}>Teléfono</TableCell>
                             <TableCell sx={{ minWidth: 140, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 700, fontSize: 16, letterSpacing: 0.5, borderBottom: '2px solid #1976d2' }}>Dirección</TableCell>
+                            <TableCell sx={{ minWidth: 170, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 700, fontSize: 16, letterSpacing: 0.5, borderBottom: '2px solid #1976d2' }}>Estado (% Vendidos)</TableCell>
                             <TableCell align="center" sx={{ minWidth: 120, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 700, fontSize: 16, letterSpacing: 0.5, borderBottom: '2px solid #1976d2' }}>Acciones</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {clients.map((client: ClientType) => (
+                        {clients.map((client: ResponseClientType) => (
                             <Row 
                                 key={client.id} 
                                 client={client} 

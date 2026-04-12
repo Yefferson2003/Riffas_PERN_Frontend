@@ -784,6 +784,16 @@ export const ramdomNumberSchema = z.object({
     status: z.enum(statusRaffleNumbersEnum)
 })
 
+export const RaffleNumberAvisoSchema = z.object({
+    totalNumbers: z.number(),
+    number: z.number(),
+    telefono: z.string(),
+    name: z.string(),
+    raffleName: z.string(),
+})
+
+export type RaffleNumberAvisoType = z.infer<typeof RaffleNumberAvisoSchema>
+
 export const RaffleOffersSchema = z.object({
     id: z.number(),
     minQuantity: z.number(),
@@ -803,6 +813,12 @@ export const ResponseClientSchema = ClientSchema.pick({
         phone: true,
         address: true,
     }).extend({
+        status: z.object({
+            semaforo: z.enum(['red', 'orange', 'green', 'blue']),
+            totalNumbers: z.number(),
+            soldNumbers: z.number(),
+            soldPercentage: z.number(),
+        }).optional(),
         raffleNumbers: z.array(
             RaffleNumberSchema.pick({
                 id: true,
@@ -820,6 +836,8 @@ export const ResponseClientSchema = ClientSchema.pick({
                     playDate: true,
                     price: true,
                     color: true,
+                    description: true,
+                    nameResponsable: true,
                 }).extend({
                     totalNumbers: z.number().optional()
                 }).optional(),

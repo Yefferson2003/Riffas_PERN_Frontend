@@ -10,6 +10,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteClient, getClients } from "../../api/clientApi";
+import { getRaffles } from '../../api/raffleApi';
 import ClientsListTable from "../../components/clients/ClientsListTable";
 import BuyNumbersForClientModal from "../../components/clients/modal/BuyNumbersForClientModal";
 import CreateClientModal from "../../components/clients/modal/CreateClientModal";
@@ -26,6 +27,8 @@ function ClientView () {
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [page, setPage] = useState(1);
     const [order, setOrder] = useState(3); // 1: Alfa ASC, 2: Alfa DESC, 3: Fecha ASC, 4: Fecha DESC
+    const [raffleId, setRaffleId] = useState<number | ''>('');
+    const [semaforo, setSemaforo] = useState<string>('');
     const [startDate, setStartDate] = useState<Dayjs | null>(null);
     const [endDate, setEndDate] = useState<Dayjs | null>(null);
     const limit = 15;
@@ -50,8 +53,13 @@ function ClientView () {
         error,
         refetch
     } = useQuery({
-        queryKey: ["clients", { page, limit, search: debouncedSearch, order, startDate: startDate?.format('YYYY-MM-DD'), endDate: endDate?.format('YYYY-MM-DD') }],
-        queryFn: () => getClients({ page, limit, search: debouncedSearch, order, startDate: startDate?.format('YYYY-MM-DD'), endDate: endDate?.format('YYYY-MM-DD') }),
+        queryKey: ["clients", { page, limit, search: debouncedSearch, order, raffleId, semaforo, startDate: startDate?.format('YYYY-MM-DD'), endDate: endDate?.format('YYYY-MM-DD') }],
+        queryFn: () => getClients({ page, limit, search: debouncedSearch, order, raffleId: raffleId ? Number(raffleId) : undefined, semaforo: semaforo || undefined, startDate: startDate?.format('YYYY-MM-DD'), endDate: endDate?.format('YYYY-MM-DD') }),
+    });
+
+    const { data: rafflesData } = useQuery({
+        queryKey: ['raffles-filter-clients'],
+        queryFn: () => getRaffles({ page: 1, limit: 200 }),
     });
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,6 +69,17 @@ function ClientView () {
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, newPage: number) => {
         setPage(newPage);
+    };
+
+    const handleRaffleChange = (e: SelectChangeEvent<number | ''>) => {
+        const selectedValue = e.target.value;
+        setRaffleId(selectedValue === '' ? '' : Number(selectedValue));
+        setPage(1);
+    };
+
+    const handleSemaforoChange = (e: SelectChangeEvent<string>) => {
+        setSemaforo(e.target.value);
+        setPage(1);
     };
 
     const totalPages = data?.totalPages || 1;
@@ -100,14 +119,21 @@ function ClientView () {
     }
 
     const handleExportClientsToExcel = async () => {
-        await exportClientsToExcel({ search: debouncedSearch, order, startDate: startDate?.format('YYYY-MM-DD'), endDate: endDate?.format('YYYY-MM-DD') });
+        await exportClientsToExcel({ search: debouncedSearch, order, raffleId: raffleId ? Number(raffleId) : undefined, semaforo: semaforo || undefined, startDate: startDate?.format('YYYY-MM-DD'), endDate: endDate?.format('YYYY-MM-DD') });
     }
 
     return (
         <Box sx={{ width: '100%', pb: 8, px: { xs: 1, md: 4 }, textAlign: 'center' }}>
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, alignItems: 'center', justifyContent: 'space-between', mb: 6, gap: 3 }}>
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, alignItems: { xs: 'stretch', md: 'center' }, width: '100%' }}>
-                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, width: '100%' }}>
+                <Box sx={{ width: '100%' }}>
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+                            gap: 2,
+                            alignItems: 'start',
+                        }}
+                    >
                         <TextField
                             id="search"
                             label="Buscar cliente..."
@@ -115,9 +141,9 @@ function ClientView () {
                             size="small"
                             value={search}
                             onChange={handleSearchChange}
-                            sx={{ width: { xs: '100%', md: 300 } }}
+                            sx={{ width: '100%' }}
                         />
-                        <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 180 } }}>
+                        <FormControl size="small" sx={{ width: '100%' }}>
                             <InputLabel id="order-select-label">Ordenar por</InputLabel>
                             <Select
                                 labelId="order-select-label"
@@ -132,27 +158,58 @@ function ClientView () {
                                 <MenuItem value={4}>Fecha creación (más antiguo primero)</MenuItem>
                             </Select>
                         </FormControl>
-                    </Box>
-                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, width: { xs: '100%', md: 'auto' }, mt: { xs: 2, md: 0 } }}>
+                        <FormControl size="small" sx={{ width: '100%' }}>
+                            <InputLabel id="raffle-filter-select-label">Filtrar por rifa</InputLabel>
+                            <Select
+                                labelId="raffle-filter-select-label"
+                                id="raffle-filter-select"
+                                value={raffleId}
+                                label="Filtrar por rifa"
+                                onChange={handleRaffleChange}
+                            >
+                                <MenuItem value="">Todas las rifas</MenuItem>
+                                {(rafflesData?.raffles || []).map((raffle) => (
+                                    <MenuItem key={raffle.id} value={raffle.id}>{raffle.name}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <FormControl size="small" sx={{ width: '100%' }}>
+                            <InputLabel id="semaforo-filter-select-label">Estado (% vendidos)</InputLabel>
+                            <Select
+                                labelId="semaforo-filter-select-label"
+                                id="semaforo-filter-select"
+                                value={semaforo}
+                                label="Estado (% vendidos)"
+                                onChange={handleSemaforoChange}
+                            >
+                                <MenuItem value="">Todos los estados</MenuItem>
+                                <MenuItem value="blue">🔵 Excelente (&gt;75%)</MenuItem>
+                                <MenuItem value="green">🟢 Bueno (50–75%)</MenuItem>
+                                <MenuItem value="orange">🟠 Regular (25–50%)</MenuItem>
+                                <MenuItem value="red">🔴 Bajo (&lt;25%)</MenuItem>
+                            </Select>
+                        </FormControl>
                         <LocalizationProvider dateAdapter={AdapterDayjs}>
-                            <DatePicker
-                                label="Fecha inicial"
-                                value={startDate}
-                                onChange={(newValue) => {
-                                    setStartDate(newValue);
-                                    if (!newValue) setEndDate(null);
-                                }}
-                                slotProps={{ textField: { size: 'small', sx: { minWidth: { xs: '100%', md: 130 } } } }}
-                                maxDate={endDate || undefined}
-                            />
-                            <DatePicker
-                                label="Fecha final"
-                                value={endDate}
-                                onChange={setEndDate}
-                                slotProps={{ textField: { size: 'small', sx: { minWidth: { xs: '100%', md: 130 } } } }}
-                                minDate={startDate || undefined}
-                                disabled={!startDate}
-                            />
+                            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+                                <DatePicker
+                                    label="Fecha inicial"
+                                    value={startDate}
+                                    onChange={(newValue) => {
+                                        setStartDate(newValue);
+                                        if (!newValue) setEndDate(null);
+                                    }}
+                                    slotProps={{ textField: { size: 'small', sx: { width: '100%' } } }}
+                                    maxDate={endDate || undefined}
+                                />
+                                <DatePicker
+                                    label="Fecha final"
+                                    value={endDate}
+                                    onChange={setEndDate}
+                                    slotProps={{ textField: { size: 'small', sx: { width: '100%' } } }}
+                                    minDate={startDate || undefined}
+                                    disabled={!startDate}
+                                />
+                            </Box>
                         </LocalizationProvider>
                     </Box>
                 </Box>

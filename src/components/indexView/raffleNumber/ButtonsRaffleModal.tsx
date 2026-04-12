@@ -13,7 +13,7 @@ import { deleteNumberClient } from "../../../api/raffleNumbersApi";
 import { toast } from "react-toastify";
 import { AwardType, Raffle, RaffleNumber, RaffleNumbersPayments, RaffleNumbersResponseType } from "../../../types";
 import ButtoToWasap from "./ButtoToWasap";
-import { formatDateTimeLarge, handleDownloadPDF, handleMessageToWhatsAppAviso, handleViewAndDownloadPDF } from "../../../utils";
+import { formatDateTimeLarge, handleDownloadPDF, handleViewAndDownloadPDF } from "../../../utils";
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import AdfScannerIcon from '@mui/icons-material/AdfScanner';
 import CampaignIcon from '@mui/icons-material/Campaign';
@@ -22,9 +22,6 @@ import { useState } from "react";
 
 
 type ButtonsRaffleModalProps = {
-    name: string
-    telefono: string
-    number: number
     totalNumbers: number
     pdfData: RaffleNumbersPayments
     raffle: Raffle
@@ -34,6 +31,7 @@ type ButtonsRaffleModalProps = {
     refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<RaffleNumbersResponseType | undefined, Error>>
     raffleNumberStatus: RaffleNumber['status']
     handleToWasap: () => void
+    handleAvisoWhatsApp: () => void
     handleSendPaymentReminderWhatsApp: (award: {
         id: number;
         name: string;
@@ -41,7 +39,7 @@ type ButtonsRaffleModalProps = {
     } | undefined) => void
 }
 
-function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfData, raffle, raffleId, raffleNumberId, refetch, handleToWasap, raffleNumberStatus, handleSendPaymentReminderWhatsApp} : ButtonsRaffleModalProps) {
+function ButtonsRaffleModal({ awards, totalNumbers ,pdfData, raffle, raffleId, raffleNumberId, refetch, handleToWasap, handleAvisoWhatsApp, raffleNumberStatus, handleSendPaymentReminderWhatsApp} : ButtonsRaffleModalProps) {
     const navigate = useNavigate()
 
     const queryClient = useQueryClient()
@@ -92,7 +90,7 @@ function ButtonsRaffleModal({ name, number, telefono, awards, totalNumbers ,pdfD
 
             {raffleNumberStatus !== 'available' && (
                 <IconButton
-                    onClick={() => handleMessageToWhatsAppAviso({ telefono, number, totalNumbers, name, raffleName: raffle.name })}
+                    onClick={handleAvisoWhatsApp}
                     sx={{ 
                         bgcolor: '#fef3c7',
                         '&:hover': { bgcolor: '#fde68a' },
