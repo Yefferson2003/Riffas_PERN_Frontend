@@ -66,7 +66,7 @@ export const exelRaffleNumbersFilterDetails = async (
         rowCount.font = { bold: true, size: 12 };
 
         worksheet.addRow([]);
-        const resumenHeader = worksheet.addRow(['Resumen Totales', 'COP', ...resumenConversionHeaders]);
+        const resumenHeader = worksheet.addRow(['Resumen Totales', 'Dolar', ...resumenConversionHeaders]);
         resumenHeader.font = { bold: true, size: 11, color: { argb: 'FFFFFFFF' } };
         resumenHeader.eachCell((cell) => {
             cell.fill = {
