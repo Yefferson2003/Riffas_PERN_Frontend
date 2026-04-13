@@ -72,6 +72,10 @@ type FilterOptions = {
     pending1?: boolean;
     pending2?: boolean;
     apartado?: boolean;
+    resumen1?: boolean;
+    resumen2?: boolean;
+    resumen3?: boolean;
+    resumen4?: boolean;
 }
 
 function RaffleNumbersView() {
@@ -162,6 +166,10 @@ function RaffleNumbersView() {
             pending1: { pending1: true },
             pending2: { pending2: true },
             apartado: { apartado: true },
+            resumen1: { resumen1: true },
+            resumen2: { resumen2: true },
+            resumen3: { resumen3: true },
+            resumen4: { resumen4: true },
         };
 
         // Actualizar el uso de setFilter
@@ -633,6 +641,10 @@ function RaffleNumbersView() {
                                 <MenuItem value={'pending2'}>Abonados</MenuItem>
                                 <MenuItem value={'sold'}>Pagados</MenuItem>
                                 <MenuItem value={'apartado'}>Por Confirmar</MenuItem>
+                                <MenuItem value={'resumen1'}>Resumen (Diario)</MenuItem>
+                                <MenuItem value={'resumen2'}>Resumen (Semanal)</MenuItem>
+                                <MenuItem value={'resumen3'}>Resumen (Mensual)</MenuItem>
+                                <MenuItem value={'resumen4'}>Resumen (Todo)</MenuItem>
                             </Select>
                             
                             <Select
@@ -862,6 +874,7 @@ function RaffleNumbersView() {
                                                 userId: userFilter
                                             },
                                             raffle?.totalNumbers || 0,
+                                            tasas?.tasas || [],
                                             // methodName,
                                         );
                                     }}
@@ -923,6 +936,7 @@ function RaffleNumbersView() {
                                             userId: userFilter
                                         },
                                         raffle?.totalNumbers || 0,
+                                        tasas?.tasas || [],
                                         // methodName,
                                     );
                                 }}

@@ -75,6 +75,7 @@ export async function getClients( { page, limit, search, order, startDate, endDa
         } });
         
         const response = responseClientsSchema.safeParse(data);
+        console.log(data);
         
         if (response.success) {
             return response.data;

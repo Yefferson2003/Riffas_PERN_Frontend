@@ -4,6 +4,7 @@ import { saveAs } from 'file-saver';
 import { capitalize, formatCurrencyCOP, formatDateTimeLargeIsNull, formatWithLeadingZeros, translateRaffleStatus } from '.';
 import { getRafflesDetailsNumbers } from '../api/raffleApi';
 import { getRaffleNumersExel, getRaffleNumersExelFilter } from '../api/raffleNumbersApi';
+import { TasaResponseType } from '../types/tasas';
 
 
 export const fetchRaffleNumbers = async (raffleId: number) => {
@@ -28,6 +29,7 @@ export const exelRaffleNumbersFilterDetails = async (
     raffleId: string, 
     params: object, 
     totalNumbers: number,
+    tasas: TasaResponseType[] = [],
     // paymentMethodFilter: string
 ) => {
 
@@ -39,36 +41,96 @@ export const exelRaffleNumbersFilterDetails = async (
         }
 
         const { raffleNumbers, rafflePrice, userLastName, userName, count } = data;
+        const validTasas = tasas.filter((tasa) => {
+            const value = Number(tasa.value);
+            return !Number.isNaN(value) && value > 0;
+        });
 
-        console.log('exelRaffleNumbersFilterDetails', data);
+        const totalAbonosGeneral = raffleNumbers.reduce((sum, raffle) => {
+            const abonos = (raffle.payments || []).reduce((acc, payment) => acc + (+payment.amount || 0), 0);
+            return sum + abonos;
+        }, 0);
+        const totalDeudasGeneral = raffleNumbers.reduce((sum, raffle) => sum + (+raffle.paymentDue || 0), 0);
         
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("Resumen Rifa");
-        
-        worksheet.mergeCells('A3:C3');
-        worksheet.getCell('A3').value = `Números: ${count ?? raffleNumbers.length}`;
-        worksheet.getCell('A3').font = { bold: true, size: 12 };
-        // Cabecera personalizada
-        worksheet.mergeCells('A1:C1');
-        worksheet.getCell('A1').value = `Responsable: ${userLastName || '---'}, ${userName || '---'}`;
-        worksheet.getCell('A1').font = { bold: true, size: 14 };
 
-        worksheet.mergeCells('A2:C2');
-        worksheet.getCell('A2').value = `Precio de la Boleta: ${formatCurrencyCOP(+rafflePrice) || '---'}`;
-        worksheet.getCell('A2').font = { bold: true, size: 12 };
+        const resumenConversionHeaders = validTasas.map((tasa) => `${tasa.moneda.symbol} ${tasa.moneda.name}`);
+        const rowResponsable = worksheet.addRow([`Responsable: ${userLastName || '---'}, ${userName || '---'}`]);
+        rowResponsable.font = { bold: true, size: 14 };
 
+        const rowPrecio = worksheet.addRow([`Precio de la Boleta: ${formatCurrencyCOP(+rafflePrice) || '---'}`]);
+        rowPrecio.font = { bold: true, size: 12 };
 
+        const rowCount = worksheet.addRow([`Números: ${count ?? raffleNumbers.length}`]);
+        rowCount.font = { bold: true, size: 12 };
+
+        worksheet.addRow([]);
+        const resumenHeader = worksheet.addRow(['Resumen Totales', 'COP', ...resumenConversionHeaders]);
+        resumenHeader.font = { bold: true, size: 11, color: { argb: 'FFFFFFFF' } };
+        resumenHeader.eachCell((cell) => {
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF1F4E78' }
+            };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        });
+
+        const resumenAbonos = worksheet.addRow([
+            'Total Abonos',
+            formatCurrencyCOP(totalAbonosGeneral),
+            ...validTasas.map((tasa) => formatCurrencyCOP(totalAbonosGeneral * Number(tasa.value)))
+        ]);
+
+        const resumenDeudas = worksheet.addRow([
+            'Total Deudas',
+            formatCurrencyCOP(totalDeudasGeneral),
+            ...validTasas.map((tasa) => formatCurrencyCOP(totalDeudasGeneral * Number(tasa.value)))
+        ]);
+
+        [resumenAbonos, resumenDeudas].forEach((row) => {
+            row.eachCell((cell, colNumber) => {
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+                    left: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+                    bottom: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+                    right: { style: 'thin', color: { argb: 'FFD9D9D9' } }
+                };
+                if (colNumber === 1) {
+                    cell.font = { bold: true };
+                    cell.alignment = { horizontal: 'left' };
+                } else {
+                    cell.alignment = { horizontal: 'right' };
+                    cell.numFmt = '#,##0.00';
+                }
+            });
+        });
+
+        worksheet.addRow([]);
 
         // Encabezados de columnas (orden profesional)
-        worksheet.addRow([]);
-        const headers = ['Número', 'Nombre Completo', 'Teléfono', 'Valor Abonado', 'Saldo Pendiente', 'Métodos de Pago', 'Referencias', 'Estado' ];
-        worksheet.addRow(headers);
-        const headerRowNumber = 6;
-        const headerRow = worksheet.getRow(headerRowNumber);
-        headerRow.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
+        const conversionHeaders = validTasas.flatMap((tasa) => [
+            `Abonado ${tasa.moneda.symbol} (${tasa.moneda.name})`,
+            `Deuda ${tasa.moneda.symbol} (${tasa.moneda.name})`
+        ]);
+        const headers = [
+            'Número',
+            'Nombre Completo',
+            'Teléfono',
+            'Valor Abonado',
+            'Saldo Pendiente',
+            ...conversionHeaders,
+            'Métodos de Pago',
+            'Referencias',
+            'Estado'
+        ];
+        const tableHeaderRow = worksheet.addRow(headers);
+        const headerRowNumber = tableHeaderRow.number;
+        tableHeaderRow.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
         
         // Aplicar color de fondo a los headers
-        headerRow.eachCell((cell) => {
+        tableHeaderRow.eachCell((cell) => {
             cell.fill = {
                 type: "pattern",
                 pattern: "solid",
@@ -84,7 +146,7 @@ export const exelRaffleNumbersFilterDetails = async (
         });
 
 
-        // Agregar los números de la rifa divididos por método de pago
+        // Agregar una fila por número, con métodos/referencias agregados
         raffleNumbers.forEach((raffle) => {
             const raffleData = raffle;
             
@@ -94,75 +156,42 @@ export const exelRaffleNumbersFilterDetails = async (
                 .map(name => capitalize(name || ''))
                 .join(' ') || '---';
 
-            // Agrupar pagos por método
-            const pagosPorMetodo = new Map<string, { pagos: typeof raffleData.payments, totalMonto: number, referencias: string[] }>();
+            const pagos = raffleData.payments || [];
+            const totalAbonado = pagos.reduce((acc, payment) => acc + (+payment.amount || 0), 0);
+            const saldoPendiente = +raffleData.paymentDue || 0;
+            const metodosUnicos = Array.from(new Set(pagos.map((payment) => capitalize(payment.rafflePayMethode?.payMethode?.name || 'No especificado'))));
+            const referenciasUnicas = Array.from(new Set(
+                pagos
+                    .map((payment) => (payment as typeof payment & { reference?: string }).reference)
+                    .filter((ref): ref is string => Boolean(ref))
+            ));
 
-            if (raffleData.payments && raffleData.payments.length > 0) {
-                raffleData.payments.forEach(payment => {
-                    const metodeName = payment.rafflePayMethode?.payMethode?.name || 'No especificado';
-                    const paymentWithRef = payment as typeof payment & { reference?: string };
-                    
-                    if (!pagosPorMetodo.has(metodeName)) {
-                        pagosPorMetodo.set(metodeName, { pagos: [], totalMonto: 0, referencias: [] });
-                    }
-                    
-                    const metodo = pagosPorMetodo.get(metodeName)!;
-                    metodo.pagos.push(payment);
-                    metodo.totalMonto += (+payment.amount || 0);
-                    
-                    if (paymentWithRef.reference) {
-                        metodo.referencias.push(paymentWithRef.reference);
-                    }
-                });
-            } else {
-                // Si no hay pagos específicos, mostrar como método no especificado
-                pagosPorMetodo.set('No especificado', {
-                    pagos: [],
-                    totalMonto: +raffleData.paymentAmount || 0,
-                    referencias: []
-                });
-            }
-
-            // Crear una fila por cada método de pago
-            let isFirstRow = true;
-            const metodosOrdenados = Array.from(pagosPorMetodo.keys()).sort();
-            
-            metodosOrdenados.forEach(metodoName => {
-                const metodoData = pagosPorMetodo.get(metodoName)!;
-                
-                // Ordenar referencias
-                const referenciasOrdenadas = metodoData.referencias.sort((a, b) => {
-                    const numA = parseInt(a);
-                    const numB = parseInt(b);
-                    if (!isNaN(numA) && !isNaN(numB)) {
-                        return numA - numB;
-                    }
-                    return a.localeCompare(b);
-                });
-
-                const referenciasTexto = referenciasOrdenadas.length > 0
-                    ? referenciasOrdenadas.join(' • ')
-                    : '---';
-
-                // Calcular saldo pendiente proporcional si hay múltiples métodos
-                const totalAbonado = Array.from(pagosPorMetodo.values()).reduce((sum, m) => sum + m.totalMonto, 0);
-                const saldoPendienteTotal = +raffleData.paymentDue || 0;
-                const saldoProporcional = metodosOrdenados.length > 1 && totalAbonado > 0
-                    ? (metodoData.totalMonto / totalAbonado) * saldoPendienteTotal
-                    : (isFirstRow ? saldoPendienteTotal : 0);
-
-                const rowData = [
-                    isFirstRow ? formatWithLeadingZeros(raffleData.number, totalNumbers) : '', // Solo mostrar número en primera fila
-                    isFirstRow ? nombreCompleto : '', // Solo mostrar nombre en primera fila
-                    isFirstRow ? (raffleData.phone || '---') : '', // Solo mostrar teléfono en primera fila
-                    formatCurrencyCOP(metodoData.totalMonto) || 0, // Valor abonado por este método
-                    metodosOrdenados.length > 1 ? formatCurrencyCOP(saldoProporcional) : formatCurrencyCOP(saldoPendienteTotal), // Saldo pendiente
-                    capitalize(metodoName), // Método de pago individual
-                    referenciasTexto, // Referencias de este método
-                    isFirstRow ? translateRaffleStatus(raffleData.status) : '', // Solo mostrar estado en primera fila
+            const conversionValues = validTasas.flatMap((tasa) => {
+                const tasaValue = Number(tasa.value);
+                return [
+                    formatCurrencyCOP(totalAbonado * tasaValue),
+                    formatCurrencyCOP(saldoPendiente * tasaValue)
                 ];
-                
-                const row = worksheet.addRow(rowData);
+            });
+
+            const metodoCol = 6 + conversionHeaders.length + 1;
+            const estadoCol = metodoCol + 2;
+            const conversionStartCol = 6;
+            const amountCols = [4, 5, ...Array.from({ length: conversionHeaders.length }, (_, i) => conversionStartCol + i)];
+
+            const rowData = [
+                formatWithLeadingZeros(raffleData.number, totalNumbers),
+                nombreCompleto,
+                raffleData.phone || '---',
+                formatCurrencyCOP(totalAbonado),
+                formatCurrencyCOP(saldoPendiente),
+                ...conversionValues,
+                metodosUnicos.length ? metodosUnicos.join(' | ') : 'No especificado',
+                referenciasUnicas.length ? referenciasUnicas.join(' • ') : '---',
+                translateRaffleStatus(raffleData.status),
+            ];
+
+            const row = worksheet.addRow(rowData);
 
                 // Colores según el estado del número (consistente para todas las filas del mismo número)
                 let fillColor;
@@ -193,10 +222,10 @@ export const exelRaffleNumbersFilterDetails = async (
                     // Alineación por tipo de contenido
                     if (colNumber === 1) { // Número
                         cell.alignment = { horizontal: 'center' };
-                    } else if (colNumber === 4 || colNumber === 5) { // Montos
+                    } else if (amountCols.includes(colNumber)) { // Montos y conversiones
                         cell.alignment = { horizontal: 'right' };
                         cell.numFmt = '#,##0.00';
-                    } else if (colNumber === 8) { // Estado
+                    } else if (colNumber === estadoCol) { // Estado
                         cell.alignment = { horizontal: 'center' };
                         cell.font = { bold: true };
                     } else {
@@ -210,28 +239,7 @@ export const exelRaffleNumbersFilterDetails = async (
                         bottom: { style: 'thin', color: { argb: 'FFE8E8E8' } },
                         right: { style: 'thin', color: { argb: 'FFE8E8E8' } }
                     };
-
-                    // Si no es la primera fila, hacer el texto más suave para campos vacíos
-                    if (!isFirstRow && (colNumber === 1 || colNumber === 2 || colNumber === 3 || colNumber === 8)) {
-                        cell.font = { color: { argb: 'FFA0A0A0' } };
-                    }
                 });
-
-                isFirstRow = false;
-            });
-
-            // Agregar una línea separadora sutil entre diferentes números si hay múltiples métodos
-            if (metodosOrdenados.length > 1) {
-                const separatorRow = worksheet.addRow(['', '', '', '', '', '', '', '']);
-                separatorRow.height = 5;
-                separatorRow.eachCell((cell) => {
-                    cell.fill = {
-                        type: "pattern",
-                        pattern: "solid",
-                        fgColor: { argb: "FFF8F8F8" },
-                    };
-                });
-            }
         });
 
         // Ajustar ancho de columnas optimizado
@@ -241,6 +249,8 @@ export const exelRaffleNumbersFilterDetails = async (
             { width: 15 }, // Teléfono
             { width: 18 }, // Valor Abonado
             { width: 18 }, // Saldo Pendiente
+            ...validTasas.map(() => ({ width: 22 })), // Conversiones por tasa
+            ...validTasas.map(() => ({ width: 22 })),
             { width: 28 }, // Métodos de Pago
             { width: 35 }, // Referencias
             { width: 15 }, // Estado

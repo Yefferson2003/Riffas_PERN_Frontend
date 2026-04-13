@@ -227,12 +227,16 @@ export const handleMessageToWhatsAppAviso = ({
     raffleName
 }: {
     totalNumbers: number;
-    number: number;
+    number: number | number[];
     telefono: string;
     name: string;
     raffleName: string;
 }) => {
-    const formattedNumber = formatWithLeadingZeros(number, totalNumbers);
+    const numbersArray = Array.isArray(number) ? number : [number];
+    const formattedNumbers = numbersArray
+        .map((n) => formatWithLeadingZeros(n, totalNumbers))
+        .join(', ');
+    const numberText = numbersArray.length > 1 ? 'tus números anteriores' : 'tu número anterior';
     
     const message = `📢 ¡Hola *${name}*! 👋
 
@@ -241,7 +245,7 @@ export const handleMessageToWhatsAppAviso = ({
 Estamos a punto de lanzar nuestra nueva *rifa* 🎉  
 Y queremos darte prioridad como cliente VIP 🌟
 
-❓ ¿Te gustaría conservar tu número anterior *${formattedNumber}* 🎲 o prefieres cambiarlo?
+❓ ¿Te gustaría conservar ${numberText} *${formattedNumbers}* 🎲 o prefieres cambiarlo?
 
 📞 _Esperamos tu respuesta pronto..._
 
@@ -278,7 +282,10 @@ export const generateRafflePurchaseMessage = ({
     const rafflePrice = priceRaffleNumber ?? +infoRaffle.amountRaffle;
     let deuda = 0;
 
-    if (statusRaffleNumber === "pending" && payments) {
+    if (typeof abonosPendientes === 'number' && !Number.isNaN(abonosPendientes)) {
+        // Cuando llega explícitamente la deuda pendiente (por número o suma), usamos ese valor real.
+        deuda = Math.max(abonosPendientes, 0);
+    } else if (statusRaffleNumber === "pending" && payments && payments.length > 0) {
         const abonosValidos = payments
             .filter(p => p.isValid)
             .reduce((acc, p) => acc + Number(p.amount), 0);
@@ -368,13 +375,38 @@ export const redirectToWhatsApp = ({
     name,
     phone,
     numbers,
+    number,
     payments,
     statusRaffleNumber,
     awards,
     reservedDate,
     priceRaffleNumber
-}: redirectToWhatsAppType): string => {
+}: Omit<redirectToWhatsAppType, 'numbers'> & {
+    numbers?: {
+        numberId: number;
+        number: number;
+    }[];
+    number?: number | number[];
+}): string => {
     if (!phone) return "";
+
+    const normalizedNumbers = (() => {
+        if (Array.isArray(numbers) && numbers.length > 0) {
+            return numbers;
+        }
+
+        if (Array.isArray(number)) {
+            return number.map((n) => ({ numberId: n, number: n }));
+        }
+
+        if (typeof number === 'number') {
+            return [{ numberId: number, number }];
+        }
+
+        return [] as { numberId: number; number: number }[];
+    })();
+
+    if (!normalizedNumbers.length) return "";
 
     const message = generateRafflePurchaseMessage({
         totalNumbers,
@@ -382,7 +414,7 @@ export const redirectToWhatsApp = ({
         abonosPendientes,
         infoRaffle,
         name,
-        numbers,
+        numbers: normalizedNumbers,
         payments,
         statusRaffleNumber,
         awards,
@@ -400,20 +432,49 @@ export const redirectToWhatsApp = ({
 export const sendPaymentReminderWhatsApp = ({
     totalNumbers,
     numbers,
+    number,
     phone,
     name,
     infoRaffle,
     reservedDate,
     award,
     abonosPendientes,
-}: redirectToWhatsAppType): string => {
+}: Omit<redirectToWhatsAppType, 'numbers'> & {
+    numbers?: {
+        numberId: number;
+        number: number;
+    }[];
+    number?: number | number[];
+}): string => {
     if (!phone) return "";
+
+    const normalizedNumbers = (() => {
+        if (Array.isArray(numbers) && numbers.length > 0) {
+            return numbers;
+        }
+
+        if (Array.isArray(number)) {
+            return number.map((n) => ({ numberId: n, number: n }));
+        }
+
+        if (typeof number === 'number') {
+            return [{ numberId: number, number }];
+        }
+
+        return [] as { numberId: number; number: number }[];
+    })();
+
+    if (!normalizedNumbers.length) return "";
 
     const valorPendiente = abonosPendientes || 0;
 
-    const numbersList = numbers
+    const numbersList = normalizedNumbers
         .map(n => formatWithLeadingZeros(n.number, totalNumbers))
         .join(", ");
+
+    const hasMultipleNumbers = normalizedNumbers.length > 1;
+    const numberLabel = hasMultipleNumbers ? 'números' : 'número';
+    const verbLabel = hasMultipleNumbers ? 'apartaste' : 'apartaste';
 
 
     let premioInfo = "";
@@ -422,7 +483,7 @@ export const sendPaymentReminderWhatsApp = ({
     }
 
     const message = `
-✨ Hola *${name.trim()}*, Recuerda que apartaste el número(s) *${numbersList}* en la rifa *“${infoRaffle.name.trim()}”*${premioInfo}
+✨ Hola *${name.trim()}*, recuerda que ${verbLabel} el ${numberLabel} *${numbersList}* en la rifa *“${infoRaffle.name.trim()}”*${premioInfo}
 
 📌 Detalles
 💵 Valor pendiente: *${formatCurrencyCOP(valorPendiente)}*

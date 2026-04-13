@@ -791,8 +791,17 @@ export const RaffleNumberAvisoSchema = z.object({
     name: z.string(),
     raffleName: z.string(),
 })
+export const RaffleNumberAvisoByClientSchema = RaffleNumberAvisoSchema.pick({
+    telefono: true,
+    name: true,
+    raffleName: true,
+    totalNumbers: true,
+}).extend({
+    number: z.array(z.number())
+})
 
 export type RaffleNumberAvisoType = z.infer<typeof RaffleNumberAvisoSchema>
+export type RaffleNumberAvisoByClientType = z.infer<typeof RaffleNumberAvisoByClientSchema>
 
 export const RaffleOffersSchema = z.object({
     id: z.number(),

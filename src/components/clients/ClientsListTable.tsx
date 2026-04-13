@@ -40,7 +40,7 @@ import CampaignIcon from '@mui/icons-material/Campaign';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { useQuery } from '@tanstack/react-query';
-import { getDataRaffleNumberAvisoWhatsapp } from '../../api/raffleNumbersApi';
+import { getDataRaffleNumberAvisoWhatsapp, getDataRaffleNumberAvisoWhatsappByClient } from '../../api/raffleNumbersApi';
 import { getAwards } from '../../api/awardsApi';
 import { sendPaymentReminderWhatsApp } from '../../utils';
 import { toast } from 'react-toastify';
@@ -136,6 +136,64 @@ function NumberAvisoButton({ raffleId, raffleNumberId }: { raffleId: number; raf
     );
 }
 
+function RaffleAvisoByClientButton({ raffleId, clientId }: { raffleId: number; clientId: number }) {
+    const [isSending, setIsSending] = React.useState(false);
+
+    const { data, isFetching, isError, refetch } = useQuery({
+        queryKey: ['whatsapp-aviso-client', raffleId, clientId],
+        queryFn: () => getDataRaffleNumberAvisoWhatsappByClient({ raffleId, clienteId: clientId }),
+        enabled: false,
+        retry: false,
+        staleTime: Infinity,
+    });
+
+    const handleClick = async () => {
+        if (isSending) return;
+
+        try {
+            setIsSending(true);
+
+            let avisoData = data;
+            
+
+            if (!avisoData) {
+                const response = await refetch();
+                avisoData = response.data;
+            }
+
+            if (!avisoData) {
+                throw new Error('No se pudieron obtener los datos para el aviso general');
+            }
+
+            handleMessageToWhatsAppAviso(avisoData);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsSending(false);
+        }
+    };
+
+    return (
+        <Tooltip
+            title={isError ? 'Sin datos para aviso general' : 'Enviar aviso general de la rifa'}
+            arrow
+        >
+            <span>
+                <IconButton
+                    size="small"
+                    onClick={handleClick}
+                    disabled={isFetching || isSending}
+                    sx={{ color: isError ? 'error.main' : '#ef6c00' }}
+                >
+                    {isFetching || isSending
+                        ? <CircularProgress size={16} sx={{ color: '#ef6c00' }} />
+                        : <CampaignIcon fontSize="small" />}
+                </IconButton>
+            </span>
+        </Tooltip>
+    );
+}
+
 function NumberPaymentReminderButton({
     raffleId,
     raffleName,
@@ -188,7 +246,7 @@ function NumberPaymentReminderButton({
         try {
             const url = sendPaymentReminderWhatsApp({
                 totalNumbers,
-                numbers: [{ numberId: 0, number: raffleNumber }],
+                number: raffleNumber,
                 phone,
                 name,
                 amount: 0,
@@ -269,6 +327,241 @@ function NumberPaymentReminderButton({
                 )}
             </Menu>
         </>
+    );
+}
+
+function RafflePaymentReminderButton({
+    raffleId,
+    raffleName,
+    rafflePlayDate,
+    rafflePrice,
+    totalNumbers,
+    numbers,
+    phone,
+    name,
+    reservedDate,
+    paymentDue,
+}: {
+    raffleId: number;
+    raffleName: string;
+    rafflePlayDate: string;
+    rafflePrice: string;
+    totalNumbers: number;
+    numbers: number[];
+    phone: string;
+    name: string;
+    reservedDate: string | null;
+    paymentDue: number;
+}) {
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+
+    const { data: awards = [], isLoading: isLoadingAwards } = useQuery({
+        queryKey: ['client-reminder-awards-group', raffleId],
+        queryFn: () => getAwards({ raffleId: String(raffleId) }),
+        enabled: open,
+        retry: false,
+        staleTime: 5 * 60 * 1000,
+    });
+
+    const openWhatsAppUrl = (url: string) => {
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+            window.location.href = url;
+        } else {
+            window.open(url, '_blank');
+        }
+    };
+
+    const handleSendReminder = (award?: { id: number; name: string; playDate: string }) => {
+        if (!phone) {
+            toast.warn('El cliente no tiene teléfono asignado.');
+            return;
+        }
+
+        if (!numbers.length) {
+            toast.warn('No hay números con deuda para recordar.');
+            return;
+        }
+
+        try {
+            const url = sendPaymentReminderWhatsApp({
+                totalNumbers,
+                number: numbers,
+                phone,
+                name,
+                amount: 0,
+                infoRaffle: {
+                    name: raffleName,
+                    amountRaffle: rafflePrice,
+                    playDate: rafflePlayDate,
+                    description: '',
+                    responsable: '',
+                },
+                awards: [],
+                reservedDate,
+                award,
+                abonosPendientes: paymentDue,
+            });
+
+            if (!url) {
+                toast.error('No se pudo generar el mensaje de recordatorio.');
+                return;
+            }
+
+            openWhatsAppUrl(url);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Hubo un error al enviar recordatorio.';
+            toast.error(message);
+        }
+    };
+
+    return (
+        <>
+            <Tooltip title="Recordar pago (general rifa)" arrow>
+                <span>
+                    <IconButton
+                        size="small"
+                        onClick={(event) => setAnchorEl(event.currentTarget)}
+                        disabled={!numbers.length}
+                        sx={{ color: '#059669' }}
+                    >
+                        <AttachMoneyIcon fontSize="small" />
+                    </IconButton>
+                </span>
+            </Tooltip>
+
+            <Menu
+                anchorEl={anchorEl}
+                open={open}
+                onClose={() => setAnchorEl(null)}
+                PaperProps={{
+                    sx: {
+                        width: 360,
+                        maxWidth: '90vw',
+                        borderRadius: 2,
+                    },
+                }}
+            >
+                {isLoadingAwards ? (
+                    <MenuItem disabled>Cargando premios...</MenuItem>
+                ) : awards.length === 0 ? (
+                    <MenuItem
+                        onClick={() => {
+                            handleSendReminder(undefined);
+                            setAnchorEl(null);
+                        }}
+                    >
+                        <ListItemText primary="Recordar pago (sin premio)" secondary="No hay premios disponibles" />
+                    </MenuItem>
+                ) : (
+                    awards.map((award) => (
+                        <MenuItem
+                            key={award.id}
+                            onClick={() => {
+                                handleSendReminder(award);
+                                setAnchorEl(null);
+                            }}
+                        >
+                            <ListItemText primary={award.name} secondary={new Date(award.playDate).toLocaleString()} />
+                        </MenuItem>
+                    ))
+                )}
+            </Menu>
+        </>
+    );
+}
+
+function RaffleWhatsappButton({
+    totalNumbers,
+    numbers,
+    phone,
+    name,
+    raffleName,
+    rafflePlayDate,
+    rafflePrice,
+    raffleDescription,
+    raffleResponsable,
+    reservedDate,
+    paymentAmount,
+    paymentDue,
+}: {
+    totalNumbers: number;
+    numbers: number[];
+    phone: string;
+    name: string;
+    raffleName: string;
+    rafflePlayDate: string;
+    rafflePrice: string;
+    raffleDescription: string;
+    raffleResponsable: string;
+    reservedDate: string | null;
+    paymentAmount: number;
+    paymentDue: number;
+}) {
+    const handleSendUserMessage = () => {
+        if (!phone) {
+            toast.warn('El cliente no tiene teléfono asignado.');
+            return;
+        }
+
+        if (!numbers.length) {
+            toast.warn('No hay números para enviar en el mensaje.');
+            return;
+        }
+
+        try {
+            const url = redirectToWhatsApp({
+                totalNumbers,
+                amount: paymentAmount,
+                number: numbers,
+                phone,
+                name,
+                infoRaffle: {
+                    name: raffleName,
+                    amountRaffle: rafflePrice,
+                    playDate: rafflePlayDate,
+                    description: raffleDescription,
+                    responsable: raffleResponsable,
+                },
+                payments: [],
+                awards: [],
+                reservedDate,
+                statusRaffleNumber: 'pending',
+                priceRaffleNumber: Number(rafflePrice || 0),
+                abonosPendientes: paymentDue,
+            });
+
+            if (!url) {
+                toast.error('No se pudo generar el mensaje para WhatsApp.');
+                return;
+            }
+
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile) {
+                window.location.href = url;
+            } else {
+                window.open(url, '_blank');
+            }
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Error al generar el mensaje de WhatsApp.';
+            toast.error(message);
+        }
+    };
+
+    return (
+        <Tooltip title="Mensaje WhatsApp (general rifa)" arrow>
+            <span>
+                <IconButton
+                    size="small"
+                    onClick={handleSendUserMessage}
+                    disabled={!numbers.length}
+                    sx={{ color: '#16a34a' }}
+                >
+                    <WhatsAppIcon fontSize="small" />
+                </IconButton>
+            </span>
+        </Tooltip>
     );
 }
 
@@ -487,7 +780,10 @@ function Row({ client, onEdit, onBuyNumbers, onDelete, isDeleting }: Pick<Client
                                 groupedByRaffle.map(([raffleId, numbers]) => {
                                     const raffleColor = numbers[0].raffle?.color || undefined;
                                     const raffleTotalNumbers = numbers.length;
+                                    const raffleTotalPaid = numbers.reduce((sum, num) => sum + (Number(num.paymentAmount) || 0), 0);
                                     const raffleTotalDebt = numbers.reduce((sum, num) => sum + (Number(num.paymentDue) || 0), 0);
+                                    const raffleNumbersWithDebt = numbers.filter((num) => Number(num.paymentDue) > 0);
+                                    const raffleIdNumber = Number(raffleId);
                                     return (
                                         <Box
                                             key={raffleId}
@@ -501,9 +797,40 @@ function Row({ client, onEdit, onBuyNumbers, onDelete, isDeleting }: Pick<Client
                                                 overflowX: 'auto',
                                             }}
                                         >
-                                            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1, color: raffleColor || 'primary.main', fontSize: { xs: 15, sm: 17 } }}>
-                                                Rifa: {numbers[0].raffle?.name || `ID ${raffleId}`}
-                                            </Typography>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1 }}>
+                                                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: raffleColor || 'primary.main', fontSize: { xs: 15, sm: 17 } }}>
+                                                    Rifa: {numbers[0].raffle?.name || `ID ${raffleId}`}
+                                                </Typography>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                    <RaffleAvisoByClientButton raffleId={raffleIdNumber} clientId={client.id} />
+                                                    <RafflePaymentReminderButton
+                                                        raffleId={raffleIdNumber}
+                                                        raffleName={numbers[0].raffle?.name || `Rifa ${raffleId}`}
+                                                        rafflePlayDate={numbers[0].raffle?.playDate || new Date().toISOString()}
+                                                        rafflePrice={numbers[0].raffle?.price || '0'}
+                                                        totalNumbers={numbers[0].raffle?.totalNumbers || numbers.length}
+                                                        numbers={raffleNumbersWithDebt.map((num) => num.number)}
+                                                        phone={clientPhone}
+                                                        name={clientName}
+                                                        reservedDate={raffleNumbersWithDebt[0]?.reservedDate || null}
+                                                        paymentDue={raffleTotalDebt}
+                                                    />
+                                                    <RaffleWhatsappButton
+                                                        totalNumbers={numbers[0].raffle?.totalNumbers || numbers.length}
+                                                        numbers={numbers.map((num) => num.number)}
+                                                        phone={clientPhone}
+                                                        name={clientName}
+                                                        raffleName={numbers[0].raffle?.name || `Rifa ${raffleId}`}
+                                                        rafflePlayDate={numbers[0].raffle?.playDate || new Date().toISOString()}
+                                                        rafflePrice={numbers[0].raffle?.price || '0'}
+                                                        raffleDescription={numbers[0].raffle?.description || ''}
+                                                        raffleResponsable={numbers[0].raffle?.nameResponsable || ''}
+                                                        reservedDate={numbers[0].reservedDate || null}
+                                                        paymentAmount={raffleTotalPaid}
+                                                        paymentDue={raffleTotalDebt}
+                                                    />
+                                                </Box>
+                                            </Box>
                                             <Box
                                                 sx={{
                                                     display: 'flex',
@@ -693,12 +1020,46 @@ export default function ClientsListTable({ clients, onEdit, onBuyNumbers, onDele
                                                 if (!numbers || numbers.length === 0) return null;
                                                 const raffleColor = numbers[0].raffle?.color || undefined;
                                                 const raffleTotalNumbers = numbers.length;
+                                                const raffleTotalPaid = numbers.reduce((sum, num) => sum + (Number(num.paymentAmount) || 0), 0);
                                                 const raffleTotalDebt = numbers.reduce((sum, num) => sum + (Number(num.paymentDue) || 0), 0);
+                                                const raffleNumbersWithDebt = numbers.filter((num) => Number(num.paymentDue) > 0);
+                                                const raffleIdNumber = Number(raffleId);
                                                 return (
                                                     <Box key={raffleId} sx={{ mb: 1.5, p: 1, border: `2px solid ${raffleColor || '#1976d2'}`, borderRadius: 2, background: raffleColor ? `${raffleColor}11` : undefined }}>
-                                                        <Typography variant="body2" sx={{ fontWeight: 700, color: raffleColor || 'primary.main', mb: 0.5 }}>
-                                                            Rifa: {numbers[0].raffle?.name || `ID ${raffleId}`}
-                                                        </Typography>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 0.5 }}>
+                                                            <Typography variant="body2" sx={{ fontWeight: 700, color: raffleColor || 'primary.main' }}>
+                                                                Rifa: {numbers[0].raffle?.name || `ID ${raffleId}`}
+                                                            </Typography>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                <RaffleAvisoByClientButton raffleId={raffleIdNumber} clientId={client.id} />
+                                                                <RafflePaymentReminderButton
+                                                                    raffleId={raffleIdNumber}
+                                                                    raffleName={numbers[0].raffle?.name || `Rifa ${raffleId}`}
+                                                                    rafflePlayDate={numbers[0].raffle?.playDate || new Date().toISOString()}
+                                                                    rafflePrice={numbers[0].raffle?.price || '0'}
+                                                                    totalNumbers={numbers[0].raffle?.totalNumbers || numbers.length}
+                                                                    numbers={raffleNumbersWithDebt.map((num) => num.number)}
+                                                                    phone={clientPhone}
+                                                                    name={clientName}
+                                                                    reservedDate={raffleNumbersWithDebt[0]?.reservedDate || null}
+                                                                    paymentDue={raffleTotalDebt}
+                                                                />
+                                                                <RaffleWhatsappButton
+                                                                    totalNumbers={numbers[0].raffle?.totalNumbers || numbers.length}
+                                                                    numbers={numbers.map((num) => num.number)}
+                                                                    phone={clientPhone}
+                                                                    name={clientName}
+                                                                    raffleName={numbers[0].raffle?.name || `Rifa ${raffleId}`}
+                                                                    rafflePlayDate={numbers[0].raffle?.playDate || new Date().toISOString()}
+                                                                    rafflePrice={numbers[0].raffle?.price || '0'}
+                                                                    raffleDescription={numbers[0].raffle?.description || ''}
+                                                                    raffleResponsable={numbers[0].raffle?.nameResponsable || ''}
+                                                                    reservedDate={numbers[0].reservedDate || null}
+                                                                    paymentAmount={raffleTotalPaid}
+                                                                    paymentDue={raffleTotalDebt}
+                                                                />
+                                                            </Box>
+                                                        </Box>
                                                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1 }}>
                                                             <Chip
                                                                 label={`Total numeros: ${raffleTotalNumbers}`}
