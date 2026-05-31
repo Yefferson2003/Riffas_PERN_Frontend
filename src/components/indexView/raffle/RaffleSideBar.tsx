@@ -13,6 +13,7 @@ import { Raffle, User } from '../../../types';
 import ButtonDeleteRaffle from '../ButtonDeleteRaffle';
 import { toast } from 'react-toastify';
 import { exportRaffleNumbers } from '../../../utils/exel';
+import { isRaffleVisible } from '../../../utils/raffleVisibility';
 
 type RaffleSideBarProps = {
     raffleId: string;
@@ -111,7 +112,11 @@ function RaffleSideBar({ raffleId, raffle, totalNumbers }: RaffleSideBarProps) {
                 </Tooltip>
                 </IconButton>
 
-                <ButtonDeleteRaffle raffleId={raffle.id} />
+                <ButtonDeleteRaffle
+                    raffleId={raffle.id}
+                    adminToggleMode={user.rol.name === 'admin'}
+                    isVisible={isRaffleVisible(raffle.visible)}
+                />
             </>
             )}
         </div>

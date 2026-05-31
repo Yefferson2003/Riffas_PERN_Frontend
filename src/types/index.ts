@@ -155,6 +155,7 @@ export const raffleSchema = z.object({
     color: z.string().nullable().optional(),
     contactRifero: z.string().nullable().optional(),
     loteria: z.string().nullable().optional(),
+    visible: z.boolean().optional(),
 })
 
 export const raffleSchemaShared = raffleSchema.extend({

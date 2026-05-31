@@ -1,4 +1,19 @@
-import { Button, CircularProgress, Pagination, TextField } from "@mui/material"
+import {
+    Button,
+    Card,
+    CardActionArea,
+    CardContent,
+    CardMedia,
+    Chip,
+    CircularProgress,
+    Pagination,
+    TextField,
+    Typography,
+} from "@mui/material"
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth"
+import LockOpenIcon from "@mui/icons-material/LockOpen"
+import VisibilityIcon from "@mui/icons-material/Visibility"
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { ChangeEvent, useEffect, useState } from "react"
 import { useMediaQuery } from 'react-responsive'
@@ -9,8 +24,9 @@ import AddRaffleModal from "../../components/indexView/AddRaffleModal"
 import TasasModal from "../../components/indexView/TasasModal"
 import socket from "../../socket"
 import { User } from "../../types"
-import { formatCurrencyCOP, formatDateTimeLarge } from "../../utils"
+import { capitalizeWords, formatCurrencyCOP, formatDateTimeLarge } from "../../utils"
 import { exelRafflesDetailsNumber } from "../../utils/exel"
+import { isRaffleVisible } from "../../utils/raffleVisibility"
 
 function IndexView() {
     const navigate = useNavigate()
@@ -134,51 +150,117 @@ function IndexView() {
             }
 
             {data && 
-            <section className="grid justify-center gap-8 lg:grid-cols-2">
-                {data.raffles.map(raffle => (
-                    <div key={raffle.id} 
-                        className="pb-3 space-y-3 overflow-hidden text-lg transition transform bg-white cursor-pointer rounded-2xl hover:scale-105 hover:opacity-90 text-azul"
-                        onClick={() => handleNavigateRaffleNumbers(raffle.id)}
+            <section className="grid justify-center gap-6 lg:grid-cols-2">
+                {data.raffles.map(raffle => {
+                    const raffleVisible = isRaffleVisible(raffle.visible)
+
+                    return (
+                    <Card
+                        key={raffle.id}
+                        elevation={3}
+                        sx={{
+                            borderRadius: 3,
+                            overflow: 'hidden',
+                            transition: 'transform 0.2s, box-shadow 0.2s',
+                            '&:hover': { transform: 'translateY(-4px)', boxShadow: 8 },
+                            position: 'relative',
+                        }}
                     >
-                        <img 
-                            className="w-full lg:object-cover lg:h-40 "
-                            src={isSmallDevice ? raffle.banerMovileImgUrl || '/banner_default.jpg' : raffle.banerImgUrl  || '/banner_default.jpg'}
-                            alt="banner riffa" 
-                        />
+                        {/* Badge de visibilidad — solo admin */}
+                        {user.rol.name === 'admin' && (
+                            <Chip
+                                icon={raffleVisible ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
+                                label={raffleVisible ? 'Visible' : 'No visible'}
+                                color={raffleVisible ? 'success' : 'error'}
+                                size="small"
+                                sx={{
+                                    position: 'absolute',
+                                    top: 10,
+                                    right: 10,
+                                    zIndex: 1,
+                                    fontWeight: 700,
+                                }}
+                            />
+                        )}
 
-                        <div className="space-y-3 text-center md:px-3 ">
-                        <div className="items-start md:justify-between md:flex">
-                            <p className="text-2xl font-bold">{raffle.name}</p>
-                        </div>
+                        <CardActionArea onClick={() => handleNavigateRaffleNumbers(raffle.id)}>
+                            <CardMedia
+                                component="img"
+                                image={isSmallDevice ? raffle.banerMovileImgUrl || '/banner_default.jpg' : raffle.banerImgUrl || '/banner_default.jpg'}
+                                alt={`Banner ${raffle.name}`}
+                                sx={{ height: { xs: 160, md: 200 }, objectFit: 'cover' }}
+                            />
 
-                        <div className="items-start md:justify-between md:flex">
-                            <p className="text-xl font-bold">{raffle.nameResponsable}</p>
-                            <p className="text-xl font-bold">{raffle.nitResponsable}</p>
-                        </div>
+                            <CardContent sx={{ p: 3 }}>
+                                {/* Nombre */}
+                                <Typography variant="h6" fontWeight={700} color="primary" gutterBottom>
+                                    {capitalizeWords(raffle.name)}
+                                </Typography>
 
-                        <p className="px-2 text-justify md:px-0">{raffle.description}</p>
+                                {/* Responsable */}
+                                <div className="flex items-center justify-between mb-2">
+                                    <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                                        {capitalizeWords(raffle.nameResponsable)}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        NIT: {raffle.nitResponsable}
+                                    </Typography>
+                                </div>
 
-                        <div className="space-y-3 md:justify-between md:flex md:space-y-0">
-                            <div>
-                                <p className="text-xl font-bold">Inicio</p>
-                                <p>{formatDateTimeLarge(raffle.startDate)}</p>   
-                            </div>
+                                {/* Descripción */}
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    sx={{
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden',
+                                        mb: 2,
+                                        textAlign: 'left',
+                                    }}
+                                >
+                                    {raffle.description}
+                                </Typography>
 
-                            <div>
-                                <p className="text-xl font-bold">Limite Compra</p>
-                                <p>{formatDateTimeLarge(raffle.editDate)}</p>
-                            </div>
-                            <div>
-                                <p className="text-xl font-bold">Juega</p>
-                                <p>{formatDateTimeLarge(raffle.playDate)}</p>
-                            </div>
-                        </div>
+                                {/* Fechas como chips */}
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    <Chip
+                                        icon={<CalendarMonthIcon fontSize="small" />}
+                                        label={`Inicio: ${formatDateTimeLarge(raffle.startDate)}`}
+                                        size="small"
+                                        variant="outlined"
+                                        color="primary"
+                                    />
+                                    <Chip
+                                        icon={<LockOpenIcon fontSize="small" />}
+                                        label={`Límite: ${formatDateTimeLarge(raffle.editDate)}`}
+                                        size="small"
+                                        variant="outlined"
+                                        color="warning"
+                                    />
+                                    <Chip
+                                        icon={<CalendarMonthIcon fontSize="small" />}
+                                        label={`Juega: ${formatDateTimeLarge(raffle.playDate)}`}
+                                        size="small"
+                                        variant="outlined"
+                                        color="success"
+                                    />
+                                </div>
 
-                        <p className="text-2xl font-bold text-center">{formatCurrencyCOP(+raffle.price)}</p>
-                        </div>
-                        
-                    </div>
-                ))}
+                                {/* Precio */}
+                                <div className="flex justify-end">
+                                    <Chip
+                                        label={formatCurrencyCOP(+raffle.price)}
+                                        color="primary"
+                                        sx={{ fontWeight: 700, fontSize: '1rem', px: 1 }}
+                                    />
+                                </div>
+                            </CardContent>
+                        </CardActionArea>
+                    </Card>
+                    )
+                })}
 
                 {data.raffles.length !== 0 &&
                     <div className="mx-auto lg:col-span-2">
